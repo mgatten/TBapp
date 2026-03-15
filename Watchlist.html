@@ -292,11 +292,6 @@ function onSearch(){
     return;
   }
   const exact=[];const startsWith=[];const contains=[];
-  if(!_allTickers.length){drop.innerHTML='<div class="search-item"><span class="si-name">Loading all symbols...</span></div>';drop.classList.add('show');return}
-  const matches=[];
-  const exact=[];
-  const startsWith=[];
-  const contains=[];
   for(const c of _allTickers){
     if(exact.length+startsWith.length+contains.length>=30)break;
     const tk=c.ticker;
