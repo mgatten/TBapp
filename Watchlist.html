@@ -176,6 +176,7 @@ async function ghGet(p){const d=await gh(`contents/${p}`);return{content:b64d(d.
 async function ghPut(p,c,sha,msg){const b={message:msg,content:btoa(unescape(encodeURIComponent(c)))};if(sha)b.sha=sha;const d=await gh(`contents/${p}`,{method:'PUT',body:JSON.stringify(b)});return d.content.sha}
 
 // ── Connect ──
+<<<<<<< main
 const _R='bWdhdHRlbi9teWZpcnN0Z2l0cmVwbw==';
 async function doConnect(){
   const token=document.getElementById('tokenInput').value.trim();
@@ -194,6 +195,26 @@ function doDisconnect(){cfg={};LS.del('cfg');wlItems=[];wlSha=null;portfolio=nul
   document.getElementById('loginHeader').classList.remove('hidden');
   document.getElementById('brandedHeader').classList.add('hidden');
   document.getElementById('mainPanel').classList.add('hidden');setConn('')}
+=======
+const _R=‘bWdhdHRlbi9teWZpcnN0Z2l0cmVwbw==’;
+async function doConnect(){
+const token=document.getElementById(‘tokenInput’).value.trim();
+if(!token){toast(‘Token required’,‘err’);return}
+cfg={token,repo:atob(_R)};
+try{await gh(‘contents/portfolio_state.json’);LS.set(‘cfg’,cfg);
+document.getElementById(‘setupPanel’).classList.add(‘hidden’);
+document.getElementById(‘loginHeader’).classList.add(‘hidden’);
+document.getElementById(‘brandedHeader’).classList.remove(‘hidden’);
+document.getElementById(‘mainPanel’).classList.remove(‘hidden’);
+setConn(‘ok’);await refreshAll();
+}catch(e){toast(‘Login failed’,‘err’);setConn(‘err’);cfg={}}
+}
+function doDisconnect(){cfg={};LS.del(‘cfg’);wlItems=[];wlSha=null;portfolio=null;events=[];
+document.getElementById(‘setupPanel’).classList.remove(‘hidden’);
+document.getElementById(‘loginHeader’).classList.remove(‘hidden’);
+document.getElementById(‘brandedHeader’).classList.add(‘hidden’);
+document.getElementById(‘mainPanel’).classList.add(‘hidden’);setConn(’’)}
+>>>>>>> origin/main
 
 // ── Tabs ──
 function switchTab(name){
@@ -221,6 +242,7 @@ async function refreshAll(){
 function parseWl(t){const o=[];for(const raw of t.split('\n')){const l=raw.trim();if(!l||l.startsWith('#'))continue;let tk,n='';for(const s of['#','|']){const i=l.indexOf(s);if(i!==-1){tk=l.slice(0,i).trim().toUpperCase();n=l.slice(i+1).trim();break}}if(!tk)tk=l.toUpperCase();if(tk&&/^[A-Z0-9]+$/.test(tk))o.push({symbol:tk,note:n})}return o}
 function serWl(){return wlItems.map(w=>w.note?`${w.symbol}  # ${w.note}`:w.symbol).join('\n')+(wlItems.length?'\n':'')}
 
+<<<<<<< main
 async function loadWl(){try{const{content,sha}=await ghGet('data/watchlist.txt');wlItems=parseWl(content);wlSha=sha}catch(e){if(e.message.includes('404')){wlItems=[];wlSha=null}else throw e}renderWl()}
 async function saveWl(){try{wlSha=await ghPut('data/watchlist.txt',serWl(),wlSha,`watchlist: ${wlItems.length} symbol${wlItems.length!==1?'s':''}`);toast(`Saved — ${wlItems.length} symbol${wlItems.length!==1?'s':''}`)}catch(e){toast('Save failed: '+e.message,'err')}}
 
@@ -229,6 +251,16 @@ function renderWl(){
   if(!wlItems.length){list.innerHTML='';empty.classList.remove('hidden');return}
   empty.classList.add('hidden');
   list.innerHTML=wlItems.map((w,i)=>`<div class="card"><div class="wl-item"><span class="wl-ticker">${esc(w.symbol)}</span><span class="wl-note" id="wlN${i}" onclick="wlNoteToggle(${i})" ondblclick="wlEdit(${i})">${esc(w.note)||'—'}</span><div class="wl-actions"><button class="wl-btn" onclick="wlEdit(${i})" title="Edit">✎</button><button class="wl-btn del" onclick="wlDel(${i})" title="Remove">×</button></div></div></div>`).join('');
+=======
+async function loadWl(){try{const{content,sha}=await ghGet(‘data/watchlist.txt’);wlItems=parseWl(content);wlSha=sha}catch(e){if(e.message.includes(‘404’)){wlItems=[];wlSha=null}else throw e}renderWl()}
+async function saveWl(){try{wlSha=await ghPut(‘data/watchlist.txt’,serWl(),wlSha,`watchlist: ${wlItems.length} symbol${wlItems.length!==1?'s':''}`);toast(`Saved — ${wlItems.length} symbol${wlItems.length!==1?'s':''}`)}catch(e){toast(’Save failed: ’+e.message,‘err’)}}
+
+function renderWl(){
+const list=document.getElementById(‘wlList’),empty=document.getElementById(‘wlEmpty’);
+if(!wlItems.length){list.innerHTML=’’;empty.classList.remove(‘hidden’);return}
+empty.classList.add(‘hidden’);
+list.innerHTML=wlItems.map((w,i)=>`<div class="card"><div class="wl-item"><span class="wl-ticker">${esc(w.symbol)}</span><span class="wl-note" id="wlN${i}" onclick="wlNoteToggle(${i})" ondblclick="wlEdit(${i})">${esc(w.note)||'—'}</span><div class="wl-actions"><button class="wl-btn" onclick="wlEdit(${i})" title="Edit">✎</button><button class="wl-btn del" onclick="wlDel(${i})" title="Remove">×</button></div></div></div>`).join(’’);
+>>>>>>> origin/main
 }
 async function wlAdd(){
   const tE=document.getElementById('wlTicker'),nE=document.getElementById('wlNote');
@@ -246,6 +278,7 @@ async function wlEditDone(i){const el=document.getElementById('wlE'+i);if(!el)re
 async function loadPortfolio(){try{const{content}=await ghGet('portfolio_state.json');portfolio=JSON.parse(content)}catch(e){if(!e.message.includes('404'))throw e;portfolio=null}renderHoldings()}
 
 function renderHoldings(){
+<<<<<<< main
   const bar=document.getElementById('acctBar'),list=document.getElementById('holdingsList'),empty=document.getElementById('holdingsEmpty'),tsEl=document.getElementById('holdingsTs');
   if(!portfolio){bar.innerHTML='';list.innerHTML='';empty.classList.remove('hidden');tsEl.textContent='';return}
   const eq=portfolio.equity||0,cash=portfolio.cash||0,inv=eq-cash,positions=portfolio.positions||[],theses=portfolio.entry_theses||{},dates=portfolio.position_open_dates||{};
@@ -257,19 +290,39 @@ function renderHoldings(){
       const th=theses[p.symbol]||{},opened=dates[p.symbol]?dates[p.symbol].slice(0,10):'—';
       return`<div class="card expandable" onclick="toggleTh(${i})"><div class="pos-row"><span class="pos-sym">${esc(p.symbol)}</span><div class="pos-mid"><div class="pos-alloc">${p.alloc_pct||0}% · ${p.side}</div><div class="pos-entry">${opened} @ $${(p.avg_entry_price||0).toFixed(2)}</div></div><div class="pos-pl ${cls}">${sgn}$${pl.toFixed(2)}<br><span style="font-size:11px">${sgn}${pct.toFixed(1)}%</span></div></div><div class="thesis-expand" id="th${i}">${th.reason?`<div class="thesis-label">Why Opened</div><div>${esc(th.reason)}</div>`:''}${th.price_target?`<div class="thesis-label">Price Target</div><div>${esc(th.price_target)}</div>`:''}${th.exit_catalyst?`<div class="thesis-label">Exit Catalyst</div><div>${esc(th.exit_catalyst)}</div>`:''}${th.invalidation?`<div class="thesis-label">Invalidation</div><div>${esc(th.invalidation)}</div>`:''}${th.conviction?`<div class="thesis-label">Conviction</div><div>${th.conviction}/10</div>`:''}${!th.reason&&!th.price_target?'<div style="color:var(--text3)">No thesis recorded.</div>':''}</div></div>`}).join('')}
   if(portfolio.timestamp){try{const d=new Date(portfolio.timestamp);tsEl.textContent=`Last updated: ${d.toLocaleDateString()} ${d.toLocaleTimeString()}`}catch{tsEl.textContent=`Last updated: ${portfolio.timestamp}`}}else tsEl.textContent='';
+=======
+const bar=document.getElementById(‘acctBar’),list=document.getElementById(‘holdingsList’),empty=document.getElementById(‘holdingsEmpty’),tsEl=document.getElementById(‘holdingsTs’);
+if(!portfolio){bar.innerHTML=’’;list.innerHTML=’’;empty.classList.remove(‘hidden’);tsEl.textContent=’’;return}
+const eq=portfolio.equity||0,cash=portfolio.cash||0,inv=eq-cash,positions=portfolio.positions||[],theses=portfolio.entry_theses||{},dates=portfolio.position_open_dates||{};
+bar.innerHTML=`<div class="stat-box"><div class="stat-label">Equity</div><div class="stat-val">$${eq.toFixed(2)}</div></div><div class="stat-box"><div class="stat-label">Cash</div><div class="stat-val">$${cash.toFixed(2)}</div></div><div class="stat-box"><div class="stat-label">Invested</div><div class="stat-val">$${inv.toFixed(2)}</div></div>`;
+if(!positions.length){list.innerHTML=’’;empty.classList.remove(‘hidden’)}
+else{empty.classList.add(‘hidden’);
+list.innerHTML=positions.map((p,i)=>{
+const pl=p.unrealized_pl||0,pct=p.unrealized_plpc||0,cls=pl>=0?‘up’:‘down’,sgn=pl>=0?’+’:’’;
+const th=theses[p.symbol]||{},opened=dates[p.symbol]?dates[p.symbol].slice(0,10):’—’;
+return`<div class="card expandable" onclick="toggleTh(${i})"><div class="pos-row"><span class="pos-sym">${esc(p.symbol)}</span><div class="pos-mid"><div class="pos-alloc">${p.alloc_pct||0}% · ${p.side}</div><div class="pos-entry">${opened} @ $${(p.avg_entry_price||0).toFixed(2)}</div></div><div class="pos-pl ${cls}">${sgn}$${pl.toFixed(2)}<br><span style="font-size:11px">${sgn}${pct.toFixed(1)}%</span></div></div><div class="thesis-expand" id="th${i}">${th.reason?`<div class="thesis-label">Why Opened</div><div>${esc(th.reason)}</div>`:''}${th.price_target?`<div class="thesis-label">Price Target</div><div>${esc(th.price_target)}</div>`:''}${th.exit_catalyst?`<div class="thesis-label">Exit Catalyst</div><div>${esc(th.exit_catalyst)}</div>`:''}${th.invalidation?`<div class="thesis-label">Invalidation</div><div>${esc(th.invalidation)}</div>`:''}${th.conviction?`<div class="thesis-label">Conviction</div><div>${th.conviction}/10</div>`:''}${!th.reason&&!th.price_target?'<div style="color:var(--text3)">No thesis recorded.</div>':''}</div></div>`}).join(’’)}
+if(portfolio.timestamp){try{const d=new Date(portfolio.timestamp);tsEl.textContent=`Last updated: ${d.toLocaleDateString()} ${d.toLocaleTimeString()}`}catch{tsEl.textContent=`Last updated: ${portfolio.timestamp}`}}else tsEl.textContent=’’;
+>>>>>>> origin/main
 }
 function toggleTh(i){const e=document.getElementById('th'+i);if(e)e.classList.toggle('show')}
 
 // ── History ──
 function parseCSV(text){
+<<<<<<< main
   const lines=text.split('\n').filter(l=>l.trim());if(lines.length<2)return[];
   const hdr=lines[0].split(',').map(h=>h.trim().replace(/^"|"$/g,''));
   return lines.slice(1).map(line=>{const v=[];let c='',q=false;for(let ch of line){if(ch==='"')q=!q;else if(ch===','&&!q){v.push(c.trim());c=''}else c+=ch}v.push(c.trim());const o={};hdr.forEach((h,i)=>o[h]=v[i]||'');return o});
+=======
+const lines=text.split(’\n’).filter(l=>l.trim());if(lines.length<2)return[];
+const hdr=lines[0].split(’,’).map(h=>h.trim().replace(/^”|”$/g,’’));
+return lines.slice(1).map(line=>{const v=[];let c=’’,q=false;for(let ch of line){if(ch===’”’)q=!q;else if(ch===’,’&&!q){v.push(c.trim());c=’’}else c+=ch}v.push(c.trim());const o={};hdr.forEach((h,i)=>o[h]=v[i]||’’);return o});
+>>>>>>> origin/main
 }
 
 async function loadEvents(){try{const{content}=await ghGet('data/position_events.csv');events=parseCSV(content).filter(e=>['OPEN','CLOSE','PARTIAL_CLOSE'].includes(e.event_type))}catch(e){if(!e.message.includes('404'))throw e;events=[]}renderHist()}
 
 function renderHist(){
+<<<<<<< main
   const list=document.getElementById('histList'),empty=document.getElementById('histEmpty'),label=document.getElementById('monthLabel'),nBtn=document.getElementById('nextMonth');
   const y=histMonth.getFullYear(),m=histMonth.getMonth();
   const mNames=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -285,17 +338,42 @@ function renderHist(){
     let ph='';if(tp!=='OPEN'&&e.realized_pl){const pl=parseFloat(e.realized_pl)||0,pc=parseFloat(e.realized_pl_pct)||0,c=pl>=0?'up':'down',s=pl>=0?'+':'';ph=`<span class="evt-pl ${c}">${s}$${pl.toFixed(2)} (${s}${pc.toFixed(1)}%)</span>`}
     const reason=tp==='OPEN'?(e.open_reason||''):(e.close_reason||'');
     return`<div class="card ${reason?'expandable':''}" ${reason?`onclick="toggleEv(${i})"`:''}><div class="evt-row"><span class="evt-date">${ds}</span><span class="evt-badge ${bc}">${bt}</span><span class="evt-sym">${esc(e.symbol)}</span>${ph}</div>${reason?`<div class="evt-detail" id="ev${i}">${esc(reason)}</div>`:''}</div>`}).join('');
+=======
+const list=document.getElementById(‘histList’),empty=document.getElementById(‘histEmpty’),label=document.getElementById(‘monthLabel’),nBtn=document.getElementById(‘nextMonth’);
+const y=histMonth.getFullYear(),m=histMonth.getMonth();
+const mNames=[‘Jan’,‘Feb’,‘Mar’,‘Apr’,‘May’,‘Jun’,‘Jul’,‘Aug’,‘Sep’,‘Oct’,‘Nov’,‘Dec’];
+label.textContent=`${mNames[m]} ${y}`;
+const now=new Date();nBtn.disabled=(y===now.getFullYear()&&m===now.getMonth());
+const filt=events.filter(e=>{const ts=e.close_timestamp||e.open_timestamp||’’;if(!ts)return false;try{const d=new Date(ts);return d.getFullYear()===y&&d.getMonth()===m}catch{return false}});
+filt.sort((a,b)=>(b.close_timestamp||b.open_timestamp||’’).localeCompare(a.close_timestamp||a.open_timestamp||’’));
+if(!filt.length){list.innerHTML=’’;empty.classList.remove(‘hidden’);return}
+empty.classList.add(‘hidden’);
+list.innerHTML=filt.map((e,i)=>{
+const ts=e.close_timestamp||e.open_timestamp||’’;let ds=’’;try{ds=new Date(ts).toLocaleDateString(‘en-US’,{month:‘short’,day:‘numeric’})}catch{ds=ts.slice(0,10)}
+const tp=e.event_type,bc=tp===‘OPEN’?‘open’:tp===‘CLOSE’?‘close’:‘partial’,bt=tp===‘OPEN’?‘OPEN’:tp===‘CLOSE’?‘CLOSE’:‘PARTIAL’;
+let ph=’’;if(tp!==‘OPEN’&&e.realized_pl){const pl=parseFloat(e.realized_pl)||0,pc=parseFloat(e.realized_pl_pct)||0,c=pl>=0?‘up’:‘down’,s=pl>=0?’+’:’’;ph=`<span class="evt-pl ${c}">${s}$${pl.toFixed(2)} (${s}${pc.toFixed(1)}%)</span>`}
+const reason=tp===‘OPEN’?(e.open_reason||’’):(e.close_reason||’’);
+return`<div class="card ${reason?'expandable':''}" ${reason?`onclick=“toggleEv(${i})”`:''}><div class="evt-row"><span class="evt-date">${ds}</span><span class="evt-badge ${bc}">${bt}</span><span class="evt-sym">${esc(e.symbol)}</span>${ph}</div>${reason?`<div class="evt-detail" id="ev${i}">${esc(reason)}</div>`:''}</div>`}).join(’’);
+>>>>>>> origin/main
 }
 function toggleEv(i){const e=document.getElementById('ev'+i);if(e)e.classList.toggle('show')}
 function histNav(d){histMonth.setMonth(histMonth.getMonth()+d);renderHist()}
 
 // ── Init ──
 (async function(){
+<<<<<<< main
   document.body.setAttribute('data-theme',LS.get('theme')||'dark');
   cfg=LS.get('cfg')||{};
   if(cfg.token&&cfg.repo){document.getElementById('setupPanel').classList.add('hidden');document.getElementById('loginHeader').classList.add('hidden');document.getElementById('brandedHeader').classList.remove('hidden');document.getElementById('mainPanel').classList.remove('hidden');await refreshAll()}
   window.addEventListener('online',()=>{document.getElementById('offlineBanner').classList.remove('show');refreshAll()});
   window.addEventListener('offline',()=>{document.getElementById('offlineBanner').classList.add('show')});
+=======
+document.body.setAttribute(‘data-theme’,LS.get(‘theme’)||‘dark’);
+cfg=LS.get(‘cfg’)||{};
+if(cfg.token&&cfg.repo){document.getElementById(‘setupPanel’).classList.add(‘hidden’);document.getElementById(‘loginHeader’).classList.add(‘hidden’);document.getElementById(‘brandedHeader’).classList.remove(‘hidden’);document.getElementById(‘mainPanel’).classList.remove(‘hidden’);await refreshAll()}
+window.addEventListener(‘online’,()=>{document.getElementById(‘offlineBanner’).classList.remove(‘show’);refreshAll()});
+window.addEventListener(‘offline’,()=>{document.getElementById(‘offlineBanner’).classList.add(‘show’)});
+>>>>>>> origin/main
 })();
 </script>
 </body>
