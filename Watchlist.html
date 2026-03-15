@@ -285,7 +285,7 @@ function onSearch(){
   const q=document.getElementById('wlSearch').value.trim().toUpperCase();
   const drop=document.getElementById('searchDrop');
   if(!q||q.length<1){drop.classList.remove('show');drop.innerHTML='';return}
-  if(!_allTickers.length){drop.innerHTML='<div class="search-item"><span class="si-name">Loading symbols...</span></div>';drop.classList.add('show');return}
+  if(!_allTickers.length){drop.innerHTML='<div class="search-item"><span class="si-name">Loading all symbols...</span></div>';drop.classList.add('show');return}
   const matches=[];
   const exact=[];
   const startsWith=[];
