@@ -288,7 +288,7 @@ function onSearch(){
     if(/^[A-Z]{1,5}$/.test(q)){
       drop.innerHTML=`<div class="search-item" onclick="pickTicker('${q}','')"><span class="si-ticker">${q}</span><span class="si-name">tap to add (symbol list loading...)</span></div>`;
       drop.classList.add('show');
-    }else{drop.innerHTML='<div class="search-item"><span class="si-name">Loading symbols...</span></div>';drop.classList.add('show')}
+    }else{drop.innerHTML='<div class="search-item"><span class="si-name">Loading the symbols...</span></div>';drop.classList.add('show')}
     return;
   }
   const exact=[];const startsWith=[];const contains=[];
