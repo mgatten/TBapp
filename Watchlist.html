@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -50,7 +51,8 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
 .add-bar .note-in{font-family:var(--font-head)}
 .wl-item{display:flex;align-items:center;gap:10px}
 .wl-ticker{font-family:var(--font-mono);font-weight:600;font-size:14px;color:var(--accent);min-width:55px}
-.wl-note{flex:1;font-size:12px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wl-note{flex:1;font-size:12px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+.wl-note.expanded{white-space:normal;overflow:visible;text-overflow:unset}
 .wl-note-edit{flex:1;background:var(--bg2);border:1px solid var(--accent);border-radius:4px;padding:4px 8px;color:var(--text);font-size:12px;font-family:var(--font-head);outline:none}
 .wl-actions{display:flex;gap:4px}
 .wl-btn{background:none;border:none;color:var(--text3);font-size:14px;cursor:pointer;padding:4px 6px;border-radius:4px;line-height:1;transition:all var(--tr)}
@@ -112,7 +114,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
     </div>
   </div>
   <div class="offline-banner" id="offlineBanner">
-    ⚠️ No internet connection. Showing cached data — there may have been runs since this snapshot.
+    ⚠️ No internet connection. Showing cached data -- there may have been runs since this snapshot.
     <span id="offlineTs"></span>
   </div>
   <div id="setupPanel" class="setup">
@@ -131,7 +133,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
     </div>
     <div class="tab-content active" id="tab-watchlist">
       <div class="add-bar">
-        <input type="text" class="ticker-in" id="wlTicker" placeholder="PLTR" maxlength="10" onkeydown="if(event.key==='Enter')document.getElementById('wlNote').focus()">
+        <input type="text" class="ticker-in" id="wlTicker" placeholder="Symb" maxlength="10" onkeydown="if(event.key==='Enter')document.getElementById('wlNote').focus()">
         <input type="text" class="note-in" id="wlNote" placeholder="optional note" onkeydown="if(event.key==='Enter')wlAdd()">
         <button class="btn btn-sm btn-primary" onclick="wlAdd()">+</button>
       </div>
@@ -176,121 +178,123 @@ async function ghPut(p,c,sha,msg){const b={message:msg,content:btoa(unescape(enc
 
 // ── Connect ──
 async function doConnect(){
-  const token=document.getElementById('tokenInput').value.trim();
-  const repo=document.getElementById('repoInput').value.trim();
-  if(!token||!repo){toast('Token & repo required','err');return}
-  cfg={token,repo};
-  try{await gh('contents/portfolio_state.json');LS.set('cfg',cfg);
-    document.getElementById('setupPanel').classList.add('hidden');
-    document.getElementById('mainPanel').classList.remove('hidden');
-    setConn('ok');await refreshAll();
-  }catch(e){toast('Connection failed: '+e.message,'err');setConn('err');cfg={}}
+const token=document.getElementById(‘tokenInput’).value.trim();
+const repo=document.getElementById(‘repoInput’).value.trim();
+if(!token||!repo){toast(‘Token & repo required’,‘err’);return}
+cfg={token,repo};
+try{await gh(‘contents/portfolio_state.json’);LS.set(‘cfg’,cfg);
+document.getElementById(‘setupPanel’).classList.add(‘hidden’);
+document.getElementById(‘mainPanel’).classList.remove(‘hidden’);
+setConn(‘ok’);await refreshAll();
+}catch(e){toast(‘Connection failed: ‘+e.message,‘err’);setConn(‘err’);cfg={}}
 }
-function doDisconnect(){cfg={};LS.del('cfg');wlItems=[];wlSha=null;portfolio=null;events=[];
-  document.getElementById('setupPanel').classList.remove('hidden');
-  document.getElementById('mainPanel').classList.add('hidden');setConn('')}
+function doDisconnect(){cfg={};LS.del(‘cfg’);wlItems=[];wlSha=null;portfolio=null;events=[];
+document.getElementById(‘setupPanel’).classList.remove(‘hidden’);
+document.getElementById(‘mainPanel’).classList.add(‘hidden’);setConn(’’)}
 
 // ── Tabs ──
 function switchTab(name){
-  const tabs=['watchlist','holdings','history'];
-  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',tabs[i]===name));
-  document.querySelectorAll('.tab-content').forEach(tc=>tc.classList.toggle('active',tc.id==='tab-'+name));
+const tabs=[‘watchlist’,‘holdings’,‘history’];
+document.querySelectorAll(’.tab’).forEach((t,i)=>t.classList.toggle(‘active’,tabs[i]===name));
+document.querySelectorAll(’.tab-content’).forEach(tc=>tc.classList.toggle(‘active’,tc.id===‘tab-’+name));
 }
 
 // ── Refresh ──
 async function refreshAll(){
-  if(!navigator.onLine){
-    document.getElementById('offlineBanner').classList.add('show');
-    const c=LS.get('cache');
-    if(c){if(c.wlItems){wlItems=c.wlItems;wlSha=c.wlSha;renderWl()}if(c.portfolio){portfolio=c.portfolio;renderHoldings()}if(c.events){events=c.events;renderHist()}
-      document.getElementById('offlineTs').textContent=` Last fetched: ${c.ts||'unknown'}`}
-    return;
-  }
-  document.getElementById('offlineBanner').classList.remove('show');setConn('ok');
-  try{await Promise.all([loadWl(),loadPortfolio(),loadEvents()]);
-    LS.set('cache',{wlItems,wlSha,portfolio,events,ts:new Date().toLocaleString()});
-  }catch(e){setConn('err');toast('Refresh failed: '+e.message,'err')}
+if(!navigator.onLine){
+document.getElementById(‘offlineBanner’).classList.add(‘show’);
+const c=LS.get(‘cache’);
+if(c){if(c.wlItems){wlItems=c.wlItems;wlSha=c.wlSha;renderWl()}if(c.portfolio){portfolio=c.portfolio;renderHoldings()}if(c.events){events=c.events;renderHist()}
+document.getElementById(‘offlineTs’).textContent=` Last fetched: ${c.ts||'unknown'}`}
+return;
+}
+document.getElementById(‘offlineBanner’).classList.remove(‘show’);setConn(‘ok’);
+try{await Promise.all([loadWl(),loadPortfolio(),loadEvents()]);
+LS.set(‘cache’,{wlItems,wlSha,portfolio,events,ts:new Date().toLocaleString()});
+}catch(e){setConn(‘err’);toast(’Refresh failed: ’+e.message,‘err’)}
 }
 
 // ── Watchlist ──
-function parseWl(t){const o=[];for(const raw of t.split('\n')){const l=raw.trim();if(!l||l.startsWith('#'))continue;let tk,n='';for(const s of['#','|']){const i=l.indexOf(s);if(i!==-1){tk=l.slice(0,i).trim().toUpperCase();n=l.slice(i+1).trim();break}}if(!tk)tk=l.toUpperCase();if(tk&&/^[A-Z0-9]+$/.test(tk))o.push({symbol:tk,note:n})}return o}
-function serWl(){return wlItems.map(w=>w.note?`${w.symbol}  # ${w.note}`:w.symbol).join('\n')+(wlItems.length?'\n':'')}
+function parseWl(t){const o=[];for(const raw of t.split(’\n’)){const l=raw.trim();if(!l||l.startsWith(’#’))continue;let tk,n=’’;for(const s of[’#’,’|’]){const i=l.indexOf(s);if(i!==-1){tk=l.slice(0,i).trim().toUpperCase();n=l.slice(i+1).trim();break}}if(!tk)tk=l.toUpperCase();if(tk&&/^[A-Z0-9]+$/.test(tk))o.push({symbol:tk,note:n})}return o}
+function serWl(){return wlItems.map(w=>w.note?`${w.symbol}  # ${w.note}`:w.symbol).join(’\n’)+(wlItems.length?’\n’:’’)}
 
-async function loadWl(){try{const{content,sha}=await ghGet('data/watchlist.txt');wlItems=parseWl(content);wlSha=sha}catch(e){if(e.message.includes('404')){wlItems=[];wlSha=null}else throw e}renderWl()}
-async function saveWl(){try{wlSha=await ghPut('data/watchlist.txt',serWl(),wlSha,`watchlist: ${wlItems.length} symbol${wlItems.length!==1?'s':''}`);toast(`Saved — ${wlItems.length} symbol${wlItems.length!==1?'s':''}`)}catch(e){toast('Save failed: '+e.message,'err')}}
+async function loadWl(){try{const{content,sha}=await ghGet(‘data/watchlist.txt’);wlItems=parseWl(content);wlSha=sha}catch(e){if(e.message.includes(‘404’)){wlItems=[];wlSha=null}else throw e}renderWl()}
+async function saveWl(){try{wlSha=await ghPut(‘data/watchlist.txt’,serWl(),wlSha,`watchlist: ${wlItems.length} symbol${wlItems.length!==1?'s':''}`);toast(`Saved -- ${wlItems.length} symbol${wlItems.length!==1?'s':''}`)}catch(e){toast(’Save failed: ’+e.message,‘err’)}}
 
 function renderWl(){
-  const list=document.getElementById('wlList'),empty=document.getElementById('wlEmpty');
-  if(!wlItems.length){list.innerHTML='';empty.classList.remove('hidden');return}
-  empty.classList.add('hidden');
-  list.innerHTML=wlItems.map((w,i)=>`<div class="card"><div class="wl-item"><span class="wl-ticker">${esc(w.symbol)}</span><span class="wl-note" id="wlN${i}" ondblclick="wlEdit(${i})">${esc(w.note)||'—'}</span><div class="wl-actions"><button class="wl-btn" onclick="wlEdit(${i})" title="Edit">✎</button><button class="wl-btn del" onclick="wlDel(${i})" title="Remove">×</button></div></div></div>`).join('');
+const list=document.getElementById(‘wlList’),empty=document.getElementById(‘wlEmpty’);
+if(!wlItems.length){list.innerHTML=’’;empty.classList.remove(‘hidden’);return}
+empty.classList.add(‘hidden’);
+list.innerHTML=wlItems.map((w,i)=>`<div class="card"><div class="wl-item"><span class="wl-ticker">${esc(w.symbol)}</span><span class="wl-note" id="wlN${i}" onclick="wlNoteToggle(${i})" ondblclick="wlEdit(${i})">${esc(w.note)||'--'}</span><div class="wl-actions"><button class="wl-btn" onclick="wlEdit(${i})" title="Edit">✎</button><button class="wl-btn del" onclick="wlDel(${i})" title="Remove">×</button></div></div></div>`).join(’’);
 }
 async function wlAdd(){
-  const tE=document.getElementById('wlTicker'),nE=document.getElementById('wlNote');
-  const tk=tE.value.trim().toUpperCase(),n=nE.value.trim();
-  if(!tk||!/^[A-Z0-9]+$/.test(tk)){toast('Enter a valid ticker','err');return}
-  if(wlItems.some(w=>w.symbol===tk)){toast(`${tk} already listed`,'err');return}
-  wlItems.push({symbol:tk,note:n});renderWl();tE.value='';nE.value='';tE.focus();await saveWl();
+const tE=document.getElementById(‘wlTicker’),nE=document.getElementById(‘wlNote’);
+const tk=tE.value.trim().toUpperCase(),n=nE.value.trim();
+if(!tk||!/^[A-Z0-9]+$/.test(tk)){toast(‘Enter a valid ticker’,‘err’);return}
+if(wlItems.some(w=>w.symbol===tk)){toast(`${tk} already listed`,‘err’);return}
+wlItems.push({symbol:tk,note:n});renderWl();tE.value=’’;nE.value=’’;tE.focus();await saveWl();
 }
-async function wlDel(i){const s=wlItems[i].symbol;wlItems.splice(i,1);renderWl();await saveWl();toast(`Removed ${s}`)}
-function wlEdit(i){const el=document.getElementById('wlN'+i);el.outerHTML=`<input class="wl-note-edit" id="wlE${i}" value="${esc(wlItems[i].note)}" onblur="wlEditDone(${i})" onkeydown="if(event.key==='Enter')this.blur()">`;document.getElementById('wlE'+i).focus()}
-async function wlEditDone(i){const el=document.getElementById('wlE'+i);if(!el)return;wlItems[i].note=el.value.trim();renderWl();await saveWl()}
+async function wlDel(i){const s=wlItems[i].symbol;if(!confirm(`Remove ${s} from watchlist?`))return;wlItems.splice(i,1);renderWl();await saveWl();toast(`Removed ${s}`)}
+function wlNoteToggle(i){const el=document.getElementById(‘wlN’+i);if(el)el.classList.toggle(‘expanded’)}
+function wlEdit(i){const el=document.getElementById(‘wlN’+i);el.outerHTML=`<input class="wl-note-edit" id="wlE${i}" value="${esc(wlItems[i].note)}" onblur="wlEditDone(${i})" onkeydown="if(event.key==='Enter')this.blur()">`; document.getElementById(‘wlE’+i).focus()}
+async function wlEditDone(i){const el=document.getElementById(‘wlE’+i);if(!el)return;wlItems[i].note=el.value.trim();renderWl();await saveWl()}
 
 // ── Holdings ──
-async function loadPortfolio(){try{const{content}=await ghGet('portfolio_state.json');portfolio=JSON.parse(content)}catch(e){if(!e.message.includes('404'))throw e;portfolio=null}renderHoldings()}
+async function loadPortfolio(){try{const{content}=await ghGet(‘portfolio_state.json’);portfolio=JSON.parse(content)}catch(e){if(!e.message.includes(‘404’))throw e;portfolio=null}renderHoldings()}
 
 function renderHoldings(){
-  const bar=document.getElementById('acctBar'),list=document.getElementById('holdingsList'),empty=document.getElementById('holdingsEmpty'),tsEl=document.getElementById('holdingsTs');
-  if(!portfolio){bar.innerHTML='';list.innerHTML='';empty.classList.remove('hidden');tsEl.textContent='';return}
-  const eq=portfolio.equity||0,cash=portfolio.cash||0,inv=eq-cash,positions=portfolio.positions||[],theses=portfolio.entry_theses||{},dates=portfolio.position_open_dates||{};
-  bar.innerHTML=`<div class="stat-box"><div class="stat-label">Equity</div><div class="stat-val">$${eq.toFixed(2)}</div></div><div class="stat-box"><div class="stat-label">Cash</div><div class="stat-val">$${cash.toFixed(2)}</div></div><div class="stat-box"><div class="stat-label">Invested</div><div class="stat-val">$${inv.toFixed(2)}</div></div>`;
-  if(!positions.length){list.innerHTML='';empty.classList.remove('hidden')}
-  else{empty.classList.add('hidden');
-    list.innerHTML=positions.map((p,i)=>{
-      const pl=p.unrealized_pl||0,pct=p.unrealized_plpc||0,cls=pl>=0?'up':'down',sgn=pl>=0?'+':'';
-      const th=theses[p.symbol]||{},opened=dates[p.symbol]?dates[p.symbol].slice(0,10):'—';
-      return`<div class="card expandable" onclick="toggleTh(${i})"><div class="pos-row"><span class="pos-sym">${esc(p.symbol)}</span><div class="pos-mid"><div class="pos-alloc">${p.alloc_pct||0}% · ${p.side}</div><div class="pos-entry">${opened} @ $${(p.avg_entry_price||0).toFixed(2)}</div></div><div class="pos-pl ${cls}">${sgn}$${pl.toFixed(2)}<br><span style="font-size:11px">${sgn}${pct.toFixed(1)}%</span></div></div><div class="thesis-expand" id="th${i}">${th.reason?`<div class="thesis-label">Why Opened</div><div>${esc(th.reason)}</div>`:''}${th.price_target?`<div class="thesis-label">Price Target</div><div>${esc(th.price_target)}</div>`:''}${th.exit_catalyst?`<div class="thesis-label">Exit Catalyst</div><div>${esc(th.exit_catalyst)}</div>`:''}${th.invalidation?`<div class="thesis-label">Invalidation</div><div>${esc(th.invalidation)}</div>`:''}${th.conviction?`<div class="thesis-label">Conviction</div><div>${th.conviction}/10</div>`:''}${!th.reason&&!th.price_target?'<div style="color:var(--text3)">No thesis recorded.</div>':''}</div></div>`}).join('')}
-  if(portfolio.timestamp){try{const d=new Date(portfolio.timestamp);tsEl.textContent=`Last updated: ${d.toLocaleDateString()} ${d.toLocaleTimeString()}`}catch{tsEl.textContent=`Last updated: ${portfolio.timestamp}`}}else tsEl.textContent='';
+const bar=document.getElementById(‘acctBar’),list=document.getElementById(‘holdingsList’),empty=document.getElementById(‘holdingsEmpty’),tsEl=document.getElementById(‘holdingsTs’);
+if(!portfolio){bar.innerHTML=’’;list.innerHTML=’’;empty.classList.remove(‘hidden’);tsEl.textContent=’’;return}
+const eq=portfolio.equity||0,cash=portfolio.cash||0,inv=eq-cash,positions=portfolio.positions||[],theses=portfolio.entry_theses||{},dates=portfolio.position_open_dates||{};
+bar.innerHTML=`<div class="stat-box"><div class="stat-label">Equity</div><div class="stat-val">$${eq.toFixed(2)}</div></div><div class="stat-box"><div class="stat-label">Cash</div><div class="stat-val">$${cash.toFixed(2)}</div></div><div class="stat-box"><div class="stat-label">Invested</div><div class="stat-val">$${inv.toFixed(2)}</div></div>`;
+if(!positions.length){list.innerHTML=’’;empty.classList.remove(‘hidden’)}
+else{empty.classList.add(‘hidden’);
+list.innerHTML=positions.map((p,i)=>{
+const pl=p.unrealized_pl||0,pct=p.unrealized_plpc||0,cls=pl>=0?‘up’:‘down’,sgn=pl>=0?’+’:’’;
+const th=theses[p.symbol]||{},opened=dates[p.symbol]?dates[p.symbol].slice(0,10):’--’;
+return`<div class="card expandable" onclick="toggleTh(${i})"><div class="pos-row"><span class="pos-sym">${esc(p.symbol)}</span><div class="pos-mid"><div class="pos-alloc">${p.alloc_pct||0}% · ${p.side}</div><div class="pos-entry">${opened} @ $${(p.avg_entry_price||0).toFixed(2)}</div></div><div class="pos-pl ${cls}">${sgn}$${pl.toFixed(2)}<br><span style="font-size:11px">${sgn}${pct.toFixed(1)}%</span></div></div><div class="thesis-expand" id="th${i}">${th.reason?`<div class="thesis-label">Why Opened</div><div>${esc(th.reason)}</div>`:''}${th.price_target?`<div class="thesis-label">Price Target</div><div>${esc(th.price_target)}</div>`:''}${th.exit_catalyst?`<div class="thesis-label">Exit Catalyst</div><div>${esc(th.exit_catalyst)}</div>`:''}${th.invalidation?`<div class="thesis-label">Invalidation</div><div>${esc(th.invalidation)}</div>`:''}${th.conviction?`<div class="thesis-label">Conviction</div><div>${th.conviction}/10</div>`:''}${!th.reason&&!th.price_target?'<div style="color:var(--text3)">No thesis recorded.</div>':''}</div></div>`}).join(’’)}
+if(portfolio.timestamp){try{const d=new Date(portfolio.timestamp);tsEl.textContent=`Last updated: ${d.toLocaleDateString()} ${d.toLocaleTimeString()}`}catch{tsEl.textContent=`Last updated: ${portfolio.timestamp}`}}else tsEl.textContent=’’;
 }
-function toggleTh(i){const e=document.getElementById('th'+i);if(e)e.classList.toggle('show')}
+function toggleTh(i){const e=document.getElementById(‘th’+i);if(e)e.classList.toggle(‘show’)}
 
 // ── History ──
 function parseCSV(text){
-  const lines=text.split('\n').filter(l=>l.trim());if(lines.length<2)return[];
-  const hdr=lines[0].split(',').map(h=>h.trim().replace(/^"|"$/g,''));
-  return lines.slice(1).map(line=>{const v=[];let c='',q=false;for(let ch of line){if(ch==='"')q=!q;else if(ch===','&&!q){v.push(c.trim());c=''}else c+=ch}v.push(c.trim());const o={};hdr.forEach((h,i)=>o[h]=v[i]||'');return o});
+const lines=text.split(’\n’).filter(l=>l.trim());if(lines.length<2)return[];
+const hdr=lines[0].split(’,’).map(h=>h.trim().replace(/^"|"$/g,’’));
+return lines.slice(1).map(line=>{const v=[];let c=’’,q=false;for(let ch of line){if(ch===’"’)q=!q;else if(ch===’,’&&!q){v.push(c.trim());c=’’}else c+=ch}v.push(c.trim());const o={};hdr.forEach((h,i)=>o[h]=v[i]||’’);return o});
 }
 
-async function loadEvents(){try{const{content}=await ghGet('data/position_events.csv');events=parseCSV(content).filter(e=>['OPEN','CLOSE','PARTIAL_CLOSE'].includes(e.event_type))}catch(e){if(!e.message.includes('404'))throw e;events=[]}renderHist()}
+async function loadEvents(){try{const{content}=await ghGet(‘data/position_events.csv’);events=parseCSV(content).filter(e=>[‘OPEN’,‘CLOSE’,‘PARTIAL_CLOSE’].includes(e.event_type))}catch(e){if(!e.message.includes(‘404’))throw e;events=[]}renderHist()}
 
 function renderHist(){
-  const list=document.getElementById('histList'),empty=document.getElementById('histEmpty'),label=document.getElementById('monthLabel'),nBtn=document.getElementById('nextMonth');
-  const y=histMonth.getFullYear(),m=histMonth.getMonth();
-  const mNames=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  label.textContent=`${mNames[m]} ${y}`;
-  const now=new Date();nBtn.disabled=(y===now.getFullYear()&&m===now.getMonth());
-  const filt=events.filter(e=>{const ts=e.close_timestamp||e.open_timestamp||'';if(!ts)return false;try{const d=new Date(ts);return d.getFullYear()===y&&d.getMonth()===m}catch{return false}});
-  filt.sort((a,b)=>(b.close_timestamp||b.open_timestamp||'').localeCompare(a.close_timestamp||a.open_timestamp||''));
-  if(!filt.length){list.innerHTML='';empty.classList.remove('hidden');return}
-  empty.classList.add('hidden');
-  list.innerHTML=filt.map((e,i)=>{
-    const ts=e.close_timestamp||e.open_timestamp||'';let ds='';try{ds=new Date(ts).toLocaleDateString('en-US',{month:'short',day:'numeric'})}catch{ds=ts.slice(0,10)}
-    const tp=e.event_type,bc=tp==='OPEN'?'open':tp==='CLOSE'?'close':'partial',bt=tp==='OPEN'?'OPEN':tp==='CLOSE'?'CLOSE':'PARTIAL';
-    let ph='';if(tp!=='OPEN'&&e.realized_pl){const pl=parseFloat(e.realized_pl)||0,pc=parseFloat(e.realized_pl_pct)||0,c=pl>=0?'up':'down',s=pl>=0?'+':'';ph=`<span class="evt-pl ${c}">${s}$${pl.toFixed(2)} (${s}${pc.toFixed(1)}%)</span>`}
-    const reason=tp==='OPEN'?(e.open_reason||''):(e.close_reason||'');
-    return`<div class="card ${reason?'expandable':''}" ${reason?`onclick="toggleEv(${i})"`:''}><div class="evt-row"><span class="evt-date">${ds}</span><span class="evt-badge ${bc}">${bt}</span><span class="evt-sym">${esc(e.symbol)}</span>${ph}</div>${reason?`<div class="evt-detail" id="ev${i}">${esc(reason)}</div>`:''}</div>`}).join('');
+const list=document.getElementById(‘histList’),empty=document.getElementById(‘histEmpty’),label=document.getElementById(‘monthLabel’),nBtn=document.getElementById(‘nextMonth’);
+const y=histMonth.getFullYear(),m=histMonth.getMonth();
+const mNames=[‘Jan’,‘Feb’,‘Mar’,‘Apr’,‘May’,‘Jun’,‘Jul’,‘Aug’,‘Sep’,‘Oct’,‘Nov’,‘Dec’];
+label.textContent=`${mNames[m]} ${y}`;
+const now=new Date();nBtn.disabled=(y===now.getFullYear()&&m===now.getMonth());
+const filt=events.filter(e=>{const ts=e.close_timestamp||e.open_timestamp||’’;if(!ts)return false;try{const d=new Date(ts);return d.getFullYear()===y&&d.getMonth()===m}catch{return false}});
+filt.sort((a,b)=>(b.close_timestamp||b.open_timestamp||’’).localeCompare(a.close_timestamp||a.open_timestamp||’’));
+if(!filt.length){list.innerHTML=’’;empty.classList.remove(‘hidden’);return}
+empty.classList.add(‘hidden’);
+list.innerHTML=filt.map((e,i)=>{
+const ts=e.close_timestamp||e.open_timestamp||’’;let ds=’’;try{ds=new Date(ts).toLocaleDateString(‘en-US’,{month:‘short’,day:‘numeric’})}catch{ds=ts.slice(0,10)}
+const tp=e.event_type,bc=tp===‘OPEN’?‘open’:tp===‘CLOSE’?‘close’:‘partial’,bt=tp===‘OPEN’?‘OPEN’:tp===‘CLOSE’?‘CLOSE’:‘PARTIAL’;
+let ph=’’;if(tp!==‘OPEN’&&e.realized_pl){const pl=parseFloat(e.realized_pl)||0,pc=parseFloat(e.realized_pl_pct)||0,c=pl>=0?‘up’:‘down’,s=pl>=0?’+’:’’;ph=`<span class="evt-pl ${c}">${s}$${pl.toFixed(2)} (${s}${pc.toFixed(1)}%)</span>`}
+const reason=tp===‘OPEN’?(e.open_reason||’’):(e.close_reason||’’);
+return`<div class="card ${reason?'expandable':''}" ${reason?`onclick="toggleEv(${i})"`:''}><div class="evt-row"><span class="evt-date">${ds}</span><span class="evt-badge ${bc}">${bt}</span><span class="evt-sym">${esc(e.symbol)}</span>${ph}</div>${reason?`<div class="evt-detail" id="ev${i}">${esc(reason)}</div>`:''}</div>`}).join(’’);
 }
-function toggleEv(i){const e=document.getElementById('ev'+i);if(e)e.classList.toggle('show')}
+function toggleEv(i){const e=document.getElementById(‘ev’+i);if(e)e.classList.toggle(‘show’)}
 function histNav(d){histMonth.setMonth(histMonth.getMonth()+d);renderHist()}
 
 // ── Init ──
 (async function(){
-  document.body.setAttribute('data-theme',LS.get('theme')||'dark');
-  cfg=LS.get('cfg')||{};
-  if(cfg.token&&cfg.repo){document.getElementById('setupPanel').classList.add('hidden');document.getElementById('mainPanel').classList.remove('hidden');await refreshAll()}
-  window.addEventListener('online',()=>{document.getElementById('offlineBanner').classList.remove('show');refreshAll()});
-  window.addEventListener('offline',()=>{document.getElementById('offlineBanner').classList.add('show')});
+document.body.setAttribute(‘data-theme’,LS.get(‘theme’)||‘dark’);
+cfg=LS.get(‘cfg’)||{};
+if(cfg.token&&cfg.repo){document.getElementById(‘setupPanel’).classList.add(‘hidden’);document.getElementById(‘mainPanel’).classList.remove(‘hidden’);await refreshAll()}
+window.addEventListener(‘online’,()=>{document.getElementById(‘offlineBanner’).classList.remove(‘show’);refreshAll()});
+window.addEventListener(‘offline’,()=>{document.getElementById(‘offlineBanner’).classList.add(‘show’)});
 })();
 </script>
+
 </body>
 </html>
