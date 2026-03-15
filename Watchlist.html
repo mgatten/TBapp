@@ -42,12 +42,14 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
 .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text2)}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:8px;transition:border-color var(--tr)}
 .card.expandable{cursor:pointer}.card.expandable:hover{border-color:var(--accent)}
-.add-bar{display:flex;gap:6px;margin-bottom:0;position:relative;flex-wrap:wrap}
-.add-bar input{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;color:var(--text);font-size:13px;outline:none;transition:border-color var(--tr)}
-.add-bar input:focus{border-color:var(--accent)}
-.add-bar .search-in{font-family:var(--font-head);min-width:0}
-.add-bar .note-in{font-family:var(--font-head);width:100%;flex:none;margin-top:6px}
+.add-bar{display:flex;flex-direction:column;gap:0;margin-bottom:14px;position:relative}
+.add-bar .search-in{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;color:var(--text);font-size:13px;outline:none;transition:border-color var(--tr);font-family:var(--font-head)}
+.add-bar .search-in:focus{border-color:var(--accent)}
+.add-bar .note-in{font-family:var(--font-head);width:100%;margin-top:6px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;color:var(--text);font-size:13px;outline:none;transition:border-color var(--tr)}
+.add-bar .note-in:focus{border-color:var(--accent)}
 .add-bar .note-in.hidden{display:none}
+.add-bar #wlAddBtn{margin-top:6px}
+.add-bar #wlAddBtn.hidden{display:none}
 .search-dropdown{position:absolute;top:100%;left:0;right:48px;background:var(--surface);border:1px solid var(--border);border-top:none;border-radius:0 0 var(--radius-sm) var(--radius-sm);max-height:220px;overflow-y:auto;z-index:50;display:none;box-shadow:var(--shadow)}
 .search-dropdown.show{display:block}
 .search-item{padding:10px 12px;cursor:pointer;display:flex;align-items:baseline;gap:8px;border-bottom:1px solid var(--border);transition:background 0.1s}
@@ -142,10 +144,10 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
     <div class="tab-content active" id="tab-watchlist">
       <div class="add-bar" id="addBar">
         <input type="text" class="search-in" id="wlSearch" placeholder="search ticker or company" autocomplete="off" oninput="onSearch()" onfocus="onSearch()">
-        <button class="btn btn-sm btn-primary" onclick="wlAdd()">+</button>
         <div class="search-dropdown" id="searchDrop"></div>
         <div class="search-selected hidden" id="searchSel"></div>
         <input type="text" class="note-in hidden" id="wlNote" placeholder="optional note" onkeydown="if(event.key==='Enter')wlAdd()">
+        <button class="btn btn-primary hidden" id="wlAddBtn" onclick="wlAdd()">Add</button>
       </div>
       <div id="wlList"></div>
       <div class="empty-msg hidden" id="wlEmpty"><div class="em-icon">📋</div>No symbols on your watchlist.<br>Add a ticker to suggest it to Claude.</div>
@@ -251,6 +253,7 @@ async function wlAdd(){
   _selectedTicker='';document.getElementById('wlSearch').value='';
   nE.value='';nE.classList.add('hidden');
   document.getElementById('searchSel').classList.add('hidden');
+  document.getElementById('wlAddBtn').classList.add('hidden');
   document.getElementById('wlSearch').focus();
   await saveWl();
 }
@@ -288,7 +291,7 @@ function onSearch(){
     if(/^[A-Z]{1,5}$/.test(q)){
       drop.innerHTML=`<div class="search-item" onclick="pickTicker('${q}','')"><span class="si-ticker">${q}</span><span class="si-name">tap to add (symbol list loading...)</span></div>`;
       drop.classList.add('show');
-    }else{drop.innerHTML='<div class="search-item"><span class="si-name">Loading the symbols...</span></div>';drop.classList.add('show')}
+    }else{drop.innerHTML='<div class="search-item"><span class="si-name">Loading symbols...</span></div>';drop.classList.add('show')}
     return;
   }
   const exact=[];const startsWith=[];const contains=[];
@@ -314,6 +317,7 @@ function pickTicker(ticker,title){
   sel.innerHTML=`${esc(ticker)} — ${esc(title)} <span class="sel-clear" onclick="clearPick()">×</span>`;
   sel.classList.remove('hidden');
   document.getElementById('wlNote').classList.remove('hidden');
+  document.getElementById('wlAddBtn').classList.remove('hidden');
   document.getElementById('wlNote').focus();
 }
 
@@ -321,6 +325,7 @@ function clearPick(){
   _selectedTicker='';
   document.getElementById('searchSel').classList.add('hidden');
   document.getElementById('wlNote').classList.add('hidden');
+  document.getElementById('wlAddBtn').classList.add('hidden');
   document.getElementById('wlNote').value='';
   document.getElementById('wlSearch').value='';
   document.getElementById('wlSearch').focus();
