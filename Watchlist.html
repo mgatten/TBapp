@@ -42,12 +42,21 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
 .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text2)}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:8px;transition:border-color var(--tr)}
 .card.expandable{cursor:pointer}.card.expandable:hover{border-color:var(--accent)}
-.add-bar{display:flex;gap:6px;margin-bottom:14px}
+.add-bar{display:flex;gap:6px;margin-bottom:0;position:relative;flex-wrap:wrap}
 .add-bar input{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;color:var(--text);font-size:13px;outline:none;transition:border-color var(--tr)}
 .add-bar input:focus{border-color:var(--accent)}
-.add-bar .ticker-in{font-family:var(--font-mono);font-weight:500;text-transform:uppercase;max-width:90px}
-.add-bar .ticker-in::placeholder{text-transform:none}
-.add-bar .note-in{font-family:var(--font-head)}
+.add-bar .search-in{font-family:var(--font-head);min-width:0}
+.add-bar .note-in{font-family:var(--font-head);width:100%;flex:none;margin-top:6px}
+.add-bar .note-in.hidden{display:none}
+.search-dropdown{position:absolute;top:100%;left:0;right:48px;background:var(--surface);border:1px solid var(--border);border-top:none;border-radius:0 0 var(--radius-sm) var(--radius-sm);max-height:220px;overflow-y:auto;z-index:50;display:none;box-shadow:var(--shadow)}
+.search-dropdown.show{display:block}
+.search-item{padding:10px 12px;cursor:pointer;display:flex;align-items:baseline;gap:8px;border-bottom:1px solid var(--border);transition:background 0.1s}
+.search-item:last-child{border-bottom:none}
+.search-item:hover,.search-item:active{background:var(--accent-bg)}
+.search-item .si-ticker{font-family:var(--font-mono);font-weight:600;font-size:13px;color:var(--accent);min-width:50px}
+.search-item .si-name{font-size:12px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.search-selected{font-size:12px;color:var(--accent);font-family:var(--font-mono);font-weight:500;padding:4px 0;margin-bottom:6px}
+.search-selected .sel-clear{color:var(--text3);cursor:pointer;margin-left:8px;font-size:14px}
 .wl-item{display:flex;align-items:center;gap:10px}
 .wl-ticker{font-family:var(--font-mono);font-weight:600;font-size:14px;color:var(--accent);min-width:55px}
 .wl-note{flex:1;font-size:12px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
@@ -131,10 +140,12 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
       <button class="tab" onclick="switchTab('history')">History</button>
     </div>
     <div class="tab-content active" id="tab-watchlist">
-      <div class="add-bar">
-        <input type="text" class="ticker-in" id="wlTicker" placeholder="Symb" maxlength="10" onkeydown="if(event.key==='Enter')document.getElementById('wlNote').focus()">
-        <input type="text" class="note-in" id="wlNote" placeholder="optional note" onkeydown="if(event.key==='Enter')wlAdd()">
+      <div class="add-bar" id="addBar">
+        <input type="text" class="search-in" id="wlSearch" placeholder="search ticker or company" autocomplete="off" oninput="onSearch()" onfocus="onSearch()">
         <button class="btn btn-sm btn-primary" onclick="wlAdd()">+</button>
+        <div class="search-dropdown" id="searchDrop"></div>
+        <div class="search-selected hidden" id="searchSel"></div>
+        <input type="text" class="note-in hidden" id="wlNote" placeholder="optional note" onkeydown="if(event.key==='Enter')wlAdd()">
       </div>
       <div id="wlList"></div>
       <div class="empty-msg hidden" id="wlEmpty"><div class="em-icon">📋</div>No symbols on your watchlist.<br>Add a ticker to suggest it to Claude.</div>
@@ -212,7 +223,7 @@ async function refreshAll(){
     return;
   }
   document.getElementById('offlineBanner').classList.remove('show');setConn('ok');
-  try{await Promise.all([loadWl(),loadPortfolio(),loadEvents()]);
+  try{await Promise.all([loadWl(),loadPortfolio(),loadEvents(),loadSecTickers()]);
     LS.set('cache',{wlItems,wlSha,portfolio,events,ts:new Date().toLocaleString()});
   }catch(e){setConn('err');toast('Refresh failed: '+e.message,'err')}
 }
@@ -231,12 +242,94 @@ function renderWl(){
   list.innerHTML=wlItems.map((w,i)=>`<div class="card"><div class="wl-item"><span class="wl-ticker">${esc(w.symbol)}</span><span class="wl-note" id="wlN${i}" onclick="wlNoteToggle(${i})" ondblclick="wlEdit(${i})">${esc(w.note)||'—'}</span><div class="wl-actions"><button class="wl-btn" onclick="wlEdit(${i})" title="Edit">✎</button><button class="wl-btn del" onclick="wlDel(${i})" title="Remove">×</button></div></div></div>`).join('');
 }
 async function wlAdd(){
-  const tE=document.getElementById('wlTicker'),nE=document.getElementById('wlNote');
-  const tk=tE.value.trim().toUpperCase(),n=nE.value.trim();
-  if(!tk||!/^[A-Z0-9]+$/.test(tk)){toast('Enter a valid ticker','err');return}
+  if(!_selectedTicker){toast('Search and select a symbol first','err');return}
+  const tk=_selectedTicker;
+  const nE=document.getElementById('wlNote');
+  const n=nE.value.trim();
   if(wlItems.some(w=>w.symbol===tk)){toast(`${tk} already listed`,'err');return}
-  wlItems.push({symbol:tk,note:n});renderWl();tE.value='';nE.value='';tE.focus();await saveWl();
+  wlItems.push({symbol:tk,note:n});renderWl();
+  _selectedTicker='';document.getElementById('wlSearch').value='';
+  nE.value='';nE.classList.add('hidden');
+  document.getElementById('searchSel').classList.add('hidden');
+  document.getElementById('wlSearch').focus();
+  await saveWl();
 }
+
+// ── SEC ticker search ──
+let _allTickers=[];  // [{ticker,title}]
+let _selectedTicker='';
+let _searchTimeout=null;
+
+async function loadSecTickers(){
+  // Try cache first
+  const cached=LS.get('sec_tickers');
+  if(cached&&cached.ts&&(Date.now()-cached.ts<86400000)){_allTickers=cached.data;return}
+  // Fetch via CORS proxy
+  const proxies=['https://corsproxy.io/?','https://api.allorigins.win/raw?url='];
+  const url='https://www.sec.gov/files/company_tickers.json';
+  for(const proxy of proxies){
+    try{
+      const r=await fetch(proxy+encodeURIComponent(url),{signal:AbortSignal.timeout(10000)});
+      if(!r.ok)continue;
+      const data=await r.json();
+      _allTickers=Object.values(data).map(c=>({ticker:(c.ticker||'').toUpperCase(),title:c.title||''}));
+      LS.set('sec_tickers',{data:_allTickers,ts:Date.now()});
+      return;
+    }catch(e){continue}
+  }
+  // If all proxies fail, use cached even if stale
+  if(cached&&cached.data){_allTickers=cached.data}
+}
+
+function onSearch(){
+  const q=document.getElementById('wlSearch').value.trim().toUpperCase();
+  const drop=document.getElementById('searchDrop');
+  if(!q||q.length<1){drop.classList.remove('show');drop.innerHTML='';return}
+  if(!_allTickers.length){drop.innerHTML='<div class="search-item"><span class="si-name">Loading symbols...</span></div>';drop.classList.add('show');return}
+  const matches=[];
+  const exact=[];
+  const startsWith=[];
+  const contains=[];
+  for(const c of _allTickers){
+    if(matches.length>=20)break;
+    const tk=c.ticker;
+    const nm=c.title.toUpperCase();
+    if(tk===q){exact.push(c)}
+    else if(tk.startsWith(q)){startsWith.push(c)}
+    else if(nm.includes(q)){contains.push(c)}
+  }
+  const results=[...exact,...startsWith.slice(0,8),...contains.slice(0,12-startsWith.length)].slice(0,12);
+  if(!results.length){drop.innerHTML='<div class="search-item"><span class="si-name">No matches</span></div>';drop.classList.add('show');return}
+  drop.innerHTML=results.map((c,i)=>`<div class="search-item" onclick="pickTicker('${esc(c.ticker)}','${esc(c.title)}')"><span class="si-ticker">${esc(c.ticker)}</span><span class="si-name">${esc(c.title)}</span></div>`).join('');
+  drop.classList.add('show');
+}
+
+function pickTicker(ticker,title){
+  _selectedTicker=ticker;
+  document.getElementById('searchDrop').classList.remove('show');
+  document.getElementById('wlSearch').value='';
+  const sel=document.getElementById('searchSel');
+  sel.innerHTML=`${esc(ticker)} — ${esc(title)} <span class="sel-clear" onclick="clearPick()">×</span>`;
+  sel.classList.remove('hidden');
+  document.getElementById('wlNote').classList.remove('hidden');
+  document.getElementById('wlNote').focus();
+}
+
+function clearPick(){
+  _selectedTicker='';
+  document.getElementById('searchSel').classList.add('hidden');
+  document.getElementById('wlNote').classList.add('hidden');
+  document.getElementById('wlNote').value='';
+  document.getElementById('wlSearch').value='';
+  document.getElementById('wlSearch').focus();
+}
+
+// Close dropdown when tapping outside
+document.addEventListener('click',function(e){
+  if(!document.getElementById('addBar').contains(e.target)){
+    document.getElementById('searchDrop').classList.remove('show');
+  }
+});
 async function wlDel(i){const s=wlItems[i].symbol;if(!confirm(`Remove ${s} from watchlist?`))return;wlItems.splice(i,1);renderWl();await saveWl();toast(`Removed ${s}`)}
 function wlNoteToggle(i){const el=document.getElementById('wlN'+i);if(el)el.classList.toggle('expanded')}
 function wlEdit(i){const el=document.getElementById('wlN'+i);el.outerHTML=`<input class="wl-note-edit" id="wlE${i}" value="${esc(wlItems[i].note)}" onblur="wlEditDone(${i})" onkeydown="if(event.key==='Enter')this.blur()">`; document.getElementById('wlE'+i).focus()}
