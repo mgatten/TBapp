@@ -68,7 +68,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
 .wl-btn{background:none;border:none;color:var(--text3);font-size:14px;cursor:pointer;padding:4px 6px;border-radius:4px;line-height:1;transition:all var(--tr)}
 .wl-btn:hover{color:var(--text);background:var(--surface2)}
 .wl-btn.del:hover{color:var(--red);background:var(--red-bg)}
-.account-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.account-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
 .stat-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;text-align:center}
 .stat-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px}
 .stat-val{font-family:var(--font-mono);font-size:15px;font-weight:600}
@@ -111,6 +111,15 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
 .toast.ok{border-color:var(--green)}.toast.err{border-color:var(--red)}
 .spinner{display:inline-block;width:12px;height:12px;border:2px solid var(--text3);border-top-color:transparent;border-radius:50%;animation:spin 0.5s linear infinite;vertical-align:middle;margin-right:5px}
 @keyframes spin{to{transform:rotate(360deg)}}
+.run-panel{padding:8px 0}
+.run-desc{font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:16px}
+.run-buttons{display:flex;flex-direction:column;gap:10px}
+.run-btn{background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:14px;font-weight:600;padding:16px;border-radius:var(--radius);transition:all var(--tr);width:100%}
+.run-btn:hover{border-color:var(--accent);color:var(--accent)}
+.run-btn:disabled{opacity:0.35;cursor:not-allowed;border-color:var(--border);color:var(--text3)}
+.run-btn:disabled:hover{border-color:var(--border);color:var(--text3)}
+.run-status{margin-top:14px;padding:12px;background:var(--accent-bg);border:1px solid var(--accent);border-radius:var(--radius-sm);font-size:12px;color:var(--text);line-height:1.5}
+.run-cooldown{margin-top:8px;font-size:11px;color:var(--text3);font-family:var(--font-mono);text-align:center}
 .hidden{display:none !important}
 </style>
 </head>
@@ -120,7 +129,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
     <h1>Dashboard</h1>
   </div>
   <div id="brandedHeader" class="header hidden">
-    <h1>📈 <span>Trading Bot</span></h1>
+    <h1><img src="https://raw.githubusercontent.com/mgatten/TBapp/main/logo.png" alt="" style="height:28px;vertical-align:middle;margin-right:6px"><span>Trading Bot</span></h1>
     <div class="header-right">
       <div class="theme-toggle" onclick="toggleTheme()" title="Toggle theme"></div>
       <div class="conn-dot" id="connDot"></div>
@@ -140,6 +149,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
       <button class="tab active" onclick="switchTab('watchlist')">Watchlist</button>
       <button class="tab" onclick="switchTab('holdings')">Holdings</button>
       <button class="tab" onclick="switchTab('history')">History</button>
+      <button class="tab" onclick="switchTab('run')">Run</button>
     </div>
     <div class="tab-content active" id="tab-watchlist">
       <div class="add-bar" id="addBar">
@@ -166,6 +176,18 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
       </div>
       <div id="histList"></div>
       <div class="empty-msg hidden" id="histEmpty"><div class="em-icon">📜</div>No events this month.</div>
+    </div>
+    <div class="tab-content" id="tab-run">
+      <div class="run-panel">
+        <p class="run-desc">Trigger a bot run manually. The run may take several minutes to complete. After triggering, all buttons are disabled for 7 minutes to prevent overlapping runs.</p>
+        <div class="run-buttons">
+          <button class="btn run-btn" id="runMorning" onclick="triggerRun('morning')">Morning</button>
+          <button class="btn run-btn" id="runMidday" onclick="triggerRun('midday')">Midday</button>
+          <button class="btn run-btn" id="runFinal" onclick="triggerRun('final')">Closing</button>
+        </div>
+        <div class="run-status hidden" id="runStatus"></div>
+        <div class="run-cooldown hidden" id="runCooldown"></div>
+      </div>
     </div>
     <div class="bottom-actions">
       <button class="btn btn-sm btn-ghost" onclick="refreshAll()">↻ Refresh</button>
@@ -210,7 +232,7 @@ function doDisconnect(){cfg={};LS.del('cfg');wlItems=[];wlSha=null;portfolio=nul
 
 // ── Tabs ──
 function switchTab(name){
-  const tabs=['watchlist','holdings','history'];
+  const tabs=['watchlist','holdings','history','run'];
   document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',tabs[i]===name));
   document.querySelectorAll('.tab-content').forEach(tc=>tc.classList.toggle('active',tc.id==='tab-'+name));
 }
@@ -274,7 +296,6 @@ async function loadSecTickers(){
     // Format: [["AAPL","Apple Inc"],["MSFT","Microsoft Corp"],...]
     _allTickers=data.map(c=>({ticker:c[0],title:c[1]}));
     LS.set('sec_tickers',{data:_allTickers,ts:Date.now()});
-    toast(`Loaded ${_allTickers.length} symbols`);
   }catch(e){
     toast('Symbol load error: '+e.message,'err');
     // If file doesn't exist yet (bot hasn't run final), use stale cache
@@ -348,8 +369,8 @@ async function loadPortfolio(){try{const{content}=await ghGet('portfolio_state.j
 function renderHoldings(){
   const bar=document.getElementById('acctBar'),list=document.getElementById('holdingsList'),empty=document.getElementById('holdingsEmpty'),tsEl=document.getElementById('holdingsTs');
   if(!portfolio){bar.innerHTML='';list.innerHTML='';empty.classList.remove('hidden');tsEl.textContent='';return}
-  const eq=portfolio.equity||0,cash=portfolio.cash||0,inv=eq-cash,positions=portfolio.positions||[],theses=portfolio.entry_theses||{},dates=portfolio.position_open_dates||{};
-  bar.innerHTML=`<div class="stat-box"><div class="stat-label">Equity</div><div class="stat-val">$${eq.toFixed(2)}</div></div><div class="stat-box"><div class="stat-label">Cash</div><div class="stat-val">$${cash.toFixed(2)}</div></div><div class="stat-box"><div class="stat-label">Invested</div><div class="stat-val">$${inv.toFixed(2)}</div></div>`;
+  const eq=portfolio.equity||0,cash=portfolio.cash||0,inv=eq-cash,ath=portfolio.equity_hwm||eq,positions=portfolio.positions||[],theses=portfolio.entry_theses||{},dates=portfolio.position_open_dates||{};
+  bar.innerHTML=`<div class="stat-box"><div class="stat-label">Equity</div><div class="stat-val">$${eq.toFixed(2)}</div></div><div class="stat-box"><div class="stat-label">Cash</div><div class="stat-val">$${cash.toFixed(2)}</div></div><div class="stat-box"><div class="stat-label">Invested</div><div class="stat-val">$${inv.toFixed(2)}</div></div><div class="stat-box"><div class="stat-label">ATH</div><div class="stat-val">$${ath.toFixed(2)}</div></div>`;
   if(!positions.length){list.innerHTML='';empty.classList.remove('hidden')}
   else{empty.classList.add('hidden');
     list.innerHTML=positions.map((p,i)=>{
@@ -389,11 +410,75 @@ function renderHist(){
 function toggleEv(i){const e=document.getElementById('ev'+i);if(e)e.classList.toggle('show')}
 function histNav(d){histMonth.setMonth(histMonth.getMonth()+d);renderHist()}
 
+// ── Run triggers ──
+let _runCooldownTimer=null;
+
+function _setRunBtns(disabled){
+  ['runMorning','runMidday','runFinal'].forEach(id=>{
+    const b=document.getElementById(id);if(b)b.disabled=disabled;
+  });
+}
+
+function _startCooldown(){
+  const end=Date.now()+7*60*1000;
+  LS.set('run_cooldown',end);
+  _setRunBtns(true);
+  _tickCooldown(end);
+}
+
+function _tickCooldown(end){
+  clearInterval(_runCooldownTimer);
+  const cd=document.getElementById('runCooldown');
+  _runCooldownTimer=setInterval(()=>{
+    const left=Math.max(0,end-Date.now());
+    if(left<=0){
+      clearInterval(_runCooldownTimer);
+      _setRunBtns(false);
+      cd.classList.add('hidden');
+      return;
+    }
+    const m=Math.floor(left/60000),s=Math.floor((left%60000)/1000);
+    cd.textContent=`Cooldown: ${m}:${String(s).padStart(2,'0')} remaining`;
+    cd.classList.remove('hidden');
+  },1000);
+}
+
+function _checkCooldown(){
+  const end=LS.get('run_cooldown');
+  if(end&&Date.now()<end){_setRunBtns(true);_tickCooldown(end)}
+}
+
+async function triggerRun(slot){
+  const label=slot==='morning'?'Morning':slot==='midday'?'Midday':'Closing';
+  if(!confirm(`Trigger a ${label} run?\n\nThis is a LIVE run that may execute trades. It may take several minutes to complete.`))return;
+  const status=document.getElementById('runStatus');
+  status.textContent=`Triggering ${label} run...`;
+  status.classList.remove('hidden');
+  try{
+    await fetch(`${API}/repos/${cfg.repo}/actions/workflows/trader.yml/dispatches`,{
+      method:'POST',
+      headers:{
+        'Authorization':`Bearer ${cfg.token}`,
+        'Accept':'application/vnd.github.v3+json',
+        'Content-Type':'application/json',
+      },
+      body:JSON.stringify({ref:'main',inputs:{slot:slot}}),
+    });
+    status.textContent=`${label} run triggered successfully. It may take several minutes to complete. Refresh the Holdings tab afterward to see results.`;
+    _startCooldown();
+    toast(`${label} run triggered`);
+  }catch(e){
+    status.textContent=`Failed to trigger run: ${e.message}`;
+    status.classList.remove('hidden');
+    toast('Trigger failed','err');
+  }
+}
+
 // ── Init ──
 (async function(){
   document.body.setAttribute('data-theme',LS.get('theme')||'dark');
   cfg=LS.get('cfg')||{};
-  if(cfg.token&&cfg.repo){document.getElementById('setupPanel').classList.add('hidden');document.getElementById('loginHeader').classList.add('hidden');document.getElementById('brandedHeader').classList.remove('hidden');document.getElementById('mainPanel').classList.remove('hidden');await refreshAll()}
+  if(cfg.token&&cfg.repo){document.getElementById('setupPanel').classList.add('hidden');document.getElementById('loginHeader').classList.add('hidden');document.getElementById('brandedHeader').classList.remove('hidden');document.getElementById('mainPanel').classList.remove('hidden');_checkCooldown();await refreshAll()}
   window.addEventListener('online',()=>{document.getElementById('offlineBanner').classList.remove('show');refreshAll()});
   window.addEventListener('offline',()=>{document.getElementById('offlineBanner').classList.add('show')});
 })();
