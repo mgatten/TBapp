@@ -112,6 +112,9 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
 .spinner{display:inline-block;width:12px;height:12px;border:2px solid var(--text3);border-top-color:transparent;border-radius:50%;animation:spin 0.5s linear infinite;vertical-align:middle;margin-right:5px}
 @keyframes spin{to{transform:rotate(360deg)}}
 .run-panel{padding:8px 0}
+.run-mode-toggle{display:flex;gap:0;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden}
+.run-mode-btn{flex:1;padding:9px 0;text-align:center;font-size:13px;font-weight:600;font-family:var(--font-head);background:var(--surface);color:var(--text3);border:none;cursor:pointer;transition:all var(--tr)}
+.run-mode-btn.active{background:var(--accent);color:#fff}
 .run-desc{font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:16px}
 .run-buttons{display:flex;flex-direction:column;gap:10px}
 .run-btn{background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:14px;font-weight:600;padding:16px;border-radius:var(--radius);transition:all var(--tr);width:100%}
@@ -179,7 +182,11 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
     </div>
     <div class="tab-content" id="tab-run">
       <div class="run-panel">
-        <p class="run-desc">Trigger a bot run manually. The run may take several minutes to complete. After triggering, all buttons are disabled for 7 minutes to prevent overlapping runs.</p>
+        <div class="run-mode-toggle">
+          <button class="run-mode-btn active" id="modeRun" onclick="setRunMode('run')">Run</button>
+          <button class="run-mode-btn" id="modeTest" onclick="setRunMode('test')">Test</button>
+        </div>
+        <p class="run-desc" id="runDesc">Trigger a live bot run. This may execute trades. The run may take several minutes to complete.</p>
         <div class="run-buttons">
           <button class="btn run-btn" id="runMorning" onclick="triggerRun('morning')">Morning</button>
           <button class="btn run-btn" id="runMidday" onclick="triggerRun('midday')">Midday</button>
@@ -412,6 +419,16 @@ function histNav(d){histMonth.setMonth(histMonth.getMonth()+d);renderHist()}
 
 // ── Run triggers ──
 let _runCooldownTimer=null;
+let _runMode='run';
+
+function setRunMode(mode){
+  _runMode=mode;
+  document.getElementById('modeRun').classList.toggle('active',mode==='run');
+  document.getElementById('modeTest').classList.toggle('active',mode==='test');
+  document.getElementById('runDesc').textContent=mode==='run'
+    ?'Trigger a live bot run. This may execute trades. The run may take several minutes to complete.'
+    :'Trigger a test run. No trades will be executed. The run may take several minutes to complete.';
+}
 
 function _setRunBtns(disabled){
   ['runMorning','runMidday','runFinal'].forEach(id=>{
@@ -450,12 +467,18 @@ function _checkCooldown(){
 
 async function triggerRun(slot){
   const label=slot==='morning'?'Morning':slot==='midday'?'Midday':'Closing';
-  if(!confirm(`Trigger a ${label} run?\n\nThis is a LIVE run that may execute trades. It may take several minutes to complete.`))return;
+  const isTest=_runMode==='test';
+  const modeLabel=isTest?'TEST':'LIVE';
+  const workflow=isTest?'test_trader.yml':'trader.yml';
+  const msg=isTest
+    ?`Trigger a ${label} TEST run?\n\nNo trades will be executed.`
+    :`Trigger a ${label} LIVE run?\n\nThis may execute real trades.`;
+  if(!confirm(msg))return;
   const status=document.getElementById('runStatus');
-  status.textContent=`Triggering ${label} run...`;
+  status.textContent=`Triggering ${label} ${modeLabel} run...`;
   status.classList.remove('hidden');
   try{
-    await fetch(`${API}/repos/${cfg.repo}/actions/workflows/trader.yml/dispatches`,{
+    await fetch(`${API}/repos/${cfg.repo}/actions/workflows/${workflow}/dispatches`,{
       method:'POST',
       headers:{
         'Authorization':`Bearer ${cfg.token}`,
@@ -464,9 +487,9 @@ async function triggerRun(slot){
       },
       body:JSON.stringify({ref:'main',inputs:{slot:slot}}),
     });
-    status.textContent=`${label} run triggered successfully. It may take several minutes to complete. Refresh the Holdings tab afterward to see results.`;
+    status.textContent=`${label} ${modeLabel} run triggered. It may take several minutes to complete.${isTest?'':' Refresh Holdings afterward to see results.'}`;
     _startCooldown();
-    toast(`${label} run triggered`);
+    toast(`${label} ${modeLabel} run triggered`);
   }catch(e){
     status.textContent=`Failed to trigger run: ${e.message}`;
     status.classList.remove('hidden');
