@@ -624,7 +624,7 @@ let _stratMem=null;
 
 async function loadStratMemory(){
   try{
-    const{content}=await ghGet('strategy_memory.json');
+    const{content}=await ghGet('data/strategy_memory.json');
     _stratMem=JSON.parse(content);
   }catch(e){if(!e.message.includes('404'))throw e;_stratMem=null}
   renderStratMemory();
