@@ -161,6 +161,10 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
 .run-btn:disabled:hover{border-color:var(--border);color:var(--text3)}
 .run-status{margin-top:14px;padding:12px;background:var(--accent-bg);border:1px solid var(--accent);border-radius:var(--radius-sm);font-size:12px;color:var(--text);line-height:1.5}
 .run-cooldown{margin-top:8px;font-size:11px;color:var(--text3);font-family:var(--font-mono);text-align:center}
+@media (orientation:landscape){
+  .app{max-width:900px}
+  #equityChart{height:240px !important}
+}
 .hidden{display:none !important}
 </style>
 </head>
@@ -170,7 +174,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
     <h1>Dashboard</h1>
   </div>
   <div id="brandedHeader" class="header hidden">
-    <h1><img src="https://raw.githubusercontent.com/mgatten/TBapp/main/tinylogo.jpg" alt="" style="height:24px;vertical-align:middle;margin-right:6px"><span onclick="alert('Build: 2026-03-17 02:25 ET')" style="cursor:pointer">Traderbot</span></h1>
+    <h1><img src="https://raw.githubusercontent.com/mgatten/TBapp/main/tinylogo.jpg" alt="" style="height:24px;vertical-align:middle;margin-right:6px"><span onclick="alert('Build: 2026-03-17 02:35 ET')" style="cursor:pointer">Traderbot</span></h1>
     <div class="header-right">
       <div class="theme-toggle" onclick="toggleTheme()" title="Toggle theme"></div>
       <div class="conn-dot" id="connDot"></div>
@@ -212,7 +216,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
       <div id="equityChartBox" class="card hidden" style="padding:10px 8px">
         <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Equity History</div>
         <div class="chart-toggle" id="chartToggle"></div>
-        <canvas id="equityChart" width="440" height="180" style="width:100%;height:auto"></canvas>
+        <canvas id="equityChart" style="width:100%;height:180px"></canvas>
       </div>
     </div>
     <div class="tab-content" id="tab-history">
@@ -511,6 +515,13 @@ function renderEquityChart(){
   const canvas=document.getElementById('equityChart');
   if(!_holdingsLog.length){box.classList.add('hidden');return}
   box.classList.remove('hidden');
+  // Size canvas pixels to match display size for sharp rendering
+  const dpr=window.devicePixelRatio||1;
+  const rect=canvas.getBoundingClientRect();
+  canvas.width=rect.width*dpr;
+  canvas.height=rect.height*dpr;
+  const ctx0=canvas.getContext('2d');
+  ctx0.scale(dpr,dpr);
   const tog=document.getElementById('chartToggle');
   tog.innerHTML=['7d','30d','All'].map(r=>
     `<button class="${r===_chartRange?'active':''}" onclick="setChartRange('${r}')">${r}</button>`
@@ -559,8 +570,8 @@ function renderEquityChart(){
   for(const k in benchPcts)allVals.push(...benchPcts[k].filter(v=>v!==null));
   const mn=Math.min(...allVals),mx=Math.max(...allVals);
   const range=mx-mn||1;
-  const ctx=canvas.getContext('2d');
-  const W=canvas.width,H=canvas.height;
+  const ctx=ctx0;
+  const W=rect.width,H=rect.height;
   const pad={t:10,r:10,b:24,l:45};
   const gW=W-pad.l-pad.r,gH=H-pad.t-pad.b;
   ctx.clearRect(0,0,W,H);
@@ -909,6 +920,7 @@ async function triggerRun(slot){
   if(cfg.token&&cfg.repo){document.getElementById('setupPanel').classList.add('hidden');document.getElementById('loginHeader').classList.add('hidden');document.getElementById('brandedHeader').classList.remove('hidden');document.getElementById('mainPanel').classList.remove('hidden');_checkCooldown();await refreshAll()}
   window.addEventListener('online',()=>{document.getElementById('offlineBanner').classList.remove('show');refreshAll()});
   window.addEventListener('offline',()=>{document.getElementById('offlineBanner').classList.add('show')});
+  window.addEventListener('resize',()=>{renderEquityChart()});
 })();
 </script>
 </body>
