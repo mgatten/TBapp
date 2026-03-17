@@ -314,7 +314,7 @@ async function refreshAll(){
     return;
   }
   document.getElementById('offlineBanner').classList.remove('show');setConn('ok');
-  try{await Promise.all([loadWl(),loadPortfolio(),loadEvents(),loadSecTickers(),loadHoldingsLog(),loadTradesLog(),loadStratMemory()]);
+  try{await Promise.all([loadWl(),loadPortfolio(),loadEvents(),loadSecTickers(),loadHoldingsLog(),loadTradesLog(),loadStratMemory(),loadSpyHistory()]);
     LS.set('cache',{wlItems,wlSha,portfolio,events,ts:new Date().toLocaleString()});
   }catch(e){setConn('err');toast('Refresh failed: '+e.message,'err')}
 }
@@ -494,12 +494,11 @@ function renderEquityChart(){
   const canvas=document.getElementById('equityChart');
   if(!_holdingsLog.length){box.classList.add('hidden');return}
   box.classList.remove('hidden');
-  // Build toggle buttons
   const tog=document.getElementById('chartToggle');
   tog.innerHTML=['7d','30d','All'].map(r=>
     `<button class="${r===_chartRange?'active':''}" onclick="setChartRange('${r}')">${r}</button>`
   ).join('');
-  // Aggregate to daily equity (take last entry per day)
+  // Aggregate to daily equity
   const daily={};
   for(const row of _holdingsLog){
     if(!row.timestamp||!row.equity)continue;
@@ -510,27 +509,54 @@ function renderEquityChart(){
   if(_chartRange==='7d')entries=entries.slice(-7);
   else if(_chartRange==='30d')entries=entries.slice(-30);
   if(entries.length<2){box.classList.add('hidden');return}
-  const vals=entries.map(e=>e[1]);
-  const labels=entries.map(e=>e[0].slice(5));// MM-DD
+  // Build SPY lookup for same date range
+  const spyLookup={};
+  for(const row of _spyHistory){
+    if(row.date&&row.close)spyLookup[row.date]=parseFloat(row.close);
+  }
+  // Normalize both to % change from first point
+  const eqBase=entries[0][1];
+  const eqPcts=entries.map(e=>((e[1]-eqBase)/eqBase)*100);
+  const labels=entries.map(e=>e[0].slice(5));
+  const spyFirstDate=entries[0][0];
+  const spyBase=spyLookup[spyFirstDate];
+  let spyPcts=null;
+  if(spyBase){
+    spyPcts=entries.map(e=>{
+      const sp=spyLookup[e[0]];
+      return sp?((sp-spyBase)/spyBase)*100:null;
+    });
+  }
+  const allVals=[...eqPcts];
+  if(spyPcts)allVals.push(...spyPcts.filter(v=>v!==null));
+  const mn=Math.min(...allVals),mx=Math.max(...allVals);
+  const range=mx-mn||1;
   const ctx=canvas.getContext('2d');
   const W=canvas.width,H=canvas.height;
   const pad={t:10,r:10,b:24,l:45};
   const gW=W-pad.l-pad.r,gH=H-pad.t-pad.b;
-  const mn=Math.min(...vals),mx=Math.max(...vals);
-  const range=mx-mn||1;
   ctx.clearRect(0,0,W,H);
-  // Grid lines
   const isDark=document.body.getAttribute('data-theme')==='dark';
   const gridCol=isDark?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.06)';
   const textCol=isDark?'#5a5a78':'#9998a5';
   const lineCol=isDark?'#e67e22':'#c8620a';
   const fillCol=isDark?'rgba(230,126,34,0.12)':'rgba(200,98,10,0.06)';
+  const spyCol=isDark?'rgba(52,152,219,0.6)':'rgba(36,114,168,0.5)';
+  // Grid
   ctx.strokeStyle=gridCol;ctx.lineWidth=1;
   for(let i=0;i<=4;i++){
     const y=pad.t+gH*(1-i/4);
     ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+gW,y);ctx.stroke();
     ctx.fillStyle=textCol;ctx.font='9px IBM Plex Mono';ctx.textAlign='right';
-    ctx.fillText('$'+(mn+range*i/4).toFixed(0),pad.l-4,y+3);
+    const pctVal=mn+range*i/4;
+    ctx.fillText((pctVal>=0?'+':'')+pctVal.toFixed(1)+'%',pad.l-4,y+3);
+  }
+  // Zero line
+  if(mn<0&&mx>0){
+    const zeroY=pad.t+gH*(1-(0-mn)/range);
+    ctx.strokeStyle=isDark?'rgba(255,255,255,0.15)':'rgba(0,0,0,0.15)';
+    ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(pad.l,zeroY);ctx.lineTo(pad.l+gW,zeroY);ctx.stroke();
+    ctx.setLineDash([]);
   }
   // X labels
   const step=Math.max(1,Math.floor(entries.length/6));
@@ -540,20 +566,45 @@ function renderEquityChart(){
     ctx.fillStyle=textCol;ctx.font='9px IBM Plex Mono';
     ctx.fillText(labels[i],x,H-4);
   }
-  // Line + fill
+  // SPY line (draw first so equity line is on top)
+  if(spyPcts){
+    ctx.beginPath();
+    let started=false;
+    for(let i=0;i<spyPcts.length;i++){
+      if(spyPcts[i]===null)continue;
+      const x=pad.l+gW*i/(eqPcts.length-1);
+      const y=pad.t+gH*(1-(spyPcts[i]-mn)/range);
+      if(!started){ctx.moveTo(x,y);started=true}else ctx.lineTo(x,y);
+    }
+    ctx.strokeStyle=spyCol;ctx.lineWidth=1.5;ctx.stroke();
+  }
+  // Equity line + fill
   ctx.beginPath();
-  for(let i=0;i<vals.length;i++){
-    const x=pad.l+gW*i/(vals.length-1);
-    const y=pad.t+gH*(1-(vals[i]-mn)/range);
+  for(let i=0;i<eqPcts.length;i++){
+    const x=pad.l+gW*i/(eqPcts.length-1);
+    const y=pad.t+gH*(1-(eqPcts[i]-mn)/range);
     if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
   }
   ctx.strokeStyle=lineCol;ctx.lineWidth=2;ctx.stroke();
-  // Fill area
   ctx.lineTo(pad.l+gW,pad.t+gH);ctx.lineTo(pad.l,pad.t+gH);ctx.closePath();
   ctx.fillStyle=fillCol;ctx.fill();
+  // Legend
+  ctx.font='9px IBM Plex Mono';ctx.textAlign='left';
+  ctx.fillStyle=lineCol;ctx.fillText('Portfolio',pad.l+4,pad.t+10);
+  if(spyPcts){ctx.fillStyle=spyCol;ctx.fillText('SPY',pad.l+60,pad.t+10)}
 }
 
 function setChartRange(r){_chartRange=r;renderEquityChart()}
+
+// ── SPY benchmark ──
+let _spyHistory=[];
+
+async function loadSpyHistory(){
+  try{
+    const{content}=await ghGet('data/spy_history.csv');
+    _spyHistory=parseCSV(content);
+  }catch(e){if(!e.message.includes('404'))throw e;_spyHistory=[]}
+}
 
 // ── P&L Dashboard ──
 function renderPLDashboard(){
