@@ -174,7 +174,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
     <h1>Dashboard</h1>
   </div>
   <div id="brandedHeader" class="header hidden">
-    <h1><img src="https://raw.githubusercontent.com/mgatten/TBapp/main/tinylogo.jpg" alt="" style="height:24px;vertical-align:middle;margin-right:6px"><span onclick="alert('Build: 2026-03-17 02:45 ET')" style="cursor:pointer">Traderbot</span></h1>
+    <h1><img src="https://raw.githubusercontent.com/mgatten/TBapp/main/tinylogo.jpg" alt="" style="height:24px;vertical-align:middle;margin-right:6px"><span onclick="alert('Build: 2026-03-17 02:55 ET')" style="cursor:pointer">Traderbot</span></h1>
     <div class="header-right">
       <div class="theme-toggle" onclick="toggleTheme()" title="Toggle theme"></div>
       <div class="conn-dot" id="connDot"></div>
@@ -457,7 +457,10 @@ function renderHoldings(){
   const bar=document.getElementById('acctBar'),list=document.getElementById('holdingsList'),empty=document.getElementById('holdingsEmpty'),tsEl=document.getElementById('holdingsTs');
   if(!portfolio){bar.innerHTML='';list.innerHTML='';empty.classList.remove('hidden');tsEl.textContent='';return}
   const eq=portfolio.equity||0,cash=portfolio.cash||0,inv=eq-cash,ath=portfolio.equity_hwm||eq,positions=portfolio.positions||[],theses=portfolio.entry_theses||{},dates=portfolio.position_open_dates||{};
-  bar.innerHTML=`<div class="stat-box"><div class="stat-label">Equity</div><div class="stat-val">$${eq.toFixed(2)}</div></div><div class="stat-box"><div class="stat-label">Cash</div><div class="stat-val">$${cash.toFixed(2)}</div></div><div class="stat-box"><div class="stat-label">Invested</div><div class="stat-val">$${inv.toFixed(2)}</div></div><div class="stat-box"><div class="stat-label">ATH</div><div class="stat-val">$${ath.toFixed(2)}</div></div>`;
+  const regime=portfolio.macro_regime||'NEUTRAL';
+  const _regimeColor=regime==='RISK_OFF'?'var(--red)':regime==='RISK_ON'?'var(--green)':'var(--yellow)';
+  const _regimeLabel=regime==='RISK_OFF'?'Risk Off':regime==='RISK_ON'?'Risk On':'Neutral';
+  bar.innerHTML=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px"><div class="stat-box"><div class="stat-label">Equity</div><div class="stat-val">$${eq.toFixed(2)}</div></div><div class="stat-box"><div class="stat-label">Cash</div><div class="stat-val">$${cash.toFixed(2)}</div></div><div class="stat-box"><div class="stat-label">Invested</div><div class="stat-val">$${inv.toFixed(2)}</div></div></div><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px"><div class="stat-box"><div class="stat-label">ATH</div><div class="stat-val">$${ath.toFixed(2)}</div></div><div class="stat-box"><div class="stat-label">Regime</div><div class="stat-val" style="color:${_regimeColor}">${_regimeLabel}</div></div></div>`;
   if(!positions.length){list.innerHTML='';empty.classList.remove('hidden')}
   else{empty.classList.add('hidden');
     list.innerHTML=positions.map((p,i)=>{
