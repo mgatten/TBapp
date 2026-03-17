@@ -170,7 +170,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
     <h1>Dashboard</h1>
   </div>
   <div id="brandedHeader" class="header hidden">
-    <h1><img src="https://raw.githubusercontent.com/mgatten/TBapp/main/tinylogo.jpg" alt="" style="height:24px;vertical-align:middle;margin-right:6px"><span onclick="alert('Build: 2026-03-17 02:00 ET')" style="cursor:pointer">Traderbot</span></h1>
+    <h1><img src="https://raw.githubusercontent.com/mgatten/TBapp/main/tinylogo.jpg" alt="" style="height:24px;vertical-align:middle;margin-right:6px"><span onclick="alert('Build: 2026-03-17 02:10 ET')" style="cursor:pointer">Traderbot</span></h1>
     <div class="header-right">
       <div class="theme-toggle" onclick="toggleTheme()" title="Toggle theme"></div>
       <div class="conn-dot" id="connDot"></div>
@@ -267,7 +267,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
           <button class="btn run-btn" id="haltBtn" onclick="toggleHalt()" style="width:100%"></button>
         </div>
         <div style="margin-top:10px">
-          <button class="btn btn-ghost" onclick="location.reload(true)" style="width:100%">Force Console Refresh</button>
+          <button class="btn btn-ghost" onclick="window.location.href=window.location.pathname+'?v='+Date.now()" style="width:100%">Force Console Refresh</button>
         </div>
       </div>
     </div>
@@ -787,10 +787,10 @@ function renderHaltBtn(){
   const halted=portfolio&&portfolio.trading_halted;
   if(halted){
     btn.textContent='Resume Trading';
-    btn.style.background='var(--green)';btn.style.color='#fff';btn.style.borderColor='var(--green)';
+    btn.style.background='var(--green)';btn.style.color='#fff';btn.style.border='1px solid var(--green)';
   }else{
     btn.textContent='Stop Trading';
-    btn.style.background='var(--red)';btn.style.color='#fff';btn.style.borderColor='var(--red)';
+    btn.style.background='var(--surface)';btn.style.color='var(--text)';btn.style.border='1px solid var(--border)';
   }
 }
 
