@@ -469,7 +469,7 @@ async function triggerRun(slot){
   const label=slot==='morning'?'Morning':slot==='midday'?'Midday':'Closing';
   const isTest=_runMode==='test';
   const modeLabel=isTest?'TEST':'LIVE';
-  const workflow=isTest?'test_trader.yml':'trader.yml';
+  const workflow=isTest?'test.yml':'trader.yml';
   const msg=isTest
     ?`Trigger a ${label} TEST run?\n\nNo trades will be executed.`
     :`Trigger a ${label} LIVE run?\n\nThis may execute real trades.`;
