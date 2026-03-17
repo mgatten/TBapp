@@ -6,6 +6,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Dashboard">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -119,6 +122,11 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
 .chart-toggle button{flex:1;padding:5px 0;font-size:11px;font-weight:600;font-family:var(--font-head);background:var(--surface);color:var(--text3);border:none;cursor:pointer;transition:all var(--tr)}
 .chart-toggle button.active{background:var(--accent);color:#fff}
 .analytics-section{margin-bottom:20px}
+.sub-tabs{display:flex;gap:0;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden}
+.sub-tab{flex:1;padding:8px 0;text-align:center;font-size:12px;font-weight:600;font-family:var(--font-head);background:var(--surface);color:var(--text3);border:none;cursor:pointer;transition:all var(--tr)}
+.sub-tab.active{background:var(--accent-bg);color:var(--accent);border-bottom:2px solid var(--accent)}
+.sub-content{display:none;padding:8px 0}
+.sub-content.active{display:block}
 .section-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
 .trade-filters{display:flex;gap:6px;margin-bottom:10px}
 .filter-input,.filter-select{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;color:var(--text);font-size:12px;font-family:var(--font-head);outline:none}
@@ -162,7 +170,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
     <h1>Dashboard</h1>
   </div>
   <div id="brandedHeader" class="header hidden">
-    <h1><img src="https://raw.githubusercontent.com/mgatten/TBapp/main/tinylogo.jpg" alt="" style="height:24px;vertical-align:middle;margin-right:6px"><span onclick="alert('Build: 2026-03-17 01:10 ET')" style="cursor:pointer">Traderbot</span></h1>
+    <h1><img src="https://raw.githubusercontent.com/mgatten/TBapp/main/tinylogo.jpg" alt="" style="height:24px;vertical-align:middle;margin-right:6px"><span onclick="alert('Build: 2026-03-17 01:45 ET')" style="cursor:pointer">Traderbot</span></h1>
     <div class="header-right">
       <div class="theme-toggle" onclick="toggleTheme()" title="Toggle theme"></div>
       <div class="conn-dot" id="connDot"></div>
@@ -217,17 +225,19 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
       <div class="empty-msg hidden" id="histEmpty"><div class="em-icon">📜</div>No events this month.</div>
     </div>
     <div class="tab-content" id="tab-analytics">
-      <div class="analytics-section">
-        <div class="section-title">Performance</div>
+      <div class="sub-tabs">
+        <button class="sub-tab active" onclick="switchSubTab('perf')">Performance</button>
+        <button class="sub-tab" onclick="switchSubTab('strategy')">Strategy</button>
+        <button class="sub-tab" onclick="switchSubTab('trades')">Trades</button>
+      </div>
+      <div class="sub-content active" id="sub-perf">
         <div class="account-bar pl-bar" id="plStats"></div>
         <div id="plDetails"></div>
       </div>
-      <div class="analytics-section">
-        <div class="section-title">Strategy Memory</div>
+      <div class="sub-content" id="sub-strategy">
         <div id="stratMemory"></div>
       </div>
-      <div class="analytics-section">
-        <div class="section-title">Trade Log</div>
+      <div class="sub-content" id="sub-trades">
         <div class="trade-filters" id="tradeFilters">
           <input type="text" class="filter-input" id="tradeFilterSym" placeholder="filter by symbol" oninput="renderTrades()">
           <select class="filter-select" id="tradeFilterAction" onchange="renderTrades()">
@@ -253,6 +263,12 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
         </div>
         <div class="run-status hidden" id="runStatus"></div>
         <div class="run-cooldown hidden" id="runCooldown"></div>
+        <div style="margin-top:20px;border-top:1px solid var(--border);padding-top:16px">
+          <button class="btn run-btn" id="haltBtn" onclick="toggleHalt()" style="width:100%"></button>
+        </div>
+        <div style="margin-top:10px">
+          <button class="btn btn-ghost" onclick="location.reload(true)" style="width:100%">Force Console Refresh</button>
+        </div>
       </div>
     </div>
     <div class="bottom-actions">
@@ -431,7 +447,7 @@ function wlEdit(i){const el=document.getElementById('wlN'+i);el.outerHTML=`<inpu
 async function wlEditDone(i){const el=document.getElementById('wlE'+i);if(!el)return;wlItems[i].note=el.value.trim();renderWl();await saveWl()}
 
 // ── Holdings ──
-async function loadPortfolio(){try{const{content}=await ghGet('portfolio_state.json');portfolio=JSON.parse(content)}catch(e){if(!e.message.includes('404'))throw e;portfolio=null}renderHoldings()}
+async function loadPortfolio(){try{const{content}=await ghGet('portfolio_state.json');portfolio=JSON.parse(content)}catch(e){if(!e.message.includes('404'))throw e;portfolio=null}renderHoldings();renderHaltBtn()}
 
 function renderHoldings(){
   const bar=document.getElementById('acctBar'),list=document.getElementById('holdingsList'),empty=document.getElementById('holdingsEmpty'),tsEl=document.getElementById('holdingsTs');
@@ -753,6 +769,56 @@ function renderStratMemory(){
     html+='</div>';
   }
   el.innerHTML=html;
+}
+
+// ── Analytics sub-tabs ──
+function switchSubTab(name){
+  const subs=['perf','strategy','trades'];
+  document.querySelectorAll('.sub-tab').forEach((t,i)=>t.classList.toggle('active',subs[i]===name));
+  document.querySelectorAll('.sub-content').forEach(sc=>sc.classList.toggle('active',sc.id==='sub-'+name));
+}
+
+// ── Stop/Resume Trading ──
+let _portfolioSha=null;
+
+function renderHaltBtn(){
+  const btn=document.getElementById('haltBtn');
+  if(!btn)return;
+  const halted=portfolio&&portfolio.trading_halted;
+  if(halted){
+    btn.textContent='Resume Trading';
+    btn.style.background='var(--green)';btn.style.color='#fff';btn.style.borderColor='var(--green)';
+  }else{
+    btn.textContent='Stop Trading';
+    btn.style.background='var(--red)';btn.style.color='#fff';btn.style.borderColor='var(--red)';
+  }
+}
+
+async function toggleHalt(){
+  if(!portfolio){toast('No portfolio data loaded','err');return}
+  const halted=portfolio.trading_halted;
+  const action=halted?'RESUME':'STOP';
+  if(!confirm(`${action} all trading?\n\n${halted?'This will allow the bot to trade again on the next run.':'This will prevent the bot from making any trades until you resume.'}`))return;
+  try{
+    // Fetch current state to get sha
+    const d=await gh('contents/portfolio_state.json');
+    const state=JSON.parse(b64d(d.content));
+    state.trading_halted=!halted;
+    const newContent=btoa(unescape(encodeURIComponent(JSON.stringify(state,null,2))));
+    await gh('contents/portfolio_state.json',{
+      method:'PUT',
+      body:JSON.stringify({
+        message:`${halted?'Resume':'Stop'} trading via console`,
+        content:newContent,
+        sha:d.sha,
+      }),
+    });
+    portfolio.trading_halted=!halted;
+    renderHaltBtn();
+    toast(`Trading ${halted?'resumed':'stopped'}`);
+  }catch(e){
+    toast('Failed: '+e.message,'err');
+  }
 }
 
 // ── Run triggers ──
