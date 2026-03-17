@@ -174,7 +174,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
     <h1>Dashboard</h1>
   </div>
   <div id="brandedHeader" class="header hidden">
-    <h1><img src="https://raw.githubusercontent.com/mgatten/TBapp/main/tinylogo.jpg" alt="" style="height:24px;vertical-align:middle;margin-right:6px"><span onclick="alert('Build: 2026-03-17 02:55 ET')" style="cursor:pointer">Traderbot</span></h1>
+    <h1><img src="https://raw.githubusercontent.com/mgatten/TBapp/main/tinylogo.jpg" alt="" style="height:24px;vertical-align:middle;margin-right:6px"><span onclick="alert('Build: 2026-03-17 03:10 ET')" style="cursor:pointer">Traderbot</span></h1>
     <div class="header-right">
       <div class="theme-toggle" onclick="toggleTheme()" title="Toggle theme"></div>
       <div class="conn-dot" id="connDot"></div>
@@ -209,7 +209,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
       <div class="empty-msg hidden" id="wlEmpty"><div class="em-icon">📋</div>No symbols on your watchlist.<br>Add a ticker to suggest it to Claude.</div>
     </div>
     <div class="tab-content" id="tab-holdings">
-      <div class="account-bar" id="acctBar"></div>
+      <div id="acctBar" style="margin-bottom:14px"></div>
       <div id="holdingsList"></div>
       <div class="empty-msg hidden" id="holdingsEmpty"><div class="em-icon">💼</div>No positions held.</div>
       <div class="updated-ts" id="holdingsTs"></div>
@@ -322,6 +322,7 @@ function switchTab(name){
   const tabs=['watchlist','holdings','history','analytics','run'];
   document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',tabs[i]===name));
   document.querySelectorAll('.tab-content').forEach(tc=>tc.classList.toggle('active',tc.id==='tab-'+name));
+  if(name==='holdings')setTimeout(renderEquityChart,50);
 }
 
 // ── Refresh ──
