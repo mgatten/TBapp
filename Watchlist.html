@@ -174,7 +174,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
     <h1>Dashboard</h1>
   </div>
   <div id="brandedHeader" class="header hidden">
-    <h1><img src="https://raw.githubusercontent.com/mgatten/TBapp/main/tinylogo.jpg" alt="" style="height:24px;vertical-align:middle;margin-right:6px"><span onclick="alert('Build: 2026-03-17 02:35 ET')" style="cursor:pointer">Traderbot</span></h1>
+    <h1><img src="https://raw.githubusercontent.com/mgatten/TBapp/main/tinylogo.jpg" alt="" style="height:24px;vertical-align:middle;margin-right:6px"><span onclick="alert('Build: 2026-03-17 02:45 ET')" style="cursor:pointer">Traderbot</span></h1>
     <div class="header-right">
       <div class="theme-toggle" onclick="toggleTheme()" title="Toggle theme"></div>
       <div class="conn-dot" id="connDot"></div>
@@ -273,11 +273,10 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
         <div style="margin-top:10px">
           <button class="btn btn-ghost" onclick="window.location.href=window.location.pathname+'?v='+Date.now()" style="width:100%">Force Console Refresh</button>
         </div>
+        <div style="margin-top:10px">
+          <button class="btn btn-ghost" onclick="doDisconnect()" style="width:100%">Disconnect</button>
+        </div>
       </div>
-    </div>
-    <div class="bottom-actions">
-      <button class="btn btn-sm btn-ghost" onclick="refreshAll()">↻ Refresh</button>
-      <button class="btn btn-sm btn-ghost" onclick="doDisconnect()">Disconnect</button>
     </div>
     <div class="logo-footer"><img src="https://raw.githubusercontent.com/mgatten/TBapp/main/TraderbotLogo" alt="TraderBot"></div>
   </div>
