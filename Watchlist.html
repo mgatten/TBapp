@@ -170,7 +170,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
     <h1>Dashboard</h1>
   </div>
   <div id="brandedHeader" class="header hidden">
-    <h1><img src="https://raw.githubusercontent.com/mgatten/TBapp/main/tinylogo.jpg" alt="" style="height:24px;vertical-align:middle;margin-right:6px"><span onclick="alert('Build: 2026-03-17 01:45 ET')" style="cursor:pointer">Traderbot</span></h1>
+    <h1><img src="https://raw.githubusercontent.com/mgatten/TBapp/main/tinylogo.jpg" alt="" style="height:24px;vertical-align:middle;margin-right:6px"><span onclick="alert('Build: 2026-03-17 02:00 ET')" style="cursor:pointer">Traderbot</span></h1>
     <div class="header-right">
       <div class="theme-toggle" onclick="toggleTheme()" title="Toggle theme"></div>
       <div class="conn-dot" id="connDot"></div>
@@ -636,12 +636,12 @@ async function loadSpyHistory(){
     const{content}=await ghGet('data/benchmark_history.csv');
     _benchHistory=parseCSV(content);
   }catch(e){
-    // Fall back to old spy_history.csv if benchmark file doesn't exist yet
     try{
       const{content}=await ghGet('data/spy_history.csv');
       _benchHistory=parseCSV(content).map(r=>({date:r.date,SPY:r.close}));
     }catch(e2){if(!e2.message.includes('404'))throw e2;_benchHistory=[]}
   }
+  renderEquityChart();
 }
 
 // ── P&L Dashboard ──
