@@ -69,7 +69,6 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
 .wl-btn:hover{color:var(--text);background:var(--surface2)}
 .wl-btn.del:hover{color:var(--red);background:var(--red-bg)}
 .account-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
-.account-bar.pl-bar{grid-template-columns:repeat(3,1fr)}
 .stat-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;text-align:center}
 .stat-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px}
 .stat-val{font-family:var(--font-mono);font-size:15px;font-weight:600}
@@ -115,33 +114,6 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
 .spinner{display:inline-block;width:12px;height:12px;border:2px solid var(--text3);border-top-color:transparent;border-radius:50%;animation:spin 0.5s linear infinite;vertical-align:middle;margin-right:5px}
 @keyframes spin{to{transform:rotate(360deg)}}
 .run-panel{padding:8px 0}
-.chart-toggle{display:flex;gap:0;margin-bottom:8px;border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden}
-.chart-toggle button{flex:1;padding:5px 0;font-size:11px;font-weight:600;font-family:var(--font-head);background:var(--surface);color:var(--text3);border:none;cursor:pointer;transition:all var(--tr)}
-.chart-toggle button.active{background:var(--accent);color:#fff}
-.analytics-section{margin-bottom:20px}
-.section-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
-.trade-filters{display:flex;gap:6px;margin-bottom:10px}
-.filter-input,.filter-select{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;color:var(--text);font-size:12px;font-family:var(--font-head);outline:none}
-.filter-input:focus,.filter-select:focus{border-color:var(--accent)}
-.filter-select{-webkit-appearance:none;appearance:none}
-.strat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:6px;font-size:12px;line-height:1.5}
-.strat-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px;font-weight:600}
-.strat-text{color:var(--text2)}
-.strat-hypo{color:var(--text2);padding:4px 0;border-bottom:1px solid var(--border)}
-.strat-hypo:last-child{border-bottom:none}
-.strat-pos{margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid var(--border)}
-.strat-pos:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
-.strat-pos-sym{font-family:var(--font-mono);font-weight:600;color:var(--accent);font-size:13px}
-.trade-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px}
-.trade-row:last-child{border-bottom:none}
-.trade-date{font-family:var(--font-mono);color:var(--text3);font-size:11px;min-width:52px}
-.trade-action{font-weight:700;font-size:10px;padding:2px 6px;border-radius:3px;min-width:36px;text-align:center}
-.trade-action.buy{background:var(--green-bg);color:var(--green)}
-.trade-action.sell{background:var(--red-bg);color:var(--red)}
-.trade-action.short{background:var(--yellow-bg);color:var(--yellow)}
-.trade-action.cover{background:var(--blue-bg);color:var(--blue)}
-.trade-sym{font-family:var(--font-mono);font-weight:600;min-width:45px}
-.trade-amt{font-family:var(--font-mono);color:var(--text2);margin-left:auto}
 .run-mode-toggle{display:flex;gap:0;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden}
 .run-mode-btn{flex:1;padding:9px 0;text-align:center;font-size:13px;font-weight:600;font-family:var(--font-head);background:var(--surface);color:var(--text3);border:none;cursor:pointer;transition:all var(--tr)}
 .run-mode-btn.active{background:var(--accent);color:#fff}
@@ -159,7 +131,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
 <body data-theme="dark">
 <div class="app">
   <div id="loginHeader" class="header">
-    <h1>Dashboard</h1>
+    <h1>Dashboard </h1>
   </div>
   <div id="brandedHeader" class="header hidden">
     <h1><img src="https://raw.githubusercontent.com/mgatten/TBapp/main/tinylogo.jpg" alt="" style="height:24px;vertical-align:middle;margin-right:6px"><span>Traderbot</span></h1>
@@ -182,7 +154,6 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
       <button class="tab active" onclick="switchTab('watchlist')">Watchlist</button>
       <button class="tab" onclick="switchTab('holdings')">Holdings</button>
       <button class="tab" onclick="switchTab('history')">History</button>
-      <button class="tab" onclick="switchTab('analytics')">Analytics</button>
       <button class="tab" onclick="switchTab('run')">Run</button>
     </div>
     <div class="tab-content active" id="tab-watchlist">
@@ -201,11 +172,6 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
       <div id="holdingsList"></div>
       <div class="empty-msg hidden" id="holdingsEmpty"><div class="em-icon">💼</div>No positions held.</div>
       <div class="updated-ts" id="holdingsTs"></div>
-      <div id="equityChartBox" class="card hidden" style="padding:10px 8px">
-        <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Equity History</div>
-        <div class="chart-toggle" id="chartToggle"></div>
-        <canvas id="equityChart" width="440" height="180" style="width:100%;height:auto"></canvas>
-      </div>
     </div>
     <div class="tab-content" id="tab-history">
       <div class="month-nav">
@@ -215,29 +181,6 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
       </div>
       <div id="histList"></div>
       <div class="empty-msg hidden" id="histEmpty"><div class="em-icon">📜</div>No events this month.</div>
-    </div>
-    <div class="tab-content" id="tab-analytics">
-      <div class="analytics-section">
-        <div class="section-title">Performance</div>
-        <div class="account-bar pl-bar" id="plStats"></div>
-        <div id="plDetails"></div>
-      </div>
-      <div class="analytics-section">
-        <div class="section-title">Strategy Memory</div>
-        <div id="stratMemory"></div>
-      </div>
-      <div class="analytics-section">
-        <div class="section-title">Trade Log</div>
-        <div class="trade-filters" id="tradeFilters">
-          <input type="text" class="filter-input" id="tradeFilterSym" placeholder="filter by symbol" oninput="renderTrades()">
-          <select class="filter-select" id="tradeFilterAction" onchange="renderTrades()">
-            <option value="">all actions</option>
-            <option value="buy">buy</option>
-            <option value="sell">sell</option>
-          </select>
-        </div>
-        <div id="tradeLog"></div>
-      </div>
     </div>
     <div class="tab-content" id="tab-run">
       <div class="run-panel">
@@ -299,7 +242,7 @@ function doDisconnect(){cfg={};LS.del('cfg');wlItems=[];wlSha=null;portfolio=nul
 
 // ── Tabs ──
 function switchTab(name){
-  const tabs=['watchlist','holdings','history','analytics','run'];
+  const tabs=['watchlist','holdings','history','run'];
   document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',tabs[i]===name));
   document.querySelectorAll('.tab-content').forEach(tc=>tc.classList.toggle('active',tc.id==='tab-'+name));
 }
@@ -314,7 +257,7 @@ async function refreshAll(){
     return;
   }
   document.getElementById('offlineBanner').classList.remove('show');setConn('ok');
-  try{await Promise.all([loadWl(),loadPortfolio(),loadEvents(),loadSecTickers(),loadHoldingsLog(),loadTradesLog(),loadStratMemory()]);
+  try{await Promise.all([loadWl(),loadPortfolio(),loadEvents(),loadSecTickers()]);
     LS.set('cache',{wlItems,wlSha,portfolio,events,ts:new Date().toLocaleString()});
   }catch(e){setConn('err');toast('Refresh failed: '+e.message,'err')}
 }
@@ -476,211 +419,6 @@ function renderHist(){
 }
 function toggleEv(i){const e=document.getElementById('ev'+i);if(e)e.classList.toggle('show')}
 function histNav(d){histMonth.setMonth(histMonth.getMonth()+d);renderHist()}
-
-// ── Equity chart ──
-let _holdingsLog=[];
-let _chartRange='30d';
-
-async function loadHoldingsLog(){
-  try{
-    const{content}=await ghGet('data/holdings_log.csv');
-    _holdingsLog=parseCSV(content);
-  }catch(e){if(!e.message.includes('404'))throw e;_holdingsLog=[]}
-  renderEquityChart();
-}
-
-function renderEquityChart(){
-  const box=document.getElementById('equityChartBox');
-  const canvas=document.getElementById('equityChart');
-  if(!_holdingsLog.length){box.classList.add('hidden');return}
-  box.classList.remove('hidden');
-  // Build toggle buttons
-  const tog=document.getElementById('chartToggle');
-  tog.innerHTML=['7d','30d','All'].map(r=>
-    `<button class="${r===_chartRange?'active':''}" onclick="setChartRange('${r}')">${r}</button>`
-  ).join('');
-  // Aggregate to daily equity (take last entry per day)
-  const daily={};
-  for(const row of _holdingsLog){
-    if(!row.timestamp||!row.equity)continue;
-    const d=row.timestamp.slice(0,10);
-    daily[d]=parseFloat(row.equity);
-  }
-  let entries=Object.entries(daily).sort((a,b)=>a[0].localeCompare(b[0]));
-  if(_chartRange==='7d')entries=entries.slice(-7);
-  else if(_chartRange==='30d')entries=entries.slice(-30);
-  if(entries.length<2){box.classList.add('hidden');return}
-  const vals=entries.map(e=>e[1]);
-  const labels=entries.map(e=>e[0].slice(5));// MM-DD
-  const ctx=canvas.getContext('2d');
-  const W=canvas.width,H=canvas.height;
-  const pad={t:10,r:10,b:24,l:45};
-  const gW=W-pad.l-pad.r,gH=H-pad.t-pad.b;
-  const mn=Math.min(...vals),mx=Math.max(...vals);
-  const range=mx-mn||1;
-  ctx.clearRect(0,0,W,H);
-  // Grid lines
-  const isDark=document.body.getAttribute('data-theme')==='dark';
-  const gridCol=isDark?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.06)';
-  const textCol=isDark?'#5a5a78':'#9998a5';
-  const lineCol=isDark?'#e67e22':'#c8620a';
-  const fillCol=isDark?'rgba(230,126,34,0.12)':'rgba(200,98,10,0.06)';
-  ctx.strokeStyle=gridCol;ctx.lineWidth=1;
-  for(let i=0;i<=4;i++){
-    const y=pad.t+gH*(1-i/4);
-    ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+gW,y);ctx.stroke();
-    ctx.fillStyle=textCol;ctx.font='9px IBM Plex Mono';ctx.textAlign='right';
-    ctx.fillText('$'+(mn+range*i/4).toFixed(0),pad.l-4,y+3);
-  }
-  // X labels
-  const step=Math.max(1,Math.floor(entries.length/6));
-  ctx.textAlign='center';
-  for(let i=0;i<entries.length;i+=step){
-    const x=pad.l+gW*i/(entries.length-1);
-    ctx.fillStyle=textCol;ctx.font='9px IBM Plex Mono';
-    ctx.fillText(labels[i],x,H-4);
-  }
-  // Line + fill
-  ctx.beginPath();
-  for(let i=0;i<vals.length;i++){
-    const x=pad.l+gW*i/(vals.length-1);
-    const y=pad.t+gH*(1-(vals[i]-mn)/range);
-    if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
-  }
-  ctx.strokeStyle=lineCol;ctx.lineWidth=2;ctx.stroke();
-  // Fill area
-  ctx.lineTo(pad.l+gW,pad.t+gH);ctx.lineTo(pad.l,pad.t+gH);ctx.closePath();
-  ctx.fillStyle=fillCol;ctx.fill();
-}
-
-function setChartRange(r){_chartRange=r;renderEquityChart()}
-
-// ── P&L Dashboard ──
-function renderPLDashboard(){
-  const stats=document.getElementById('plStats');
-  const details=document.getElementById('plDetails');
-  const closes=events.filter(e=>['CLOSE','PARTIAL_CLOSE'].includes(e.event_type)&&e.realized_pl);
-  if(!closes.length){stats.innerHTML='';details.innerHTML='<div class="empty-msg"><div class="em-icon">📊</div>No closed trades yet.</div>';return}
-  const pls=closes.map(e=>parseFloat(e.realized_pl)||0);
-  const wins=pls.filter(p=>p>0),losses=pls.filter(p=>p<0);
-  const totalPL=pls.reduce((a,b)=>a+b,0);
-  const winRate=wins.length/pls.length*100;
-  const avgWin=wins.length?wins.reduce((a,b)=>a+b,0)/wins.length:0;
-  const avgLoss=losses.length?losses.reduce((a,b)=>a+b,0)/losses.length:0;
-  const expectancy=winRate/100*avgWin+(1-winRate/100)*avgLoss;
-  const best=Math.max(...pls),worst=Math.min(...pls);
-  const plColor=totalPL>=0?'var(--green)':'var(--red)';
-  const plSign=totalPL>=0?'+':'';
-  const expColor=expectancy>=0?'var(--green)':'var(--red)';
-  const expSign=expectancy>=0?'+':'';
-  stats.innerHTML=`
-    <div class="stat-box"><div class="stat-label">Total P&L</div><div class="stat-val" style="color:${plColor}">${plSign}$${totalPL.toFixed(2)}</div></div>
-    <div class="stat-box"><div class="stat-label">Win Rate</div><div class="stat-val">${winRate.toFixed(0)}%</div></div>
-    <div class="stat-box"><div class="stat-label">Trades</div><div class="stat-val">${pls.length}</div></div>
-  `;
-  details.innerHTML=`
-    <div class="card" style="font-size:12px;line-height:2">
-      <div style="display:flex;justify-content:space-between"><span style="color:var(--text2)">Avg Winner</span><span style="color:var(--green)">+$${avgWin.toFixed(2)}</span></div>
-      <div style="display:flex;justify-content:space-between"><span style="color:var(--text2)">Avg Loser</span><span style="color:var(--red)">$${avgLoss.toFixed(2)}</span></div>
-      <div style="display:flex;justify-content:space-between"><span style="color:var(--text2)">Expectancy</span><span style="color:${expColor}">${expSign}$${expectancy.toFixed(2)}/trade</span></div>
-      <div style="display:flex;justify-content:space-between"><span style="color:var(--text2)">Best Trade</span><span style="color:var(--green)">+$${best.toFixed(2)}</span></div>
-      <div style="display:flex;justify-content:space-between"><span style="color:var(--text2)">Worst Trade</span><span style="color:var(--red)">$${worst.toFixed(2)}</span></div>
-      <div style="display:flex;justify-content:space-between"><span style="color:var(--text2)">Winners</span><span>${wins.length}</span></div>
-      <div style="display:flex;justify-content:space-between"><span style="color:var(--text2)">Losers</span><span>${losses.length}</span></div>
-    </div>
-  `;
-}
-
-// ── Trade Log ──
-let _tradesLog=[];
-
-async function loadTradesLog(){
-  try{
-    const{content}=await ghGet('data/trades_log.csv');
-    _tradesLog=parseCSV(content);
-  }catch(e){if(!e.message.includes('404'))throw e;_tradesLog=[]}
-  renderTrades();
-}
-
-function renderTrades(){
-  const el=document.getElementById('tradeLog');
-  if(!_tradesLog.length){el.innerHTML='<div class="empty-msg"><div class="em-icon">📝</div>No trades logged yet.</div>';return}
-  const symFilter=(document.getElementById('tradeFilterSym')?.value||'').toUpperCase();
-  const actFilter=document.getElementById('tradeFilterAction')?.value||'';
-  let filtered=_tradesLog.slice().reverse();
-  if(symFilter)filtered=filtered.filter(t=>(t.symbol||'').toUpperCase().includes(symFilter));
-  if(actFilter)filtered=filtered.filter(t=>(t.action||'').toLowerCase()===actFilter);
-  if(!filtered.length){el.innerHTML='<div style="text-align:center;color:var(--text3);padding:20px;font-size:12px">No matching trades.</div>';return}
-  el.innerHTML=filtered.slice(0,50).map(t=>{
-    const d=t.timestamp?t.timestamp.slice(5,10):'';
-    const a=(t.action||'').toLowerCase();
-    const n=parseFloat(t.notional)||0;
-    return`<div class="trade-row"><span class="trade-date">${d}</span><span class="trade-action ${a}">${a.toUpperCase()}</span><span class="trade-sym">${esc(t.symbol)}</span><span class="trade-amt">$${n.toFixed(0)}</span></div>`;
-  }).join('')+(filtered.length>50?`<div style="text-align:center;color:var(--text3);padding:8px;font-size:11px">Showing 50 of ${filtered.length}</div>`:'');
-}
-
-// ── Strategy Memory ──
-let _stratMem=null;
-
-async function loadStratMemory(){
-  try{
-    const{content}=await ghGet('strategy_memory.json');
-    _stratMem=JSON.parse(content);
-  }catch(e){if(!e.message.includes('404'))throw e;_stratMem=null}
-  renderStratMemory();
-  renderPLDashboard();
-}
-
-function renderStratMemory(){
-  const el=document.getElementById('stratMemory');
-  if(!_stratMem){el.innerHTML='<div class="empty-msg"><div class="em-icon">🧠</div>No strategy memory yet.</div>';return}
-  let html='';
-  // Market view
-  if(_stratMem.market_view){
-    html+=`<div class="strat-card"><div class="strat-label">Market View</div><div class="strat-text">${esc(_stratMem.market_view)}</div></div>`;
-  }
-  // Macro context
-  if(_stratMem.macro_context){
-    html+=`<div class="strat-card"><div class="strat-label">Macro Context</div><div class="strat-text">${esc(_stratMem.macro_context)}</div></div>`;
-  }
-  // Strategy hypotheses
-  const hypos=_stratMem.strategy_hypotheses||[];
-  if(hypos.length){
-    html+=`<div class="strat-card"><div class="strat-label">Active Hypotheses (${hypos.length})</div>`;
-    html+=hypos.map(h=>`<div class="strat-hypo">${esc(h)}</div>`).join('');
-    html+='</div>';
-  }
-  // Positions
-  const pos=_stratMem.positions||{};
-  const posKeys=Object.keys(pos);
-  if(posKeys.length){
-    html+=`<div class="strat-card"><div class="strat-label">Position Notes (${posKeys.length})</div>`;
-    html+=posKeys.map(sym=>{
-      const p=pos[sym];
-      return`<div class="strat-pos"><div class="strat-pos-sym">${esc(sym)}</div>`+
-        (p.thesis?`<div class="strat-text">${esc(p.thesis)}</div>`:'')+
-        (p.target_exit?`<div class="strat-text" style="color:var(--text3)">Exit: ${esc(p.target_exit)}</div>`:'')+
-        (p.watch?`<div class="strat-text" style="color:var(--yellow)">Watch: ${esc(p.watch)}</div>`:'')+
-        '</div>';
-    }).join('');
-    html+='</div>';
-  }
-  // Recently exited
-  const exited=_stratMem.recently_exited||{};
-  const exitKeys=Object.keys(exited);
-  if(exitKeys.length){
-    html+=`<div class="strat-card"><div class="strat-label">Recently Exited (${exitKeys.length})</div>`;
-    html+=exitKeys.map(sym=>{
-      const e=exited[sym];
-      return`<div class="strat-pos"><div class="strat-pos-sym">${esc(sym)}</div>`+
-        (e.reason?`<div class="strat-text">${esc(e.reason)}</div>`:'')+
-        (e.lesson?`<div class="strat-text" style="color:var(--text3)">Lesson: ${esc(e.lesson)}</div>`:'')+
-        '</div>';
-    }).join('');
-    html+='</div>';
-  }
-  el.innerHTML=html;
-}
 
 // ── Run triggers ──
 let _runCooldownTimer=null;
