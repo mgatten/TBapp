@@ -162,7 +162,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
     <h1>Dashboard</h1>
   </div>
   <div id="brandedHeader" class="header hidden">
-    <h1><img src="https://raw.githubusercontent.com/mgatten/TBapp/main/tinylogo.jpg" alt="" style="height:24px;vertical-align:middle;margin-right:6px"><span onclick="alert('Build: 2026-03-17 00:15 ET')" style="cursor:pointer">Traderbot</span></h1>
+    <h1><img src="https://raw.githubusercontent.com/mgatten/TBapp/main/tinylogo.jpg" alt="" style="height:24px;vertical-align:middle;margin-right:6px"><span onclick="alert('Build: 2026-03-17 01:10 ET')" style="cursor:pointer">Traderbot</span></h1>
     <div class="header-right">
       <div class="theme-toggle" onclick="toggleTheme()" title="Toggle theme"></div>
       <div class="conn-dot" id="connDot"></div>
@@ -509,26 +509,37 @@ function renderEquityChart(){
   if(_chartRange==='7d')entries=entries.slice(-7);
   else if(_chartRange==='30d')entries=entries.slice(-30);
   if(entries.length<2){box.classList.add('hidden');return}
-  // Build SPY lookup for same date range
-  const spyLookup={};
-  for(const row of _spyHistory){
-    if(row.date&&row.close)spyLookup[row.date]=parseFloat(row.close);
+  // Build benchmark lookups
+  const benchmarks=[
+    {key:'SPY',label:'S&P500',color_d:'rgba(52,152,219,0.6)',color_l:'rgba(36,114,168,0.5)'},
+    {key:'QQQ',label:'Nasdaq100',color_d:'rgba(155,89,182,0.6)',color_l:'rgba(130,70,160,0.5)'},
+    {key:'DIA',label:'DJIA',color_d:'rgba(46,204,113,0.5)',color_l:'rgba(26,153,85,0.4)'},
+  ];
+  const benchLookup={};
+  for(const row of _benchHistory){
+    if(!row.date)continue;
+    benchLookup[row.date]={};
+    for(const b of benchmarks){
+      if(row[b.key])benchLookup[row.date][b.key]=parseFloat(row[b.key]);
+    }
   }
-  // Normalize both to % change from first point
+  // Normalize all to % change from first point
   const eqBase=entries[0][1];
   const eqPcts=entries.map(e=>((e[1]-eqBase)/eqBase)*100);
   const labels=entries.map(e=>e[0].slice(5));
-  const spyFirstDate=entries[0][0];
-  const spyBase=spyLookup[spyFirstDate];
-  let spyPcts=null;
-  if(spyBase){
-    spyPcts=entries.map(e=>{
-      const sp=spyLookup[e[0]];
-      return sp?((sp-spyBase)/spyBase)*100:null;
-    });
+  const benchPcts={};
+  for(const b of benchmarks){
+    const firstDate=entries[0][0];
+    const base=benchLookup[firstDate]?.[b.key];
+    if(base){
+      benchPcts[b.key]=entries.map(e=>{
+        const v=benchLookup[e[0]]?.[b.key];
+        return v?((v-base)/base)*100:null;
+      });
+    }
   }
   const allVals=[...eqPcts];
-  if(spyPcts)allVals.push(...spyPcts.filter(v=>v!==null));
+  for(const k in benchPcts)allVals.push(...benchPcts[k].filter(v=>v!==null));
   const mn=Math.min(...allVals),mx=Math.max(...allVals);
   const range=mx-mn||1;
   const ctx=canvas.getContext('2d');
@@ -541,7 +552,6 @@ function renderEquityChart(){
   const textCol=isDark?'#5a5a78':'#9998a5';
   const lineCol=isDark?'#e67e22':'#c8620a';
   const fillCol=isDark?'rgba(230,126,34,0.12)':'rgba(200,98,10,0.06)';
-  const spyCol=isDark?'rgba(52,152,219,0.6)':'rgba(36,114,168,0.5)';
   // Grid
   ctx.strokeStyle=gridCol;ctx.lineWidth=1;
   for(let i=0;i<=4;i++){
@@ -566,17 +576,19 @@ function renderEquityChart(){
     ctx.fillStyle=textCol;ctx.font='9px IBM Plex Mono';
     ctx.fillText(labels[i],x,H-4);
   }
-  // SPY line (draw first so equity line is on top)
-  if(spyPcts){
+  // Benchmark lines (draw first so portfolio is on top)
+  for(const b of benchmarks){
+    const pcts=benchPcts[b.key];
+    if(!pcts)continue;
     ctx.beginPath();
     let started=false;
-    for(let i=0;i<spyPcts.length;i++){
-      if(spyPcts[i]===null)continue;
+    for(let i=0;i<pcts.length;i++){
+      if(pcts[i]===null)continue;
       const x=pad.l+gW*i/(eqPcts.length-1);
-      const y=pad.t+gH*(1-(spyPcts[i]-mn)/range);
+      const y=pad.t+gH*(1-(pcts[i]-mn)/range);
       if(!started){ctx.moveTo(x,y);started=true}else ctx.lineTo(x,y);
     }
-    ctx.strokeStyle=spyCol;ctx.lineWidth=1.5;ctx.stroke();
+    ctx.strokeStyle=isDark?b.color_d:b.color_l;ctx.lineWidth=1.5;ctx.stroke();
   }
   // Equity line + fill
   ctx.beginPath();
@@ -590,20 +602,30 @@ function renderEquityChart(){
   ctx.fillStyle=fillCol;ctx.fill();
   // Legend
   ctx.font='9px IBM Plex Mono';ctx.textAlign='left';
-  ctx.fillStyle=lineCol;ctx.fillText('Portfolio',pad.l+4,pad.t+10);
-  if(spyPcts){ctx.fillStyle=spyCol;ctx.fillText('SPY',pad.l+60,pad.t+10)}
+  let lx=pad.l+4;
+  ctx.fillStyle=lineCol;ctx.fillText('Traderbot',lx,pad.t+10);lx+=58;
+  for(const b of benchmarks){
+    if(!benchPcts[b.key])continue;
+    ctx.fillStyle=isDark?b.color_d:b.color_l;ctx.fillText(b.label,lx,pad.t+10);lx+=b.label.length*6+10;
+  }
 }
 
 function setChartRange(r){_chartRange=r;renderEquityChart()}
 
-// ── SPY benchmark ──
-let _spyHistory=[];
+// ── Benchmark data ──
+let _benchHistory=[];
 
 async function loadSpyHistory(){
   try{
-    const{content}=await ghGet('data/spy_history.csv');
-    _spyHistory=parseCSV(content);
-  }catch(e){if(!e.message.includes('404'))throw e;_spyHistory=[]}
+    const{content}=await ghGet('data/benchmark_history.csv');
+    _benchHistory=parseCSV(content);
+  }catch(e){
+    // Fall back to old spy_history.csv if benchmark file doesn't exist yet
+    try{
+      const{content}=await ghGet('data/spy_history.csv');
+      _benchHistory=parseCSV(content).map(r=>({date:r.date,SPY:r.close}));
+    }catch(e2){if(!e2.message.includes('404'))throw e2;_benchHistory=[]}
+  }
 }
 
 // ── P&L Dashboard ──
