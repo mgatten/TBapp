@@ -702,7 +702,7 @@ function _setRunBtns(disabled){
 }
 
 function _startCooldown(){
-  const end=Date.now()+7*60*1000;
+  const end=Date.now()+4*60*1000;
   LS.set('run_cooldown',end);
   _setRunBtns(true);
   _tickCooldown(end);
