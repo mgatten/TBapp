@@ -165,8 +165,15 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
   .app{max-width:900px}
   #equityChart{height:240px !important}
 }
+.export-section{margin-bottom:16px}
+.export-item{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px}
+.export-item:last-child{border-bottom:none}
+.export-item input[type="checkbox"]{width:16px;height:16px;accent-color:var(--accent)}
+.export-item label{flex:1;color:var(--text2);cursor:pointer}
+.export-item .exp-size{font-family:var(--font-mono);font-size:10px;color:var(--text3)}
 .hidden{display:none !important}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 <body data-theme="dark">
 <div class="app">
@@ -174,7 +181,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
     <h1>Dashboard</h1>
   </div>
   <div id="brandedHeader" class="header hidden">
-    <h1><img src="https://raw.githubusercontent.com/mgatten/TBapp/main/tinylogo.jpg" alt="" style="height:24px;vertical-align:middle;margin-right:6px"><span onclick="alert('Build: 2026-03-17 03:10 ET')" style="cursor:pointer">Traderbot</span></h1>
+    <h1><img src="https://raw.githubusercontent.com/mgatten/TBapp/main/tinylogo.jpg" alt="" style="height:24px;vertical-align:middle;margin-right:6px"><span onclick="alert('Build: 2026-03-17 03:30 ET')" style="cursor:pointer">Traderbot</span></h1>
     <div class="header-right">
       <div class="theme-toggle" onclick="toggleTheme()" title="Toggle theme"></div>
       <div class="conn-dot" id="connDot"></div>
@@ -233,6 +240,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
         <button class="sub-tab active" onclick="switchSubTab('perf')">Performance</button>
         <button class="sub-tab" onclick="switchSubTab('strategy')">Strategy</button>
         <button class="sub-tab" onclick="switchSubTab('trades')">Trades</button>
+        <button class="sub-tab" onclick="switchSubTab('export')">Export</button>
       </div>
       <div class="sub-content active" id="sub-perf">
         <div class="account-bar pl-bar" id="plStats"></div>
@@ -251,6 +259,21 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
           </select>
         </div>
         <div id="tradeLog"></div>
+      </div>
+      <div class="sub-content" id="sub-export">
+        <div class="export-actions" style="margin-bottom:10px">
+          <button class="btn btn-sm btn-ghost" onclick="exportSelectAll(true)">Select All</button>
+          <button class="btn btn-sm btn-ghost" onclick="exportSelectAll(false)" style="margin-left:6px">Deselect All</button>
+        </div>
+        <div class="export-section">
+          <div class="section-title">State & Data Files</div>
+          <div id="exportFiles"></div>
+        </div>
+        <div class="export-section">
+          <div class="section-title">Run Logs</div>
+          <div id="exportLogs">Loading run history...</div>
+        </div>
+        <button class="btn btn-primary" onclick="doExport()" style="margin-top:14px" id="exportBtn">Export Selected</button>
       </div>
     </div>
     <div class="tab-content" id="tab-run">
@@ -788,9 +811,10 @@ function renderStratMemory(){
 
 // ── Analytics sub-tabs ──
 function switchSubTab(name){
-  const subs=['perf','strategy','trades'];
+  const subs=['perf','strategy','trades','export'];
   document.querySelectorAll('.sub-tab').forEach((t,i)=>t.classList.toggle('active',subs[i]===name));
   document.querySelectorAll('.sub-content').forEach(sc=>sc.classList.toggle('active',sc.id==='sub-'+name));
+  if(name==='export')loadExportPanel();
 }
 
 // ── Stop/Resume Trading ──
@@ -913,6 +937,115 @@ async function triggerRun(slot){
     status.textContent=`Failed to trigger run: ${e.message}`;
     status.classList.remove('hidden');
     toast('Trigger failed','err');
+  }
+}
+
+// ── Export ──
+const _EXPORT_FILES=[
+  {path:'portfolio_state.json',label:'portfolio_state.json'},
+  {path:'trader.py',label:'trader.py'},
+  {path:'data/holdings_log.csv',label:'holdings_log.csv'},
+  {path:'data/trades_log.csv',label:'trades_log.csv'},
+  {path:'data/position_events.csv',label:'position_events.csv'},
+  {path:'data/strategy_memory.json',label:'strategy_memory.json'},
+  {path:'data/watchlist.txt',label:'watchlist.txt'},
+  {path:'data/symbols.json',label:'symbols.json'},
+  {path:'data/benchmark_history.csv',label:'benchmark_history.csv'},
+  {path:'data/spy_history.csv',label:'spy_history.csv'},
+];
+let _exportLogsLoaded=false;
+let _exportRuns=[];
+
+function loadExportPanel(){
+  // Render file checkboxes
+  const filesEl=document.getElementById('exportFiles');
+  filesEl.innerHTML=_EXPORT_FILES.map((f,i)=>
+    `<div class="export-item"><input type="checkbox" id="expf${i}" checked><label for="expf${i}">${f.label}</label></div>`
+  ).join('');
+  // Load run logs if not already loaded
+  if(!_exportLogsLoaded)loadExportRuns();
+}
+
+async function loadExportRuns(){
+  const el=document.getElementById('exportLogs');
+  try{
+    const d=await gh('actions/workflows/trader.yml/runs?per_page=20');
+    _exportRuns=(d.workflow_runs||[]).map(r=>({
+      id:r.id,
+      date:r.created_at,
+      status:r.conclusion||r.status,
+      slot:r.display_title||'',
+    }));
+    _exportLogsLoaded=true;
+    el.innerHTML=_exportRuns.map((r,i)=>{
+      const d=new Date(r.date);
+      const ds=`${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+      const sc=r.status==='success'?'var(--green)':r.status==='failure'?'var(--red)':'var(--text3)';
+      return`<div class="export-item"><input type="checkbox" id="expr${i}"><label for="expr${i}">${ds} — <span style="color:${sc}">${r.status}</span></label></div>`;
+    }).join('')||'<div style="color:var(--text3);font-size:12px">No recent runs found.</div>';
+  }catch(e){
+    el.innerHTML=`<div style="color:var(--red);font-size:12px">Failed to load runs: ${e.message}</div>`;
+  }
+}
+
+function exportSelectAll(checked){
+  document.querySelectorAll('#sub-export input[type="checkbox"]').forEach(cb=>cb.checked=checked);
+}
+
+async function doExport(){
+  const btn=document.getElementById('exportBtn');
+  btn.disabled=true;btn.textContent='Exporting...';
+  try{
+    const zip=new JSZip();
+    // Add selected files
+    for(let i=0;i<_EXPORT_FILES.length;i++){
+      const cb=document.getElementById('expf'+i);
+      if(!cb||!cb.checked)continue;
+      const f=_EXPORT_FILES[i];
+      try{
+        const{content}=await ghGet(f.path);
+        zip.file(f.label,content);
+      }catch(e){
+        zip.file(f.label+'.error.txt',`Failed to fetch: ${e.message}`);
+      }
+    }
+    // Add selected run logs
+    for(let i=0;i<_exportRuns.length;i++){
+      const cb=document.getElementById('expr'+i);
+      if(!cb||!cb.checked)continue;
+      const r=_exportRuns[i];
+      try{
+        const logsUrl=`actions/runs/${r.id}/logs`;
+        const resp=await fetch(`${API}/repos/${cfg.repo}/${logsUrl}`,{
+          headers:{'Authorization':`Bearer ${cfg.token}`,'Accept':'application/vnd.github.v3+json'},
+          redirect:'follow',
+        });
+        if(resp.ok){
+          const blob=await resp.blob();
+          const rd=new Date(r.date);
+          const fname=`run_${rd.getMonth()+1}-${rd.getDate()}_${rd.getHours()}${String(rd.getMinutes()).padStart(2,'0')}_${r.status}.zip`;
+          zip.file(fname,blob);
+        }else{
+          zip.file(`run_${r.id}.error.txt`,`HTTP ${resp.status}`);
+        }
+      }catch(e){
+        zip.file(`run_${r.id}.error.txt`,`Failed: ${e.message}`);
+      }
+    }
+    // Generate and download
+    const now=new Date();
+    const pad=n=>String(n).padStart(2,'0');
+    const fname=`TraderBotExport-${pad(now.getMonth()+1)}-${pad(now.getDate())}-${now.getFullYear()}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.zip`;
+    const blob=await zip.generateAsync({type:'blob'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download=fname;document.body.appendChild(a);a.click();
+    document.body.removeChild(a);URL.revokeObjectURL(url);
+    toast('Export downloaded');
+  }catch(e){
+    toast('Export failed: '+e.message,'err');
+  }finally{
+    btn.disabled=false;btn.textContent='Export Selected';
   }
 }
 
