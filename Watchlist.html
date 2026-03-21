@@ -181,7 +181,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
     <h1>Dashboard</h1>
   </div>
   <div id="brandedHeader" class="header hidden">
-    <h1><img src="https://raw.githubusercontent.com/mgatten/TBapp/main/tinylogo.jpg" alt="" style="height:24px;vertical-align:middle;margin-right:6px"><span onclick="alert('Build: 2026-03-20 22:00 ET')" style="cursor:pointer">Traderbot</span></h1>
+    <h1><img src="https://raw.githubusercontent.com/mgatten/TBapp/main/tinylogo.jpg" alt="" style="height:24px;vertical-align:middle;margin-right:6px"><span onclick="alert('Build: 2026-03-21 00:15 ET')" style="cursor:pointer">Traderbot</span></h1>
     <div class="header-right">
       <div class="theme-toggle" onclick="toggleTheme()" title="Toggle theme"></div>
       <div class="conn-dot" id="connDot"></div>
@@ -265,10 +265,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
           <button class="btn btn-sm btn-ghost" onclick="exportSelectAll(true)">Select All</button>
           <button class="btn btn-sm btn-ghost" onclick="exportSelectAll(false)" style="margin-left:6px">Deselect All</button>
         </div>
-        <div class="export-section">
-          <div class="section-title">State & Data Files</div>
-          <div id="exportFiles"></div>
-        </div>
+        <div id="exportFileList">Loading repo contents...</div>
         <div class="export-section">
           <div class="section-title">Run Logs</div>
           <div id="exportLogs">Loading run history...</div>
@@ -944,29 +941,71 @@ async function triggerRun(slot){
 }
 
 // ── Export ──
-const _EXPORT_FILES=[
-  {path:'portfolio_state.json',label:'portfolio_state.json'},
-  {path:'trader.py',label:'trader.py'},
-  {path:'data/holdings_log.csv',label:'holdings_log.csv'},
-  {path:'data/trades_log.csv',label:'trades_log.csv'},
-  {path:'data/position_events.csv',label:'position_events.csv'},
-  {path:'data/strategy_memory.json',label:'strategy_memory.json'},
-  {path:'data/watchlist.txt',label:'watchlist.txt'},
-  {path:'data/symbols.json',label:'symbols.json'},
-  {path:'data/benchmark_history.csv',label:'benchmark_history.csv'},
-  {path:'data/spy_history.csv',label:'spy_history.csv'},
-];
+let _exportFiles=[];  // [{path, name, dir}]
 let _exportLogsLoaded=false;
 let _exportRuns=[];
+let _exportFilesLoaded=false;
 
-function loadExportPanel(){
-  // Render file checkboxes
-  const filesEl=document.getElementById('exportFiles');
-  filesEl.innerHTML=_EXPORT_FILES.map((f,i)=>
-    `<div class="export-item"><input type="checkbox" id="expf${i}" checked><label for="expf${i}">${f.label}</label></div>`
-  ).join('');
-  // Load run logs if not already loaded
+const _EXPORT_DIRS=['','data','.github/workflows'];
+const _FILE_TYPE_ORDER={yml:0,yaml:0,py:1,json:2,csv:3,txt:4};
+
+function _fileTypeOrder(name){
+  const ext=name.split('.').pop().toLowerCase();
+  return _FILE_TYPE_ORDER[ext]??9;
+}
+
+async function loadExportPanel(){
+  if(!_exportFilesLoaded)await loadExportFiles();
   if(!_exportLogsLoaded)loadExportRuns();
+}
+
+async function loadExportFiles(){
+  const el=document.getElementById('exportFileList');
+  try{
+    _exportFiles=[];
+    for(const dir of _EXPORT_DIRS){
+      try{
+        const path=dir?`contents/${dir}`:'contents';
+        const items=await gh(path);
+        if(!Array.isArray(items))continue;
+        for(const item of items){
+          if(item.type!=='file')continue;
+          // Skip hidden files and directories we scan separately
+          if(item.name.startsWith('.')&&dir==='')continue;
+          _exportFiles.push({
+            path:item.path,
+            name:item.name,
+            dir:dir||'root',
+          });
+        }
+      }catch(e){/* directory might not exist */}
+    }
+    _exportFilesLoaded=true;
+    // Group by directory, sort by file type within each group
+    const groups={};
+    for(const f of _exportFiles){
+      if(!groups[f.dir])groups[f.dir]=[];
+      groups[f.dir].push(f);
+    }
+    const dirOrder=['root','data','.github/workflows'];
+    const dirLabels={'root':'Root','data':'Data','github/workflows':'Workflows','.github/workflows':'Workflows'};
+    let html='';
+    let idx=0;
+    for(const dir of dirOrder){
+      const files=groups[dir];
+      if(!files||!files.length)continue;
+      files.sort((a,b)=>_fileTypeOrder(a.name)-_fileTypeOrder(b.name)||a.name.localeCompare(b.name));
+      html+=`<div class="export-section"><div class="section-title">${dirLabels[dir]||dir}</div>`;
+      for(const f of files){
+        html+=`<div class="export-item"><input type="checkbox" id="expf${idx}" data-path="${f.path}" data-name="${f.name}"><label for="expf${idx}">${f.name}</label></div>`;
+        idx++;
+      }
+      html+='</div>';
+    }
+    el.innerHTML=html||'<div style="color:var(--text3);font-size:12px">No files found.</div>';
+  }catch(e){
+    el.innerHTML=`<div style="color:var(--red);font-size:12px">Failed to load repo: ${e.message}</div>`;
+  }
 }
 
 async function loadExportRuns(){
@@ -1000,16 +1039,16 @@ async function doExport(){
   btn.disabled=true;btn.textContent='Exporting...';
   try{
     const zip=new JSZip();
-    // Add selected files
-    for(let i=0;i<_EXPORT_FILES.length;i++){
-      const cb=document.getElementById('expf'+i);
-      if(!cb||!cb.checked)continue;
-      const f=_EXPORT_FILES[i];
+    // Add selected repo files
+    const fileCbs=document.querySelectorAll('#exportFileList input[type="checkbox"]:checked');
+    for(const cb of fileCbs){
+      const path=cb.dataset.path;
+      const name=cb.dataset.name;
       try{
-        const{content}=await ghGet(f.path);
-        zip.file(f.label,content);
+        const{content}=await ghGet(path);
+        zip.file(name,content);
       }catch(e){
-        zip.file(f.label+'.error.txt',`Failed to fetch: ${e.message}`);
+        zip.file(name+'.error.txt',`Failed to fetch: ${e.message}`);
       }
     }
     // Add selected run logs
