@@ -181,7 +181,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
     <h1>Dashboard</h1>
   </div>
   <div id="brandedHeader" class="header hidden">
-    <h1><img src="https://raw.githubusercontent.com/mgatten/TBapp/main/tinylogo.jpg" alt="" style="height:24px;vertical-align:middle;margin-right:6px"><span onclick="alert('Build: 2026-03-21 01:05 ET')" style="cursor:pointer">Traderbot</span></h1>
+    <h1><img src="https://raw.githubusercontent.com/mgatten/TBapp/main/tinylogo.jpg" alt="" style="height:24px;vertical-align:middle;margin-right:6px"><span onclick="alert('Build: 2026-03-21 01:10 ET')" style="cursor:pointer">Traderbot</span></h1>
     <div class="header-right">
       <div class="theme-toggle" onclick="toggleTheme()" title="Toggle theme"></div>
       <div class="conn-dot" id="connDot"></div>
@@ -965,6 +965,8 @@ async function loadExportFiles(){
           if(item.type!=='file')continue;
           // Skip hidden files in root (scanned separately via _EXPORT_DIRS)
           if(item.name.startsWith('.')&&dir==='')continue;
+          // Skip git placeholder files
+          if(item.name==='.gitkeep')continue;
           // Skip subdirectories we scan separately
           if(dir===''&&_EXPORT_DIRS.includes(item.name))continue;
           _exportFiles.push({
