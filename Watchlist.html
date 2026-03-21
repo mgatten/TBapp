@@ -326,7 +326,7 @@ async function doConnect(){
   const token=document.getElementById('tokenInput').value.trim();
   if(!token){toast('Token required','err');return}
   cfg={token,repo:atob(_R)};
-  try{await gh('');LS.set('cfg',cfg);
+  try{await gh('git/refs/heads/main');LS.set('cfg',cfg);
     document.getElementById('setupPanel').classList.add('hidden');
     document.getElementById('loginHeader').classList.add('hidden');
     document.getElementById('brandedHeader').classList.remove('hidden');
