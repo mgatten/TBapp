@@ -181,7 +181,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
     <h1>Dashboard</h1>
   </div>
   <div id="brandedHeader" class="header hidden">
-    <h1><img src="https://raw.githubusercontent.com/mgatten/TBapp/main/tinylogo.jpg" alt="" style="height:24px;vertical-align:middle;margin-right:6px"><span onclick="alert('Build: 2026-03-17 03:30 ET')" style="cursor:pointer">Traderbot</span></h1>
+    <h1><img src="https://raw.githubusercontent.com/mgatten/TBapp/main/tinylogo.jpg" alt="" style="height:24px;vertical-align:middle;margin-right:6px"><span onclick="alert('Build: 2026-03-20 22:00 ET')" style="cursor:pointer">Traderbot</span></h1>
     <div class="header-right">
       <div class="theme-toggle" onclick="toggleTheme()" title="Toggle theme"></div>
       <div class="conn-dot" id="connDot"></div>
@@ -326,7 +326,7 @@ async function doConnect(){
   const token=document.getElementById('tokenInput').value.trim();
   if(!token){toast('Token required','err');return}
   cfg={token,repo:atob(_R)};
-  try{await gh('contents/portfolio_state.json');LS.set('cfg',cfg);
+  try{await gh('');LS.set('cfg',cfg);
     document.getElementById('setupPanel').classList.add('hidden');
     document.getElementById('loginHeader').classList.add('hidden');
     document.getElementById('brandedHeader').classList.remove('hidden');
@@ -358,16 +358,19 @@ async function refreshAll(){
     return;
   }
   document.getElementById('offlineBanner').classList.remove('show');setConn('ok');
-  try{await Promise.all([loadWl(),loadPortfolio(),loadEvents(),loadSecTickers(),loadHoldingsLog(),loadTradesLog(),loadStratMemory(),loadSpyHistory()]);
-    LS.set('cache',{wlItems,wlSha,portfolio,events,ts:new Date().toLocaleString()});
-  }catch(e){setConn('err');toast('Refresh failed: '+e.message,'err')}
+  const loaders=[loadWl,loadPortfolio,loadEvents,loadSecTickers,loadHoldingsLog,loadTradesLog,loadStratMemory,loadSpyHistory];
+  const results=await Promise.allSettled(loaders.map(fn=>fn()));
+  const failures=results.filter(r=>r.status==='rejected');
+  if(failures.length){console.warn('Some loaders failed:',failures.map(f=>f.reason?.message))}
+  LS.set('cache',{wlItems,wlSha,portfolio,events,ts:new Date().toLocaleString()});
+  if(failures.length>=loaders.length){setConn('err');toast('All data loads failed','err')}
 }
 
 // ── Watchlist ──
 function parseWl(t){const o=[];for(const raw of t.split('\n')){const l=raw.trim();if(!l||l.startsWith('#'))continue;let tk,n='';for(const s of['#','|']){const i=l.indexOf(s);if(i!==-1){tk=l.slice(0,i).trim().toUpperCase();n=l.slice(i+1).trim();break}}if(!tk)tk=l.toUpperCase();if(tk&&/^[A-Z0-9]+$/.test(tk))o.push({symbol:tk,note:n})}return o}
 function serWl(){return wlItems.map(w=>w.note?`${w.symbol}  # ${w.note}`:w.symbol).join('\n')+(wlItems.length?'\n':'')}
 
-async function loadWl(){try{const{content,sha}=await ghGet('data/watchlist.txt');wlItems=parseWl(content);wlSha=sha}catch(e){if(e.message.includes('404')){wlItems=[];wlSha=null}else throw e}renderWl()}
+async function loadWl(){try{const{content,sha}=await ghGet('data/watchlist.txt');wlItems=parseWl(content);wlSha=sha}catch(e){wlItems=[];wlSha=null}renderWl()}
 async function saveWl(){try{wlSha=await ghPut('data/watchlist.txt',serWl(),wlSha,`watchlist: ${wlItems.length} symbol${wlItems.length!==1?'s':''}`);toast(`Saved — ${wlItems.length} symbol${wlItems.length!==1?'s':''}`)}catch(e){toast('Save failed: '+e.message,'err')}}
 
 function renderWl(){
@@ -475,7 +478,7 @@ function wlEdit(i){const el=document.getElementById('wlN'+i);el.outerHTML=`<inpu
 async function wlEditDone(i){const el=document.getElementById('wlE'+i);if(!el)return;wlItems[i].note=el.value.trim();renderWl();await saveWl()}
 
 // ── Holdings ──
-async function loadPortfolio(){try{const{content}=await ghGet('portfolio_state.json');portfolio=JSON.parse(content)}catch(e){if(!e.message.includes('404'))throw e;portfolio=null}renderHoldings();renderHaltBtn()}
+async function loadPortfolio(){try{const{content}=await ghGet('portfolio_state.json');portfolio=JSON.parse(content)}catch(e){portfolio=null}renderHoldings();renderHaltBtn()}
 
 function renderHoldings(){
   const bar=document.getElementById('acctBar'),list=document.getElementById('holdingsList'),empty=document.getElementById('holdingsEmpty'),tsEl=document.getElementById('holdingsTs');
@@ -502,7 +505,7 @@ function parseCSV(text){
   return lines.slice(1).map(line=>{const v=[];let c='',q=false;for(let ch of line){if(ch==='"')q=!q;else if(ch===','&&!q){v.push(c.trim());c=''}else c+=ch}v.push(c.trim());const o={};hdr.forEach((h,i)=>o[h]=v[i]||'');return o});
 }
 
-async function loadEvents(){try{const{content}=await ghGet('data/position_events.csv');events=parseCSV(content).filter(e=>['OPEN','CLOSE','PARTIAL_CLOSE'].includes(e.event_type))}catch(e){if(!e.message.includes('404'))throw e;events=[]}renderHist()}
+async function loadEvents(){try{const{content}=await ghGet('data/position_events.csv');events=parseCSV(content).filter(e=>['OPEN','CLOSE','PARTIAL_CLOSE'].includes(e.event_type))}catch(e){events=[]}renderHist()}
 
 function renderHist(){
   const list=document.getElementById('histList'),empty=document.getElementById('histEmpty'),label=document.getElementById('monthLabel'),nBtn=document.getElementById('nextMonth');
@@ -532,7 +535,7 @@ async function loadHoldingsLog(){
   try{
     const{content}=await ghGet('data/holdings_log.csv');
     _holdingsLog=parseCSV(content);
-  }catch(e){if(!e.message.includes('404'))throw e;_holdingsLog=[]}
+  }catch(e){_holdingsLog=[]}
   renderEquityChart();
 }
 
@@ -677,7 +680,7 @@ async function loadSpyHistory(){
     try{
       const{content}=await ghGet('data/spy_history.csv');
       _benchHistory=parseCSV(content).map(r=>({date:r.date,SPY:r.close}));
-    }catch(e2){if(!e2.message.includes('404'))throw e2;_benchHistory=[]}
+    }catch(e2){_benchHistory=[]}
   }
   renderEquityChart();
 }
@@ -725,7 +728,7 @@ async function loadTradesLog(){
   try{
     const{content}=await ghGet('data/trades_log.csv');
     _tradesLog=parseCSV(content);
-  }catch(e){if(!e.message.includes('404'))throw e;_tradesLog=[]}
+  }catch(e){_tradesLog=[]}
   renderTrades();
 }
 
@@ -753,7 +756,7 @@ async function loadStratMemory(){
   try{
     const{content}=await ghGet('data/strategy_memory.json');
     _stratMem=JSON.parse(content);
-  }catch(e){if(!e.message.includes('404'))throw e;_stratMem=null}
+  }catch(e){_stratMem=null}
   renderStratMemory();
   renderPLDashboard();
 }
