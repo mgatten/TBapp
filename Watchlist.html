@@ -181,7 +181,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
     <h1>Dashboard</h1>
   </div>
   <div id="brandedHeader" class="header hidden">
-    <h1><img src="https://raw.githubusercontent.com/mgatten/TBapp/main/tinylogo.jpg" alt="" style="height:24px;vertical-align:middle;margin-right:6px"><span onclick="alert('Build: 2026-03-21 00:15 ET')" style="cursor:pointer">Traderbot</span></h1>
+    <h1><img src="https://raw.githubusercontent.com/mgatten/TBapp/main/tinylogo.jpg" alt="" style="height:24px;vertical-align:middle;margin-right:6px"><span onclick="alert('Build: 2026-03-21 00:45 ET')" style="cursor:pointer">Traderbot</span></h1>
     <div class="header-right">
       <div class="theme-toggle" onclick="toggleTheme()" title="Toggle theme"></div>
       <div class="conn-dot" id="connDot"></div>
@@ -1011,19 +1011,31 @@ async function loadExportFiles(){
 async function loadExportRuns(){
   const el=document.getElementById('exportLogs');
   try{
-    const d=await gh('actions/workflows/trader.yml/runs?per_page=20');
-    _exportRuns=(d.workflow_runs||[]).map(r=>({
-      id:r.id,
-      date:r.created_at,
-      status:r.conclusion||r.status,
-      slot:r.display_title||'',
+    // Fetch both live and test workflow runs
+    const [liveData, testData] = await Promise.allSettled([
+      gh('actions/workflows/trader.yml/runs?per_page=15'),
+      gh('actions/workflows/test.yml/runs?per_page=15'),
+    ]);
+    const liveRuns=(liveData.status==='fulfilled'?liveData.value.workflow_runs||[]:[]).map(r=>({
+      id:r.id, date:r.created_at, status:r.conclusion||r.status,
+      title:r.display_title||'', type:'LIVE',
     }));
+    const testRuns=(testData.status==='fulfilled'?testData.value.workflow_runs||[]:[]).map(r=>({
+      id:r.id, date:r.created_at, status:r.conclusion||r.status,
+      title:r.display_title||'', type:'TEST',
+    }));
+    _exportRuns=[...liveRuns,...testRuns].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,20);
     _exportLogsLoaded=true;
     el.innerHTML=_exportRuns.map((r,i)=>{
       const d=new Date(r.date);
       const ds=`${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
       const sc=r.status==='success'?'var(--green)':r.status==='failure'?'var(--red)':'var(--text3)';
-      return`<div class="export-item"><input type="checkbox" id="expr${i}"><label for="expr${i}">${ds} — <span style="color:${sc}">${r.status}</span></label></div>`;
+      const tc=r.type==='TEST'?'var(--yellow)':'var(--blue)';
+      // Extract slot from title if available
+      const slotMatch=r.title.match(/slot:\s*(\w+)/i);
+      const slot=slotMatch?slotMatch[1]:'';
+      const label=`${ds} — <span style="color:${tc}">${r.type}</span>${slot?' · '+slot:''} — <span style="color:${sc}">${r.status}</span>`;
+      return`<div class="export-item"><input type="checkbox" id="expr${i}"><label for="expr${i}">${label}</label></div>`;
     }).join('')||'<div style="color:var(--text3);font-size:12px">No recent runs found.</div>';
   }catch(e){
     el.innerHTML=`<div style="color:var(--red);font-size:12px">Failed to load runs: ${e.message}</div>`;
@@ -1065,7 +1077,7 @@ async function doExport(){
         if(resp.ok){
           const blob=await resp.blob();
           const rd=new Date(r.date);
-          const fname=`run_${rd.getMonth()+1}-${rd.getDate()}_${rd.getHours()}${String(rd.getMinutes()).padStart(2,'0')}_${r.status}.zip`;
+          const fname=`${r.type}_run_${rd.getMonth()+1}-${rd.getDate()}_${rd.getHours()}${String(rd.getMinutes()).padStart(2,'0')}_${r.status}.zip`;
           zip.file(fname,blob);
         }else{
           zip.file(`run_${r.id}.error.txt`,`HTTP ${resp.status}`);
