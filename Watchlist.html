@@ -241,6 +241,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
         <button class="sub-tab" onclick="switchSubTab('strategy')">Strategy</button>
         <button class="sub-tab" onclick="switchSubTab('trades')">Trades</button>
         <button class="sub-tab" onclick="switchSubTab('export')">Export</button>
+        <button class="sub-tab" onclick="switchSubTab('costs')">Costs</button>
       </div>
       <div class="sub-content active" id="sub-perf">
         <div class="account-bar pl-bar" id="plStats"></div>
@@ -267,6 +268,14 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
         </div>
         <div id="exportFileList">Loading repo contents...</div>
         <button class="btn btn-primary" onclick="doExport()" style="margin-top:14px" id="exportBtn">Export Selected</button>
+      </div>
+      <div class="sub-content" id="sub-costs">
+        <div class="account-bar pl-bar" id="costStats"></div>
+        <div id="costChart" class="card" style="padding:10px 8px;display:none">
+          <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Daily API Cost</div>
+          <canvas id="costCanvas" style="width:100%;height:160px"></canvas>
+        </div>
+        <div id="costLog"></div>
       </div>
     </div>
     <div class="tab-content" id="tab-run">
@@ -351,7 +360,7 @@ async function refreshAll(){
     return;
   }
   document.getElementById('offlineBanner').classList.remove('show');setConn('ok');
-  const loaders=[loadWl,loadPortfolio,loadEvents,loadSecTickers,loadHoldingsLog,loadTradesLog,loadStratMemory,loadSpyHistory];
+  const loaders=[loadWl,loadPortfolio,loadEvents,loadSecTickers,loadHoldingsLog,loadTradesLog,loadStratMemory,loadSpyHistory,loadApiCosts];
   const results=await Promise.allSettled(loaders.map(fn=>fn()));
   const failures=results.filter(r=>r.status==='rejected');
   if(failures.length){console.warn('Some loaders failed:',failures.map(f=>f.reason?.message))}
@@ -650,6 +659,60 @@ function renderEquityChart(){
   ctx.strokeStyle=lineCol;ctx.lineWidth=2;ctx.stroke();
   ctx.lineTo(pad.l+gW,pad.t+gH);ctx.lineTo(pad.l,pad.t+gH);ctx.closePath();
   ctx.fillStyle=fillCol;ctx.fill();
+  // ── Trade event dots ───────────────────────────────────────────────────
+  // Overlay buy (green ▲), sell (red ▼), and stop-fire (orange ◆) markers
+  // on the equity curve at the date they occurred.
+  const _dotDateSet=new Set(entries.map(e=>e[0])); // dates with equity data
+  const _dotSize=4;
+  // Buys from trades_log
+  for(const t of _tradesLog){
+    const d=(t.timestamp||'').slice(0,10);
+    if(!_dotDateSet.has(d))continue;
+    const idx=entries.findIndex(e=>e[0]===d);
+    if(idx<0)continue;
+    const x=pad.l+gW*idx/(eqPcts.length-1);
+    const y=pad.t+gH*(1-(eqPcts[idx]-mn)/range);
+    const action=(t.action||'').toLowerCase();
+    if(action==='buy'||action==='short'){
+      // Green triangle pointing up
+      ctx.fillStyle=isDark?'#2ecc71':'#1a9955';
+      ctx.beginPath();
+      ctx.moveTo(x,y-_dotSize-2);
+      ctx.lineTo(x-_dotSize,y+_dotSize-2);
+      ctx.lineTo(x+_dotSize,y+_dotSize-2);
+      ctx.closePath();ctx.fill();
+    }else if(action==='sell'||action==='cover'){
+      // Red triangle pointing down
+      ctx.fillStyle=isDark?'#e74c3c':'#c0392b';
+      ctx.beginPath();
+      ctx.moveTo(x,y+_dotSize+2);
+      ctx.lineTo(x-_dotSize,y-_dotSize+2);
+      ctx.lineTo(x+_dotSize,y-_dotSize+2);
+      ctx.closePath();ctx.fill();
+    }
+  }
+  // Autonomous closes (stop fires) from position_events
+  for(const ev of events){
+    if(ev.event_type!=='CLOSE')continue;
+    const reason=(ev.close_reason||'').toLowerCase();
+    // If close_reason is empty, it's likely a stop fire (autonomous)
+    const isStop=!reason||reason.includes('stop')||reason.includes('mechanical');
+    if(!isStop&&reason)continue; // skip bot-initiated sells (already covered above)
+    const d=(ev.close_timestamp||'').slice(0,10);
+    if(!_dotDateSet.has(d))continue;
+    const idx=entries.findIndex(e=>e[0]===d);
+    if(idx<0)continue;
+    const x=pad.l+gW*idx/(eqPcts.length-1);
+    const y=pad.t+gH*(1-(eqPcts[idx]-mn)/range);
+    // Orange diamond
+    ctx.fillStyle=isDark?'#e67e22':'#c8620a';
+    ctx.beginPath();
+    ctx.moveTo(x,y-_dotSize-1);
+    ctx.lineTo(x+_dotSize,y);
+    ctx.lineTo(x,y+_dotSize+1);
+    ctx.lineTo(x-_dotSize,y);
+    ctx.closePath();ctx.fill();
+  }
   // Legend
   ctx.font='9px IBM Plex Mono';ctx.textAlign='left';
   let lx=pad.l+4;
@@ -657,6 +720,14 @@ function renderEquityChart(){
   for(const b of benchmarks){
     if(!benchPcts[b.key])continue;
     ctx.fillStyle=isDark?b.color_d:b.color_l;ctx.fillText(b.label,lx,pad.t+10);lx+=b.label.length*6+10;
+  }
+  // Event dot legend (second row)
+  if(_tradesLog.length||events.some(e=>e.event_type==='CLOSE')){
+    ctx.font='9px IBM Plex Mono';ctx.textAlign='left';
+    let lx2=pad.l+4;
+    ctx.fillStyle=isDark?'#2ecc71':'#1a9955';ctx.fillText('▲ Buy',lx2,pad.t+22);lx2+=42;
+    ctx.fillStyle=isDark?'#e74c3c':'#c0392b';ctx.fillText('▼ Sell',lx2,pad.t+22);lx2+=42;
+    ctx.fillStyle=isDark?'#e67e22':'#c8620a';ctx.fillText('◆ Stop',lx2,pad.t+22);
   }
 }
 
@@ -807,7 +878,7 @@ function renderStratMemory(){
 
 // ── Analytics sub-tabs ──
 function switchSubTab(name){
-  const subs=['perf','strategy','trades','export'];
+  const subs=['perf','strategy','trades','export','costs'];
   document.querySelectorAll('.sub-tab').forEach((t,i)=>t.classList.toggle('active',subs[i]===name));
   document.querySelectorAll('.sub-content').forEach(sc=>sc.classList.toggle('active',sc.id==='sub-'+name));
   if(name==='export')loadExportPanel();
@@ -934,6 +1005,110 @@ async function triggerRun(slot){
     status.classList.remove('hidden');
     toast('Trigger failed','err');
   }
+}
+
+// ── API Cost Dashboard ──
+let _apiCosts=[];
+
+async function loadApiCosts(){
+  try{
+    const{content}=await ghGet('data/api_costs.csv');
+    _apiCosts=parseCSV(content);
+  }catch(e){_apiCosts=[]}
+  renderCostDashboard();
+}
+
+function renderCostDashboard(){
+  const stats=document.getElementById('costStats');
+  const logEl=document.getElementById('costLog');
+  const chartBox=document.getElementById('costChart');
+  if(!_apiCosts.length){
+    stats.innerHTML='';
+    logEl.innerHTML='<div class="empty-msg"><div class="em-icon">💰</div>No API cost data yet.<br>Costs are logged after each bot run.</div>';
+    chartBox.style.display='none';
+    return;
+  }
+  // Aggregate by day
+  const daily={};
+  let totalCost=0,totalTokens=0,totalSearches=0,runCount=0;
+  for(const row of _apiCosts){
+    const cost=parseFloat(row.estimated_cost_usd)||0;
+    const tokens=parseInt(row.total_tokens)||0;
+    const searches=parseInt(row.search_count)||0;
+    const day=(row.timestamp||'').slice(0,10);
+    totalCost+=cost;totalTokens+=tokens;totalSearches+=searches;runCount++;
+    if(day){
+      if(!daily[day])daily[day]={cost:0,runs:0,tokens:0,searches:0};
+      daily[day].cost+=cost;daily[day].runs++;daily[day].tokens+=tokens;daily[day].searches+=searches;
+    }
+  }
+  const days=Object.keys(daily).sort();
+  const numDays=days.length||1;
+  const dailyAvg=totalCost/numDays;
+  const monthEst=dailyAvg*21; // ~21 trading days per month
+
+  const costColor=totalCost>0?'var(--accent)':'var(--text)';
+  stats.innerHTML=`
+    <div class="stat-box"><div class="stat-label">Total Spent</div><div class="stat-val" style="color:${costColor}">$${totalCost.toFixed(2)}</div></div>
+    <div class="stat-box"><div class="stat-label">Daily Avg</div><div class="stat-val">$${dailyAvg.toFixed(2)}</div></div>
+    <div class="stat-box"><div class="stat-label">Mo. Est.</div><div class="stat-val">$${monthEst.toFixed(1)}</div></div>
+  `;
+
+  // Cost chart
+  if(days.length>=2){
+    chartBox.style.display='block';
+    const canvas=document.getElementById('costCanvas');
+    const dpr=window.devicePixelRatio||1;
+    const rect=canvas.getBoundingClientRect();
+    canvas.width=rect.width*dpr;canvas.height=rect.height*dpr;
+    const ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);
+    const W=rect.width,H=rect.height;
+    const pad={t:10,r:10,b:24,l:40};
+    const gW=W-pad.l-pad.r,gH=H-pad.t-pad.b;
+    ctx.clearRect(0,0,W,H);
+    const isDark=document.body.getAttribute('data-theme')==='dark';
+    const gridCol=isDark?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.06)';
+    const textCol=isDark?'#5a5a78':'#9998a5';
+    const barCol=isDark?'rgba(230,126,34,0.7)':'rgba(200,98,10,0.6)';
+    const vals=days.map(d=>daily[d].cost);
+    const mx=Math.max(...vals,0.01);
+    // Grid
+    for(let i=0;i<=3;i++){
+      const y=pad.t+gH*(1-i/3);
+      ctx.strokeStyle=gridCol;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+gW,y);ctx.stroke();
+      ctx.fillStyle=textCol;ctx.font='9px IBM Plex Mono';ctx.textAlign='right';
+      ctx.fillText('$'+(mx*i/3).toFixed(2),pad.l-4,y+3);
+    }
+    // Bars
+    const barW=Math.max(4,Math.min(20,(gW/days.length)*0.7));
+    const gap=(gW-barW*days.length)/(days.length+1);
+    for(let i=0;i<days.length;i++){
+      const x=pad.l+gap+(barW+gap)*i;
+      const h=gH*(vals[i]/mx);
+      const y=pad.t+gH-h;
+      ctx.fillStyle=barCol;
+      ctx.beginPath();
+      ctx.roundRect(x,y,barW,h,2);
+      ctx.fill();
+      // X label (show every Nth)
+      if(days.length<=14||i%Math.ceil(days.length/7)===0){
+        ctx.fillStyle=textCol;ctx.font='8px IBM Plex Mono';ctx.textAlign='center';
+        ctx.fillText(days[i].slice(5),x+barW/2,H-4);
+      }
+    }
+  }else{chartBox.style.display='none'}
+
+  // Run log (most recent first)
+  const recent=_apiCosts.slice().reverse().slice(0,30);
+  logEl.innerHTML='<div class="section-title">Recent Runs</div>'+recent.map(r=>{
+    const ts=(r.timestamp||'').slice(5,16).replace('T',' ');
+    const slot=(r.slot||'').toUpperCase();
+    const cost=parseFloat(r.estimated_cost_usd)||0;
+    const tokens=parseInt(r.total_tokens)||0;
+    const searches=parseInt(r.search_count)||0;
+    const slotColor=slot==='MORNING'?'var(--blue)':slot==='FINAL'?'var(--accent)':'var(--text2)';
+    return`<div class="trade-row"><span class="trade-date">${ts}</span><span style="font-size:10px;font-weight:700;color:${slotColor};min-width:48px">${slot}</span><span style="font-family:var(--font-mono);font-size:11px;color:var(--text2);flex:1">${(tokens/1000).toFixed(1)}k tok · ${searches} search</span><span style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--accent)">$${cost.toFixed(3)}</span></div>`;
+  }).join('');
 }
 
 // ── Export ──
