@@ -98,6 +98,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
 .evt-badge.open{background:var(--blue-bg);color:var(--blue)}
 .evt-badge.close{background:var(--red-bg);color:var(--red)}
 .evt-badge.partial{background:var(--yellow-bg);color:var(--yellow)}
+.evt-badge.scheduled{background:var(--green-bg);color:var(--green)}
 .evt-sym{font-family:var(--font-mono);font-weight:600;font-size:13px;min-width:45px}
 .evt-pl{font-family:var(--font-mono);font-size:12px;font-weight:500;margin-left:auto}
 .evt-pl.up{color:var(--green)}.evt-pl.down{color:var(--red)}
@@ -242,6 +243,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
         <button class="sub-tab" onclick="switchSubTab('trades')">Trades</button>
         <button class="sub-tab" onclick="switchSubTab('export')">Export</button>
         <button class="sub-tab" onclick="switchSubTab('costs')">Costs</button>
+        <button class="sub-tab" onclick="switchSubTab('briefs')">Briefs</button>
       </div>
       <div class="sub-content active" id="sub-perf">
         <div class="account-bar pl-bar" id="plStats"></div>
@@ -276,6 +278,10 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
           <canvas id="costCanvas" style="width:100%;height:160px"></canvas>
         </div>
         <div id="costLog"></div>
+      </div>
+      <div class="sub-content" id="sub-briefs">
+        <div id="briefsList"></div>
+        <div class="empty-msg hidden" id="briefsEmpty"><div class="em-icon">🧠</div>No strategy briefs yet.<br>Opus generates one each Monday morning.</div>
       </div>
     </div>
     <div class="tab-content" id="tab-run">
@@ -360,7 +366,7 @@ async function refreshAll(){
     return;
   }
   document.getElementById('offlineBanner').classList.remove('show');setConn('ok');
-  const loaders=[loadWl,loadPortfolio,loadEvents,loadSecTickers,loadHoldingsLog,loadTradesLog,loadStratMemory,loadSpyHistory,loadApiCosts];
+  const loaders=[loadWl,loadPortfolio,loadEvents,loadSecTickers,loadHoldingsLog,loadTradesLog,loadStratMemory,loadSpyHistory,loadApiCosts,loadBriefs];
   const results=await Promise.allSettled(loaders.map(fn=>fn()));
   const failures=results.filter(r=>r.status==='rejected');
   if(failures.length){console.warn('Some loaders failed:',failures.map(f=>f.reason?.message))}
@@ -495,7 +501,9 @@ function renderHoldings(){
     list.innerHTML=positions.map((p,i)=>{
       const pl=p.unrealized_pl||0,pct=p.unrealized_plpc||0,cls=pl>=0?'up':'down',sgn=pl>=0?'+':'';
       const th=theses[p.symbol]||{},opened=dates[p.symbol]?dates[p.symbol].slice(0,10):'—';
-      return`<div class="card expandable" onclick="toggleTh(${i})"><div class="pos-row"><div class="pos-sym">${esc(p.symbol)}<div style="font-size:10px;font-weight:400;color:var(--text3);font-family:var(--font-head);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:80px">${esc(_tickerName(p.symbol))}</div></div><div class="pos-mid"><div class="pos-alloc">${p.alloc_pct||0}% · ${p.side}</div><div class="pos-entry">${opened} @ $${(p.avg_entry_price||0).toFixed(2)}</div></div><div class="pos-pl ${cls}">${sgn}$${pl.toFixed(2)}<br><span style="font-size:11px">${sgn}${pct.toFixed(1)}%</span></div></div><div class="thesis-expand" id="th${i}"><div style="font-size:12px;color:var(--text2);margin-bottom:8px">${esc(_tickerName(p.symbol))}</div>${th.reason?`<div class="thesis-label">Why Opened</div><div>${esc(th.reason)}</div>`:''}${th.price_target?`<div class="thesis-label">Price Target</div><div>${esc(th.price_target)}</div>`:''}${th.exit_catalyst?`<div class="thesis-label">Exit Catalyst</div><div>${esc(th.exit_catalyst)}</div>`:''}${th.invalidation?`<div class="thesis-label">Invalidation</div><div>${esc(th.invalidation)}</div>`:''}${th.conviction?`<div class="thesis-label">Conviction</div><div>${th.conviction}/10</div>`:''}${!th.reason&&!th.price_target?'<div style="color:var(--text3)">No thesis recorded.</div>':''}</div></div>`}).join('')}
+      let ageBorder='var(--border)',ageTag='';
+      if(dates[p.symbol]&&th.time_horizon_days){const od=new Date(dates[p.symbol]);const held=Math.floor((Date.now()-od.getTime())/86400000);const hz=th.time_horizon_days;const pctAge=held/hz;if(pctAge>=1){ageBorder='var(--red)';ageTag=`<span style="font-size:9px;padding:1px 5px;border-radius:3px;background:var(--red-bg);color:var(--red);font-weight:600;margin-left:6px">DAY ${held}/${hz}</span>`}else if(pctAge>=0.75){ageBorder='var(--yellow)';ageTag=`<span style="font-size:9px;padding:1px 5px;border-radius:3px;background:var(--yellow-bg);color:var(--yellow);font-weight:600;margin-left:6px">DAY ${held}/${hz}</span>`}else{ageTag=`<span style="font-size:9px;padding:1px 5px;border-radius:3px;background:var(--green-bg);color:var(--green);font-weight:600;margin-left:6px">DAY ${held}/${hz}</span>`}}
+      return`<div class="card expandable" style="border-color:${ageBorder}" onclick="toggleTh(${i})"><div class="pos-row"><div class="pos-sym">${esc(p.symbol)}<div style="font-size:10px;font-weight:400;color:var(--text3);font-family:var(--font-head);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:80px">${esc(_tickerName(p.symbol))}</div></div><div class="pos-mid"><div class="pos-alloc">${p.alloc_pct||0}% · ${p.side}${ageTag}</div><div class="pos-entry">${opened} @ $${(p.avg_entry_price||0).toFixed(2)}</div></div><div class="pos-pl ${cls}">${sgn}$${pl.toFixed(2)}<br><span style="font-size:11px">${sgn}${pct.toFixed(1)}%</span></div></div><div class="thesis-expand" id="th${i}"><div style="font-size:12px;color:var(--text2);margin-bottom:8px">${esc(_tickerName(p.symbol))}</div>${th.reason?`<div class="thesis-label">Why Opened</div><div>${esc(th.reason)}</div>`:''}${th.price_target?`<div class="thesis-label">Price Target</div><div>${esc(th.price_target)}</div>`:''}${th.exit_catalyst?`<div class="thesis-label">Exit Catalyst</div><div>${esc(th.exit_catalyst)}</div>`:''}${th.invalidation?`<div class="thesis-label">Invalidation</div><div>${esc(th.invalidation)}</div>`:''}${th.conviction?`<div class="thesis-label">Conviction</div><div>${th.conviction}/10</div>`:''}${th.time_horizon_days?`<div class="thesis-label">Time Horizon</div><div>${th.time_horizon_days} days</div>`:''}${!th.reason&&!th.price_target?'<div style="color:var(--text3)">No thesis recorded.</div>':''}</div></div>`}).join('')}
   const now=new Date();const tz=now.toLocaleTimeString('en-US',{timeZoneName:'short'}).split(' ').pop();tsEl.textContent=`Logs last consulted at: ${now.toLocaleDateString()} ${now.toLocaleTimeString()} ${tz}`;
 }
 function toggleTh(i){const e=document.getElementById('th'+i);if(e)e.classList.toggle('show')}
@@ -507,7 +515,7 @@ function parseCSV(text){
   return lines.slice(1).map(line=>{const v=[];let c='',q=false;for(let ch of line){if(ch==='"')q=!q;else if(ch===','&&!q){v.push(c.trim());c=''}else c+=ch}v.push(c.trim());const o={};hdr.forEach((h,i)=>o[h]=v[i]||'');return o});
 }
 
-async function loadEvents(){try{const{content}=await ghGet('data/position_events.csv');events=parseCSV(content).filter(e=>['OPEN','CLOSE','PARTIAL_CLOSE'].includes(e.event_type))}catch(e){events=[]}renderHist()}
+async function loadEvents(){try{const{content}=await ghGet('data/position_events.csv');events=parseCSV(content).filter(e=>['OPEN','CLOSE','PARTIAL_CLOSE','SCHEDULED_RUN'].includes(e.event_type))}catch(e){events=[]}renderHist()}
 
 function renderHist(){
   const list=document.getElementById('histList'),empty=document.getElementById('histEmpty'),label=document.getElementById('monthLabel'),nBtn=document.getElementById('nextMonth');
@@ -521,9 +529,10 @@ function renderHist(){
   empty.classList.add('hidden');
   list.innerHTML=filt.map((e,i)=>{
     const ts=e.close_timestamp||e.open_timestamp||'';let ds='';try{ds=new Date(ts).toLocaleDateString('en-US',{month:'short',day:'numeric'})}catch{ds=ts.slice(0,10)}
-    const tp=e.event_type,bc=tp==='OPEN'?'open':tp==='CLOSE'?'close':'partial',bt=tp==='OPEN'?'OPEN':tp==='CLOSE'?'CLOSE':'PARTIAL';
-    let ph='';if(tp!=='OPEN'&&e.realized_pl){const pl=parseFloat(e.realized_pl)||0,pc=parseFloat(e.realized_pl_pct)||0,c=pl>=0?'up':'down',s=pl>=0?'+':'';ph=`<span class="evt-pl ${c}">${s}$${pl.toFixed(2)} (${s}${pc.toFixed(1)}%)</span>`}
-    const reason=tp==='OPEN'?(e.open_reason||''):(e.close_reason||'');
+    const tp=e.event_type,bc=tp==='OPEN'?'open':tp==='CLOSE'?'close':tp==='SCHEDULED_RUN'?'scheduled':'partial',bt=tp==='OPEN'?'OPEN':tp==='CLOSE'?'CLOSE':tp==='SCHEDULED_RUN'?'SCHED':'PARTIAL';
+    let ph='';if(tp!=='OPEN'&&tp!=='SCHEDULED_RUN'&&e.realized_pl){const pl=parseFloat(e.realized_pl)||0,pc=parseFloat(e.realized_pl_pct)||0,c=pl>=0?'up':'down',s=pl>=0?'+':'';ph=`<span class="evt-pl ${c}">${s}$${pl.toFixed(2)} (${s}${pc.toFixed(1)}%)</span>`}
+    if(tp==='SCHEDULED_RUN'&&e.close_timestamp){try{const sd=new Date(e.close_timestamp);ph=`<span style="font-size:11px;color:var(--text2);margin-left:auto;font-family:var(--font-mono)">${sd.toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short'})}</span>`}catch{}}
+    const reason=tp==='OPEN'?(e.open_reason||''):tp==='SCHEDULED_RUN'?(e.open_reason||''):(e.close_reason||'');
     return`<div class="card ${reason?'expandable':''}" ${reason?`onclick="toggleEv(${i})"`:''}><div class="evt-row"><span class="evt-date">${ds}</span><span class="evt-badge ${bc}">${bt}</span><span class="evt-sym">${esc(e.symbol)}</span>${ph}</div>${reason?`<div class="evt-detail" id="ev${i}">${esc(reason)}</div>`:''}</div>`}).join('');
 }
 function toggleEv(i){const e=document.getElementById('ev'+i);if(e)e.classList.toggle('show')}
@@ -1110,6 +1119,37 @@ function renderCostDashboard(){
     return`<div class="trade-row"><span class="trade-date">${ts}</span><span style="font-size:10px;font-weight:700;color:${slotColor};min-width:48px">${slot}</span><span style="font-family:var(--font-mono);font-size:11px;color:var(--text2);flex:1">${(tokens/1000).toFixed(1)}k tok · ${searches} search</span><span style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--accent)">$${cost.toFixed(3)}</span></div>`;
   }).join('');
 }
+
+// ── Strategy Briefs ──
+let _briefs=[];
+
+async function loadBriefs(){
+  try{
+    const{content}=await ghGet('data/strategy_briefs.json');
+    _briefs=JSON.parse(content);
+    if(!Array.isArray(_briefs))_briefs=[];
+  }catch(e){_briefs=[]}
+  renderBriefs();
+}
+
+function renderBriefs(){
+  const list=document.getElementById('briefsList'),empty=document.getElementById('briefsEmpty');
+  if(!_briefs.length){list.innerHTML='';empty.classList.remove('hidden');return}
+  empty.classList.add('hidden');
+  const sorted=[..._briefs].reverse();
+  list.innerHTML=sorted.map((b,i)=>{
+    let ds='';
+    try{const d=new Date(b.date);ds=d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'})}catch{ds=b.date||'?'}
+    const costStr=b.cost_usd?` · $${b.cost_usd.toFixed(2)}`:'';
+    const tokStr=b.input_tokens?` · ${((b.input_tokens+b.output_tokens)/1000).toFixed(1)}k tok`:'';
+    const searchStr=b.search_count?` · ${b.search_count} search${b.search_count>1?'es':''}`:'';
+    const meta=`${costStr}${tokStr}${searchStr}`;
+    const briefHtml=esc(b.brief).replace(/\n\n/g,'</p><p style="margin:0 0 10px">').replace(/\n/g,'<br>');
+    return`<div class="card expandable" onclick="toggleBrief(${i})"><div style="display:flex;align-items:center;justify-content:space-between"><div><span style="font-weight:600;font-size:13px">${ds}</span><span style="font-size:11px;color:var(--text3);margin-left:8px">${b.model||''}</span></div><span style="font-size:10px;color:var(--text3);font-family:var(--font-mono)">${meta}</span></div><div class="thesis-expand" id="brief${i}"><p style="margin:0 0 10px;font-size:12px;line-height:1.6;color:var(--text2)">${briefHtml}</p></div></div>`;
+  }).join('');
+}
+
+function toggleBrief(i){const e=document.getElementById('brief'+i);if(e)e.classList.toggle('show')}
 
 // ── Export ──
 let _exportFiles=[];  // [{path, name, dir}]
