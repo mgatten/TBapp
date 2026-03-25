@@ -239,11 +239,11 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
     <div class="tab-content" id="tab-analytics">
       <div class="sub-tabs">
         <button class="sub-tab active" onclick="switchSubTab('perf')">Performance</button>
+        <button class="sub-tab" onclick="switchSubTab('briefs')">Briefs</button>
         <button class="sub-tab" onclick="switchSubTab('strategy')">Strategy</button>
         <button class="sub-tab" onclick="switchSubTab('trades')">Trades</button>
-        <button class="sub-tab" onclick="switchSubTab('export')">Export</button>
         <button class="sub-tab" onclick="switchSubTab('costs')">Costs</button>
-        <button class="sub-tab" onclick="switchSubTab('briefs')">Briefs</button>
+        <button class="sub-tab" onclick="switchSubTab('export')">Export</button>
       </div>
       <div class="sub-content active" id="sub-perf">
         <div class="account-bar pl-bar" id="plStats"></div>
@@ -961,7 +961,7 @@ function renderStratMemory(){
 
 // ── Analytics sub-tabs ──
 function switchSubTab(name){
-  const subs=['perf','strategy','trades','export','costs','briefs'];
+  const subs=['perf','briefs','strategy','trades','costs','export'];
   document.querySelectorAll('.sub-tab').forEach((t,i)=>t.classList.toggle('active',subs[i]===name));
   document.querySelectorAll('.sub-content').forEach(sc=>sc.classList.toggle('active',sc.id==='sub-'+name));
   if(name==='export')loadExportPanel();
