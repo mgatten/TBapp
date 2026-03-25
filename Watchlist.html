@@ -182,7 +182,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
     <h1>Dashboard</h1>
   </div>
   <div id="brandedHeader" class="header hidden">
-    <h1><img src="https://raw.githubusercontent.com/mgatten/TBapp/main/tinylogo.jpg" alt="" style="height:24px;vertical-align:middle;margin-right:6px"><span onclick="alert('Build: 2026-03-21 01:10 ET')" style="cursor:pointer">Traderbot</span></h1>
+    <h1><img src="https://raw.githubusercontent.com/mgatten/TBapp/main/tinylogo.jpg" alt="" style="height:24px;vertical-align:middle;margin-right:6px"><span onclick="alert('Build: 2026-03-24 20:00 ET')" style="cursor:pointer">Traderbot</span></h1>
     <div class="header-right">
       <div class="theme-toggle" onclick="toggleTheme()" title="Toggle theme"></div>
       <div class="conn-dot" id="connDot"></div>
@@ -314,21 +314,57 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
 </div>
 <div class="toast" id="toast"></div>
 <script>
+// ══════════════════════════════════════════════════════════════════════════════
+// Traderbot Console — Single-page GitHub Pages app for monitoring the bot.
+//
+// Architecture:
+//   - All data lives in a GitHub repo (portfolio_state.json, data/*.csv/json)
+//   - Authenticated via GitHub personal access token (stored in localStorage)
+//   - Every load/refresh fetches fresh data from GitHub API (cache-busted)
+//   - No backend — pure client-side JS reading repo files
+//
+// Tabs:
+//   Watchlist   — manage symbols for Claude to evaluate (data/watchlist.txt)
+//   Holdings    — live portfolio state with age indicators + expandable theses
+//   History     — position opens/closes/scheduled runs (data/position_events.csv)
+//   Analytics   — sub-tabs: Performance, Strategy, Trades, Export, Costs, Briefs
+//   Run         — trigger bot runs via GitHub Actions workflow dispatch
+//
+// Data sources:
+//   portfolio_state.json      — latest portfolio snapshot (positions, theses, regime)
+//   data/watchlist.txt         — user's watchlist symbols with optional notes
+//   data/position_events.csv  — OPEN, CLOSE, PARTIAL_CLOSE, SCHEDULED_RUN events
+//   data/holdings_log.csv     — per-run position snapshots (equity chart source)
+//   data/trades_log.csv       — executed trades log
+//   data/strategy_memory.json — Claude's strategy memory (hypotheses, market view)
+//   data/benchmark_history.csv— SPY/QQQ/DIA benchmark prices for chart overlay
+//   data/api_costs.csv        — per-run API token/cost tracking
+//   data/strategy_briefs.json — weekly Opus 4.5 strategic outlook briefs
+//   data/symbols.json         — SEC ticker list for watchlist search
+// ══════════════════════════════════════════════════════════════════════════════
+
 const API='https://api.github.com';
+// ── Global state ──
 let cfg={},wlItems=[],wlSha=null,portfolio=null,events=[];
-let histMonth=new Date();histMonth.setDate(1);
+let histMonth=new Date();histMonth.setDate(1);  // history tab month navigator
 const LS={get(k){try{return JSON.parse(localStorage.getItem('tb_'+k))}catch{return null}},set(k,v){localStorage.setItem('tb_'+k,JSON.stringify(v))},del(k){localStorage.removeItem('tb_'+k)}};
+
+// ── Utilities ──
 function toggleTheme(){const t=document.body.getAttribute('data-theme')==='dark'?'light':'dark';document.body.setAttribute('data-theme',t);LS.set('theme',t)}
 function toast(m,t='ok'){const e=document.getElementById('toast');e.textContent=m;e.className=`toast show ${t}`;clearTimeout(e._t);e._t=setTimeout(()=>e.className='toast',2500)}
 function esc(s){if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML}
 function _tickerName(sym){const t=_allTickers.find(t=>t.ticker===sym);return t?t.title:''}
 function setConn(s){document.getElementById('connDot').className='conn-dot'+(s==='ok'?' ok':s==='err'?' err':'')}
+// GitHub API wrapper — cache-busted with timestamp param, no-store, and
+// cleared ETag to ensure every call returns fresh data from the repo.
 async function gh(path,opts={}){const sep=path.includes('?')?'&':'?';const r=await fetch(`${API}/repos/${cfg.repo}/${path}${sep}_=${Date.now()}`,{...opts,cache:'no-store',headers:{'Authorization':`Bearer ${cfg.token}`,'Accept':'application/vnd.github.v3+json','If-None-Match':'',...(opts.headers||{})}});if(!r.ok)throw new Error(`HTTP ${r.status}`);return r.json()}
 function b64d(s){return decodeURIComponent(escape(atob(s.replace(/\n/g,''))))}
 async function ghGet(p){const d=await gh(`contents/${p}`);return{content:b64d(d.content),sha:d.sha}}
 async function ghPut(p,c,sha,msg){const b={message:msg,content:btoa(unescape(encodeURIComponent(c)))};if(sha)b.sha=sha;const d=await gh(`contents/${p}`,{method:'PUT',body:JSON.stringify(b)});return d.content.sha}
 
 // ── Connect ──
+// _R is the base64-encoded repo name (owner/repo). Decoded at runtime
+// to avoid GitHub's automated dependency scanners flagging the reference.
 const _R='bWdhdHRlbi9teWZpcnN0Z2l0cmVwbw==';
 async function doConnect(){
   const token=document.getElementById('tokenInput').value.trim();
@@ -357,6 +393,8 @@ function switchTab(name){
 }
 
 // ── Refresh ──
+// All data loaders run in parallel via Promise.allSettled so one failure
+// doesn't block others. Results are cached to localStorage for offline mode.
 async function refreshAll(){
   if(!navigator.onLine){
     document.getElementById('offlineBanner').classList.add('show');
@@ -375,6 +413,11 @@ async function refreshAll(){
 }
 
 // ── Watchlist ──
+// Manages data/watchlist.txt — a newline-separated list of ticker symbols
+// with optional notes after # or |. Supports inline editing (tap note to
+// expand, double-tap to edit), deletion with confirmation, and adding new
+// symbols via the SEC ticker search autocomplete. Changes are saved back
+// to the repo via GitHub API with optimistic sha tracking.
 function parseWl(t){const o=[];for(const raw of t.split('\n')){const l=raw.trim();if(!l||l.startsWith('#'))continue;let tk,n='';for(const s of['#','|']){const i=l.indexOf(s);if(i!==-1){tk=l.slice(0,i).trim().toUpperCase();n=l.slice(i+1).trim();break}}if(!tk)tk=l.toUpperCase();if(tk&&/^[A-Z0-9]+$/.test(tk))o.push({symbol:tk,note:n})}return o}
 function serWl(){return wlItems.map(w=>w.note?`${w.symbol}  # ${w.note}`:w.symbol).join('\n')+(wlItems.length?'\n':'')}
 
@@ -403,6 +446,9 @@ async function wlAdd(){
 }
 
 // ── SEC ticker search ──
+// Ticker autocomplete for the watchlist add bar. Loads data/symbols.json
+// (generated by the bot's final run daily) with 24h localStorage cache.
+// Supports exact match, prefix match, and company name substring search.
 let _allTickers=[];  // [{ticker,title}]
 let _selectedTicker='';
 let _searchTimeout=null;
@@ -486,6 +532,12 @@ function wlEdit(i){const el=document.getElementById('wlN'+i);el.outerHTML=`<inpu
 async function wlEditDone(i){const el=document.getElementById('wlE'+i);if(!el)return;wlItems[i].note=el.value.trim();renderWl();await saveWl()}
 
 // ── Holdings ──
+// Renders portfolio from portfolio_state.json. Shows account stats (equity,
+// cash, invested, ATH, regime), position cards with P&L, and expandable
+// entry theses. Position age indicators (DAY X/Y pills) color-code each
+// holding against its time_horizon_days: green (<75%), yellow (75-99%),
+// red (overdue). Card border color also changes to match.
+// Timestamp shows when the console last fetched data, not when the bot ran.
 async function loadPortfolio(){try{const{content}=await ghGet('portfolio_state.json');portfolio=JSON.parse(content)}catch(e){portfolio=null}renderHoldings();renderHaltBtn()}
 
 function renderHoldings(){
@@ -509,6 +561,11 @@ function renderHoldings(){
 function toggleTh(i){const e=document.getElementById('th'+i);if(e)e.classList.toggle('show')}
 
 // ── History ──
+// Reads position_events.csv and displays OPEN, CLOSE, PARTIAL_CLOSE, and
+// SCHEDULED_RUN events in a month-navigable timeline. Each event type has
+// a color-coded badge. SCHEDULED_RUN events show the event name (in the
+// symbol column), the scheduled run time, and the reason in the expandable
+// detail. Close events show realized P&L.
 function parseCSV(text){
   const lines=text.split('\n').filter(l=>l.trim());if(lines.length<2)return[];
   const hdr=lines[0].split(',').map(h=>h.trim().replace(/^"|"$/g,''));
@@ -539,6 +596,11 @@ function toggleEv(i){const e=document.getElementById('ev'+i);if(e)e.classList.to
 function histNav(d){histMonth.setMonth(histMonth.getMonth()+d);renderHist()}
 
 // ── Equity chart ──
+// Canvas-rendered equity curve from holdings_log.csv with 7d/30d/All toggle.
+// Overlays benchmark lines (SPY, QQQ, DIA) normalized to % change from the
+// first data point. Trade event dots (buy=green triangle, sell=red triangle,
+// stop fire=orange diamond) are plotted at matching dates from trades_log
+// and position_events.
 let _holdingsLog=[];
 let _chartRange='30d';
 
@@ -743,6 +805,9 @@ function renderEquityChart(){
 function setChartRange(r){_chartRange=r;renderEquityChart()}
 
 // ── Benchmark data ──
+// Loads benchmark prices (SPY, QQQ, DIA) from data/benchmark_history.csv
+// for the equity chart overlay. Falls back to the legacy data/spy_history.csv
+// (SPY-only) if the multi-benchmark file doesn't exist yet.
 let _benchHistory=[];
 
 async function loadSpyHistory(){
@@ -759,6 +824,9 @@ async function loadSpyHistory(){
 }
 
 // ── P&L Dashboard ──
+// Computes win rate, total P&L, expectancy, and best/worst trades from
+// CLOSE and PARTIAL_CLOSE events in position_events.csv. Displayed in
+// the Performance sub-tab under Analytics.
 function renderPLDashboard(){
   const stats=document.getElementById('plStats');
   const details=document.getElementById('plDetails');
@@ -795,6 +863,9 @@ function renderPLDashboard(){
 }
 
 // ── Trade Log ──
+// Reads data/trades_log.csv and displays all executed trades with
+// filterable symbol search and buy/sell action filter. Shown in the
+// Trades sub-tab under Analytics.
 let _tradesLog=[];
 
 async function loadTradesLog(){
@@ -823,6 +894,9 @@ function renderTrades(){
 }
 
 // ── Strategy Memory ──
+// Displays Claude's strategy_memory.json — the persistent memory that
+// carries across runs. Shows market view, macro context, active hypotheses,
+// position-level theses with watch items, and recently exited positions.
 let _stratMem=null;
 
 async function loadStratMemory(){
@@ -887,13 +961,17 @@ function renderStratMemory(){
 
 // ── Analytics sub-tabs ──
 function switchSubTab(name){
-  const subs=['perf','strategy','trades','export','costs'];
+  const subs=['perf','strategy','trades','export','costs','briefs'];
   document.querySelectorAll('.sub-tab').forEach((t,i)=>t.classList.toggle('active',subs[i]===name));
   document.querySelectorAll('.sub-content').forEach(sc=>sc.classList.toggle('active',sc.id==='sub-'+name));
   if(name==='export')loadExportPanel();
 }
 
 // ── Stop/Resume Trading ──
+// Toggle trading_halted in portfolio_state.json via GitHub API. When halted,
+// the bot's circuit breaker prevents all trades until manually resumed.
+// The button dynamically shows "Stop Trading" or "Resume Trading" and
+// fetches the latest sha before writing to avoid conflicts.
 let _portfolioSha=null;
 
 function renderHaltBtn(){
@@ -937,6 +1015,11 @@ async function toggleHalt(){
 }
 
 // ── Run triggers ──
+// Triggers bot runs via GitHub Actions workflow_dispatch API. Supports
+// run (live trades) and test (no real orders) modes with morning/midday/
+// closing slot buttons. After triggering, all buttons are disabled for
+// 7 minutes to prevent duplicate runs. Cooldown persists across page
+// reloads via localStorage.
 let _runCooldownTimer=null;
 let _runMode='run';
 
@@ -1017,6 +1100,10 @@ async function triggerRun(slot){
 }
 
 // ── API Cost Dashboard ──
+// Reads data/api_costs.csv which logs every Anthropic API call — both
+// Haiku trading runs (slot=morning/midday/final) and Opus strategy briefs
+// (slot=opus_brief). Shows total/daily average/monthly estimate stats,
+// a daily cost bar chart, and a reverse-chronological run log.
 let _apiCosts=[];
 
 async function loadApiCosts(){
@@ -1121,6 +1208,10 @@ function renderCostDashboard(){
 }
 
 // ── Strategy Briefs ──
+// Displays weekly Opus 4.5 strategic outlook briefs from
+// data/strategy_briefs.json. Shown in reverse chronological order with
+// expandable full text. Each card shows date, model, cost, token count,
+// and search count. Briefs are permanent records — never pruned.
 let _briefs=[];
 
 async function loadBriefs(){
@@ -1152,6 +1243,11 @@ function renderBriefs(){
 function toggleBrief(i){const e=document.getElementById('brief'+i);if(e)e.classList.toggle('show')}
 
 // ── Export ──
+// Lists all repo files from root, data/, and .github/workflows/ with
+// checkboxes. Selected files are fetched via GitHub API, bundled into a
+// zip using JSZip, and downloaded. Files are sorted by type (yml first,
+// then py, json, csv, txt) within each directory group. Lazy-loaded on
+// first visit to the Export sub-tab.
 let _exportFiles=[];  // [{path, name, dir}]
 let _exportFilesLoaded=false;
 
@@ -1259,6 +1355,10 @@ async function doExport(){
 }
 
 // ── Init ──
+// On load: restore theme and credentials from localStorage. If already
+// authenticated, hide login panel and fetch all data. Also registers
+// online/offline handlers for the offline banner and resize handler
+// for the equity chart canvas.
 (async function(){
   document.body.setAttribute('data-theme',LS.get('theme')||'dark');
   cfg=LS.get('cfg')||{};
