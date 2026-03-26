@@ -203,7 +203,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
       <button class="tab" onclick="switchTab('holdings')">Holdings</button>
       <button class="tab" onclick="switchTab('history')">History</button>
       <button class="tab" onclick="switchTab('analytics')">Analytics</button>
-      <button class="tab" onclick="switchTab('run')">Run</button>
+      <button class="tab" onclick="switchTab('control')">Control</button>
     </div>
     <div class="tab-content active" id="tab-watchlist">
       <div class="add-bar" id="addBar">
@@ -243,7 +243,6 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
         <button class="sub-tab" onclick="switchSubTab('strategy')">Strategy</button>
         <button class="sub-tab" onclick="switchSubTab('trades')">Trades</button>
         <button class="sub-tab" onclick="switchSubTab('costs')">Costs</button>
-        <button class="sub-tab" onclick="switchSubTab('export')">Export</button>
       </div>
       <div class="sub-content active" id="sub-perf">
         <div class="account-bar pl-bar" id="plStats"></div>
@@ -263,14 +262,6 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
         </div>
         <div id="tradeLog"></div>
       </div>
-      <div class="sub-content" id="sub-export">
-        <div class="export-actions" style="margin-bottom:10px">
-          <button class="btn btn-sm btn-ghost" onclick="exportSelectAll(true)">Select All</button>
-          <button class="btn btn-sm btn-ghost" onclick="exportSelectAll(false)" style="margin-left:6px">Deselect All</button>
-        </div>
-        <div id="exportFileList">Loading repo contents...</div>
-        <button class="btn btn-primary" onclick="doExport()" style="margin-top:14px" id="exportBtn">Export Selected</button>
-      </div>
       <div class="sub-content" id="sub-costs">
         <div class="account-bar pl-bar" id="costStats"></div>
         <div id="costChart" class="card" style="padding:10px 8px;display:none">
@@ -284,28 +275,45 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
         <div class="empty-msg hidden" id="briefsEmpty"><div class="em-icon">🧠</div>No strategy briefs yet.<br>Opus generates one each Monday morning.</div>
       </div>
     </div>
-    <div class="tab-content" id="tab-run">
-      <div class="run-panel">
-        <div class="run-mode-toggle">
-          <button class="run-mode-btn active" id="modeRun" onclick="setRunMode('run')">Run</button>
-          <button class="run-mode-btn" id="modeTest" onclick="setRunMode('test')">Test</button>
+    <div class="tab-content" id="tab-control">
+      <div class="sub-tabs">
+        <button class="sub-tab active" onclick="switchControlTab('runs')">Runs</button>
+        <button class="sub-tab" onclick="switchControlTab('ctrl-export')">Export</button>
+        <button class="sub-tab" onclick="switchControlTab('settings')">Settings</button>
+      </div>
+      <div class="sub-content active" id="sub-runs">
+        <div class="run-panel">
+          <div class="run-mode-toggle">
+            <button class="run-mode-btn active" id="modeRun" onclick="setRunMode('run')">Run</button>
+            <button class="run-mode-btn" id="modeTest" onclick="setRunMode('test')">Test</button>
+          </div>
+          <p class="run-desc" id="runDesc">Trigger a live bot run. This may execute trades. The run may take several minutes to complete.</p>
+          <div class="run-buttons">
+            <button class="btn run-btn" id="runMorning" onclick="triggerRun('morning')">Morning</button>
+            <button class="btn run-btn" id="runMidday" onclick="triggerRun('midday')">Midday</button>
+            <button class="btn run-btn" id="runFinal" onclick="triggerRun('final')">Closing</button>
+          </div>
+          <div class="run-status hidden" id="runStatus"></div>
+          <div class="run-cooldown hidden" id="runCooldown"></div>
         </div>
-        <p class="run-desc" id="runDesc">Trigger a live bot run. This may execute trades. The run may take several minutes to complete.</p>
-        <div class="run-buttons">
-          <button class="btn run-btn" id="runMorning" onclick="triggerRun('morning')">Morning</button>
-          <button class="btn run-btn" id="runMidday" onclick="triggerRun('midday')">Midday</button>
-          <button class="btn run-btn" id="runFinal" onclick="triggerRun('final')">Closing</button>
+      </div>
+      <div class="sub-content" id="sub-ctrl-export">
+        <div class="export-actions" style="margin-bottom:10px">
+          <button class="btn btn-sm btn-ghost" onclick="exportSelectAll(true)">Select All</button>
+          <button class="btn btn-sm btn-ghost" onclick="exportSelectAll(false)" style="margin-left:6px">Deselect All</button>
         </div>
-        <div class="run-status hidden" id="runStatus"></div>
-        <div class="run-cooldown hidden" id="runCooldown"></div>
-        <div style="margin-top:20px;border-top:1px solid var(--border);padding-top:16px">
+        <div id="exportFileList">Loading repo contents...</div>
+        <button class="btn btn-primary" onclick="doExport()" style="margin-top:14px" id="exportBtn">Export Selected</button>
+      </div>
+      <div class="sub-content" id="sub-settings">
+        <div class="run-panel">
           <button class="btn run-btn" id="haltBtn" onclick="toggleHalt()" style="width:100%"></button>
-        </div>
-        <div style="margin-top:10px">
-          <button class="btn btn-ghost" onclick="window.location.href=window.location.pathname+'?v='+Date.now()" style="width:100%">Force Console Refresh</button>
-        </div>
-        <div style="margin-top:10px">
-          <button class="btn btn-ghost" onclick="doDisconnect()" style="width:100%">Disconnect</button>
+          <div style="margin-top:10px">
+            <button class="btn btn-ghost" onclick="window.location.href=window.location.pathname+'?v='+Date.now()" style="width:100%">Force Console Refresh</button>
+          </div>
+          <div style="margin-top:10px">
+            <button class="btn btn-ghost" onclick="doDisconnect()" style="width:100%">Disconnect</button>
+          </div>
         </div>
       </div>
     </div>
@@ -386,7 +394,7 @@ function doDisconnect(){cfg={};LS.del('cfg');wlItems=[];wlSha=null;portfolio=nul
 
 // ── Tabs ──
 function switchTab(name){
-  const tabs=['watchlist','holdings','history','analytics','run'];
+  const tabs=['watchlist','holdings','history','analytics','control'];
   document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',tabs[i]===name));
   document.querySelectorAll('.tab-content').forEach(tc=>tc.classList.toggle('active',tc.id==='tab-'+name));
   if(name==='holdings')setTimeout(renderEquityChart,50);
@@ -961,10 +969,17 @@ function renderStratMemory(){
 
 // ── Analytics sub-tabs ──
 function switchSubTab(name){
-  const subs=['perf','briefs','strategy','trades','costs','export'];
-  document.querySelectorAll('.sub-tab').forEach((t,i)=>t.classList.toggle('active',subs[i]===name));
-  document.querySelectorAll('.sub-content').forEach(sc=>sc.classList.toggle('active',sc.id==='sub-'+name));
-  if(name==='export')loadExportPanel();
+  const subs=['perf','briefs','strategy','trades','costs'];
+  document.querySelectorAll('#tab-analytics .sub-tab').forEach((t,i)=>t.classList.toggle('active',subs[i]===name));
+  document.querySelectorAll('#tab-analytics .sub-content').forEach(sc=>sc.classList.toggle('active',sc.id==='sub-'+name));
+}
+
+// ── Control sub-tabs ──
+function switchControlTab(name){
+  const subs=['runs','ctrl-export','settings'];
+  document.querySelectorAll('#tab-control .sub-tab').forEach((t,i)=>t.classList.toggle('active',subs[i]===name));
+  document.querySelectorAll('#tab-control .sub-content').forEach(sc=>sc.classList.toggle('active',sc.id==='sub-'+name));
+  if(name==='ctrl-export')loadExportPanel();
 }
 
 // ── Stop/Resume Trading ──
@@ -1317,7 +1332,7 @@ async function loadExportFiles(){
 }
 
 function exportSelectAll(checked){
-  document.querySelectorAll('#sub-export input[type="checkbox"]').forEach(cb=>cb.checked=checked);
+  document.querySelectorAll('#sub-ctrl-export input[type="checkbox"]').forEach(cb=>cb.checked=checked);
 }
 
 async function doExport(){
