@@ -162,7 +162,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
 .run-cooldown{margin-top:8px;font-size:11px;color:var(--text3);font-family:var(--font-mono);text-align:center}
 @media (orientation:landscape){
   .app{max-width:900px}
-  #equityChart{height:240px !important}
+  #equityChart{height:300px !important}
 }
 .export-section{margin-bottom:16px}
 .export-item{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px}
@@ -180,7 +180,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
     <h1>Dashboard</h1>
   </div>
   <div id="brandedHeader" class="header hidden">
-    <h1><img src="https://raw.githubusercontent.com/mgatten/TBapp/main/tinylogo.jpg" alt="" style="height:24px;vertical-align:middle;margin-right:6px"><span onclick="alert('Build: 2026-03-24 20:00 ET')" style="cursor:pointer">Traderbot</span></h1>
+    <h1><img src="https://raw.githubusercontent.com/mgatten/TBapp/main/tinylogo.jpg" alt="" style="height:24px;vertical-align:middle;margin-right:6px"><span onclick="alert('Build: 2026-03-27 23:00 ET')" style="cursor:pointer">Traderbot</span></h1>
     <div class="header-right">
       <input type="range" min="0" max="100" id="brightnessSlider" class="brightness-slider" oninput="setBrightness(this.value)" title="Text brightness">
     </div>
@@ -237,7 +237,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
       <div id="equityChartBox" class="card hidden" style="padding:10px 8px">
         <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Equity History</div>
         <div class="chart-toggle" id="chartToggle"></div>
-        <canvas id="equityChart" style="width:100%;height:180px"></canvas>
+        <canvas id="equityChart" style="width:100%;height:240px"></canvas>
       </div>
     </div>
     <div class="tab-content" id="tab-history">
@@ -357,7 +357,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
         <div class="run-panel">
           <button class="btn run-btn" id="haltBtn" onclick="toggleHalt()" style="width:100%"></button>
           <div style="margin-top:10px">
-            <button class="btn btn-ghost" onclick="window.location.href=window.location.pathname+'?v='+Date.now()" style="width:100%">Force Console Refresh</button>
+            <button class="btn btn-ghost" onclick="forceHardRefresh()" style="width:100%">Force Console Refresh</button>
           </div>
           <div style="margin-top:10px">
             <button class="btn btn-ghost" onclick="doDisconnect()" style="width:100%">Disconnect</button>
@@ -447,6 +447,27 @@ function doDisconnect(){cfg={};LS.del('cfg');wlItems=[];wlSha=null;portfolio=nul
   document.getElementById('loginHeader').classList.remove('hidden');
   document.getElementById('brandedHeader').classList.add('hidden');
   document.getElementById('mainPanel').classList.add('hidden');}
+
+async function forceHardRefresh(){
+  // iOS PWAs aggressively cache the app shell. This tries multiple strategies:
+  // 1. Unregister any service workers
+  // 2. Clear all caches via Cache API
+  // 3. Navigate with cache-busting query param
+  try{
+    if('serviceWorker' in navigator){
+      const regs=await navigator.serviceWorker.getRegistrations();
+      for(const r of regs)await r.unregister();
+    }
+  }catch(e){}
+  try{
+    if('caches' in window){
+      const keys=await caches.keys();
+      for(const k of keys)await caches.delete(k);
+    }
+  }catch(e){}
+  // Navigate with unique query string to bypass any remaining cache
+  window.location.href=window.location.pathname+'?v='+Date.now();
+}
 
 // ── Tabs ──
 function switchTab(name){
@@ -944,7 +965,7 @@ function renderEquityChart(){
   const range=mx-mn||1;
   const ctx=ctx0;
   const W=rect.width,H=rect.height;
-  const pad={t:10,r:10,b:24,l:45};
+  const pad={t:36,r:10,b:24,l:45};
   const gW=W-pad.l-pad.r,gH=H-pad.t-pad.b;
   ctx.clearRect(0,0,W,H);
   
@@ -1054,21 +1075,22 @@ function renderEquityChart(){
     ctx.lineTo(x-_dotSize,y);
     ctx.closePath();ctx.fill();
   }
-  // Legend
+  // Legend — drawn in the top padding zone, above the chart grid
   ctx.font='9px IBM Plex Mono';ctx.textAlign='left';
+  const lY1=12,lY2=24;
   let lx=pad.l+4;
-  ctx.fillStyle=lineCol;ctx.fillText('Traderbot',lx,pad.t+10);lx+=58;
+  ctx.fillStyle=lineCol;ctx.fillText('Traderbot',lx,lY1);lx+=58;
   for(const b of benchmarks){
     if(!benchPcts[b.key])continue;
-    ctx.fillStyle=b.color_d;ctx.fillText(b.label,lx,pad.t+10);lx+=b.label.length*6+10;
+    ctx.fillStyle=b.color_d;ctx.fillText(b.label,lx,lY1);lx+=b.label.length*6+10;
   }
   // Event dot legend (second row)
   if(_tradesLog.length||events.some(e=>e.event_type==='CLOSE')){
     ctx.font='9px IBM Plex Mono';ctx.textAlign='left';
     let lx2=pad.l+4;
-    ctx.fillStyle='#2ecc71';ctx.fillText('▲ Buy',lx2,pad.t+22);lx2+=42;
-    ctx.fillStyle='#e74c3c';ctx.fillText('▼ Sell',lx2,pad.t+22);lx2+=42;
-    ctx.fillStyle='#e67e22';ctx.fillText('◆ Stop',lx2,pad.t+22);
+    ctx.fillStyle='#2ecc71';ctx.fillText('▲ Buy',lx2,lY2);lx2+=42;
+    ctx.fillStyle='#e74c3c';ctx.fillText('▼ Sell',lx2,lY2);lx2+=42;
+    ctx.fillStyle='#e67e22';ctx.fillText('◆ Stop',lx2,lY2);
   }
 }
 
