@@ -412,8 +412,8 @@ function setBrightness(val){
   const v=val/100;
   const t2r=Math.round(128+v*80),t2g=Math.round(128+v*80),t2b=Math.round(160+v*64);
   const t3r=Math.round(90+v*86),t3g=Math.round(90+v*86),t3b=Math.round(120+v*80);
-  document.documentElement.style.setProperty('--text2',`rgb(${t2r},${t2g},${t2b})`);
-  document.documentElement.style.setProperty('--text3',`rgb(${t3r},${t3g},${t3b})`);
+  document.body.style.setProperty('--text2',`rgb(${t2r},${t2g},${t2b})`);
+  document.body.style.setProperty('--text3',`rgb(${t3r},${t3g},${t3b})`);
   LS.set('brightness',val);
 }
 function toast(m,t='ok'){const e=document.getElementById('toast');e.textContent=m;e.className=`toast show ${t}`;clearTimeout(e._t);e._t=setTimeout(()=>e.className='toast',2500)}
