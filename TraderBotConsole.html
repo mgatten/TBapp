@@ -183,7 +183,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
     <h1>TraderBot</h1>
   </div>
   <div id="brandedHeader" class="header hidden">
-    <h1><img src="https://raw.githubusercontent.com/mgatten/TBapp/main/tinylogo.jpg" alt="" style="height:24px;vertical-align:middle;margin-right:6px"><span onclick="alert('Build: 2026-03-27 23:00 ET')" style="cursor:pointer">Traderbot</span></h1>
+    <h1><img src="https://raw.githubusercontent.com/mgatten/TBapp/main/tinylogo.jpg" alt="" style="height:24px;vertical-align:middle;margin-right:6px"><span onclick="alert('Build: 2026-03-27 23:00 ET')" style="cursor:pointer">TraderBot</span></h1>
     <div class="header-right">
       <input type="range" min="0" max="100" id="brightnessSlider" class="brightness-slider" oninput="setBrightness(this.value)" title="Text brightness">
     </div>
@@ -374,7 +374,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
 <div class="toast" id="toast"></div>
 <script>
 // ══════════════════════════════════════════════════════════════════════════════
-// Traderbot Console — Single-page GitHub Pages app for monitoring the bot.
+// TraderBot Console — Single-page GitHub Pages app for monitoring the bot.
 //
 // Architecture:
 //   - All data lives in a GitHub repo (portfolio_state.json, data/*.csv/json)
@@ -1082,7 +1082,7 @@ function renderEquityChart(){
   ctx.font='9px IBM Plex Mono';ctx.textAlign='left';
   const lY1=12,lY2=24;
   let lx=pad.l+4;
-  ctx.fillStyle=lineCol;ctx.fillText('Traderbot',lx,lY1);lx+=58;
+  ctx.fillStyle=lineCol;ctx.fillText('TraderBot',lx,lY1);lx+=58;
   for(const b of benchmarks){
     if(!benchPcts[b.key])continue;
     ctx.fillStyle=b.color_d;ctx.fillText(b.label,lx,lY1);lx+=b.label.length*6+10;
