@@ -246,11 +246,11 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
     </div>
     <div class="tab-content" id="tab-history">
       <div class="sub-tabs">
-        <button class="sub-tab active" onclick="switchHistoryTab('events')">Events</button>
+        <button class="sub-tab active" onclick="switchHistoryTab('pastruns')">Past Runs</button>
         <button class="sub-tab" onclick="switchHistoryTab('upcoming')">Upcoming</button>
-        <button class="sub-tab" onclick="switchHistoryTab('pastruns')">Past Runs</button>
+        <button class="sub-tab" onclick="switchHistoryTab('events')">Events</button>
       </div>
-      <div class="sub-content active" id="sub-events">
+      <div class="sub-content" id="sub-events">
         <div class="month-nav">
           <button class="nav-btn" id="prevMonth" onclick="histNav(-1)">◀</button>
           <span class="month-label" id="monthLabel"></span>
@@ -263,7 +263,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
         <div id="upcomingList"></div>
         <div class="empty-msg hidden" id="upcomingEmpty"><div class="em-icon">📅</div>No upcoming scheduled runs.</div>
       </div>
-      <div class="sub-content" id="sub-pastruns">
+      <div class="sub-content active" id="sub-pastruns">
         <div class="month-nav">
           <button class="nav-btn" id="prevRunMonth" onclick="runHistNav(-1)">◀</button>
           <span class="month-label" id="runMonthLabel"></span>
@@ -747,7 +747,7 @@ function histNav(d){histMonth.setMonth(histMonth.getMonth()+d);renderHist()}
 
 // ── History sub-tabs ──
 function switchHistoryTab(name){
-  const subs=['events','upcoming','pastruns'];
+  const subs=['pastruns','upcoming','events'];
   document.querySelectorAll('#tab-history .sub-tab').forEach((t,i)=>t.classList.toggle('active',subs[i]===name));
   document.querySelectorAll('#tab-history .sub-content').forEach(sc=>sc.classList.toggle('active',sc.id==='sub-'+name));
   if(name==='upcoming')renderUpcoming();
