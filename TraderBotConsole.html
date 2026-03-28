@@ -112,7 +112,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
 .offline-banner.show{display:block}
 .bottom-actions{display:flex;gap:8px;padding:16px 0 12px}
 .bottom-actions .btn{flex:1}
-.logo-footer{text-align:center;padding:0 0 24px}
+.logo-footer{text-align:center;padding:0 0 24px;margin-top:auto}
 .logo-footer img{width:100%;max-width:320px;border-radius:var(--radius)}
 .toast{position:fixed;bottom:max(24px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(80px);background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 18px;font-size:12px;font-weight:500;color:var(--text);opacity:0;transition:all 0.25s;z-index:100;box-shadow:var(--shadow)}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
@@ -173,6 +173,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
 .export-item input[type="checkbox"]{width:16px;height:16px;accent-color:var(--accent)}
 .export-item label{flex:1;color:var(--text2);cursor:pointer}
 .export-item .exp-size{font-family:var(--font-mono);font-size:10px;color:var(--text3)}
+#mainPanel{display:flex;flex-direction:column;min-height:calc(100vh - 60px)}
 .hidden{display:none !important}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
