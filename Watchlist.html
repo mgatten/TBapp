@@ -1526,7 +1526,7 @@ function renderBudgetDisplay(){
   }
   const bal=parseFloat(portfolio.api_credit_balance);
   const setDate=portfolio.api_credit_set_date||'';
-  // Sum costs since set date
+  // Sum costs since set date for remaining balance
   let spent=0;
   for(const r of _apiCosts){
     if((r.timestamp||'')>=setDate){
@@ -1534,8 +1534,16 @@ function renderBudgetDisplay(){
     }
   }
   const remaining=bal-spent;
-  const daysElapsed=Math.max(1,Math.floor((Date.now()-new Date(setDate).getTime())/86400000));
-  const dailyBurn=spent/daysElapsed;
+  // Use overall daily average from ALL cost data for burn rate estimate —
+  // more accurate than post-set-date only, especially right after setting balance
+  let totalSpentAll=0;
+  const dates=new Set();
+  for(const r of _apiCosts){
+    totalSpentAll+=parseFloat(r.estimated_cost_usd||0);
+    if(r.timestamp)dates.add(r.timestamp.slice(0,10));
+  }
+  const tradingDays=Math.max(1,dates.size);
+  const dailyBurn=totalSpentAll/tradingDays;
   const daysLeft=dailyBurn>0?remaining/dailyBurn:999;
   const color=daysLeft<3?'var(--red)':daysLeft<7?'var(--yellow)':'var(--green)';
   const setDs=setDate.slice(0,10);
@@ -1729,17 +1737,68 @@ async function doExport(){
   }
 }
 
+// ── Deep Links ──
+// Parses window.location.hash to navigate directly to a specific tab,
+// sub-tab, and item. Format: #tab/subtab/identifier
+// Examples:
+//   #holdings/TLT        → Holdings tab, expand TLT card
+//   #analytics/costs      → Analytics > Costs sub-tab
+//   #analytics/briefs/latest → Analytics > Briefs, expand newest
+//   #control/settings     → Control > Settings sub-tab
+//   #history/pastruns     → History > Past Runs sub-tab
+//   #history/upcoming     → History > Upcoming sub-tab
+function handleDeepLink(){
+  const hash=window.location.hash.replace(/^#/,'');
+  if(!hash)return;
+  const parts=hash.split('/');
+  const tab=parts[0]||'';
+  const sub=parts[1]||'';
+  const ident=parts[2]||'';
+
+  // Navigate to tab
+  if(['watchlist','holdings','history','analytics','control'].includes(tab)){
+    switchTab(tab);
+  }else return;
+
+  // Navigate to sub-tab
+  if(tab==='analytics'&&sub){
+    switchSubTab(sub);
+  }else if(tab==='history'&&sub){
+    switchHistoryTab(sub);
+  }else if(tab==='control'&&sub){
+    switchControlTab(sub);
+  }
+
+  // Expand specific item after a short delay (DOM needs to render)
+  setTimeout(()=>{
+    if(tab==='holdings'&&sub){
+      // sub is the symbol name — find and expand matching position card
+      const sym=sub.toUpperCase();
+      const positions=portfolio?portfolio.positions||[]:[];
+      const idx=positions.findIndex(p=>p.symbol===sym);
+      if(idx>=0){
+        const el=document.getElementById('th'+idx);
+        if(el){el.classList.add('show');el.scrollIntoView({behavior:'smooth',block:'center'})}
+      }
+    }else if(tab==='analytics'&&sub==='briefs'&&ident==='latest'){
+      const el=document.getElementById('brief0');
+      if(el){el.classList.add('show');el.scrollIntoView({behavior:'smooth',block:'center'})}
+    }
+  },200);
+
+  // Clear hash so refresh doesn't re-trigger
+  history.replaceState(null,null,' ');
+}
+
 // ── Init ──
-// On load: restore theme and credentials from localStorage. If already
-// authenticated, hide login panel and fetch all data. Also registers
-// online/offline handlers for the offline banner and resize handler
-// for the equity chart canvas.
+// On load: restore brightness, authenticate, fetch all data, then
+// process any deep link hash. Registers online/offline and resize handlers.
 (async function(){
   document.body.setAttribute('data-theme','dark');
   const _savedBrightness=LS.get('brightness');
   if(_savedBrightness!==null){document.getElementById('brightnessSlider').value=_savedBrightness;setBrightness(_savedBrightness)}
   cfg=LS.get('cfg')||{};
-  if(cfg.token&&cfg.repo){document.getElementById('setupPanel').classList.add('hidden');document.getElementById('loginHeader').classList.add('hidden');document.getElementById('brandedHeader').classList.remove('hidden');document.getElementById('mainPanel').classList.remove('hidden');_checkCooldown();await refreshAll()}
+  if(cfg.token&&cfg.repo){document.getElementById('setupPanel').classList.add('hidden');document.getElementById('loginHeader').classList.add('hidden');document.getElementById('brandedHeader').classList.remove('hidden');document.getElementById('mainPanel').classList.remove('hidden');_checkCooldown();await refreshAll();handleDeepLink()}
   window.addEventListener('online',()=>{document.getElementById('offlineBanner').classList.remove('show');refreshAll()});
   window.addEventListener('offline',()=>{document.getElementById('offlineBanner').classList.add('show')});
   window.addEventListener('resize',()=>{renderEquityChart()});
