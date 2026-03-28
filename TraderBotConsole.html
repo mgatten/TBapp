@@ -199,13 +199,14 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
   </div>
   <div id="mainPanel" class="hidden">
     <div class="tabs">
-      <button class="tab active" onclick="switchTab('watchlist')">Watchlist</button>
-      <button class="tab" onclick="switchTab('holdings')">Holdings</button>
+      <button class="tab active" onclick="switchTab('holdings')">Holdings</button>
       <button class="tab" onclick="switchTab('history')">History</button>
       <button class="tab" onclick="switchTab('analytics')">Analytics</button>
+      <button class="tab" onclick="switchTab('watchlist')">Watchlist</button>
       <button class="tab" onclick="switchTab('control')">Control</button>
     </div>
-    <div class="tab-content active" id="tab-watchlist">
+    <div class="tab-content" id="tab-watchlist">
+      <div style="font-size:13px;font-weight:600;margin-bottom:10px">Company Watch</div>
       <div class="add-bar" id="addBar">
         <input type="text" class="search-in" id="wlSearch" placeholder="search ticker or company" autocomplete="off" oninput="onSearch()" onfocus="onSearch()">
         <div class="search-dropdown" id="searchDrop"></div>
@@ -232,7 +233,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
         <div class="empty-msg hidden" id="ipoEmpty" style="padding:16px"><div class="em-icon">🚀</div>No IPOs on watch.<br>Add anticipated IPOs for the bot to monitor.</div>
       </div>
     </div>
-    <div class="tab-content" id="tab-holdings">
+    <div class="tab-content active" id="tab-holdings">
       <div id="acctBar" style="margin-bottom:14px"></div>
       <div id="holdingsList"></div>
       <div class="empty-msg hidden" id="holdingsEmpty"><div class="em-icon">💼</div>No positions held.</div>
@@ -474,7 +475,7 @@ async function forceHardRefresh(){
 
 // ── Tabs ──
 function switchTab(name){
-  const tabs=['watchlist','holdings','history','analytics','control'];
+  const tabs=['holdings','history','analytics','watchlist','control'];
   document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',tabs[i]===name));
   document.querySelectorAll('.tab-content').forEach(tc=>tc.classList.toggle('active',tc.id==='tab-'+name));
   if(name==='holdings')setTimeout(renderEquityChart,50);
@@ -1660,7 +1661,8 @@ let _exportFiles=[];  // [{path, name, dir}]
 let _exportFilesLoaded=false;
 
 const _EXPORT_DIRS=['','data','.github/workflows'];
-const _FILE_TYPE_ORDER={yml:0,yaml:0,py:1,json:2,csv:3,txt:4};
+const _CONSOLE_REPO='mgatten/TBapp';
+const _FILE_TYPE_ORDER={yml:0,yaml:0,py:1,html:2,json:3,csv:4,txt:5};
 
 function _fileTypeOrder(name){
   const ext=name.split('.').pop().toLowerCase();
@@ -1671,10 +1673,21 @@ async function loadExportPanel(){
   if(!_exportFilesLoaded)await loadExportFiles();
 }
 
+async function _ghFetchRepo(repo, path){
+  const sep=path.includes('?')?'&':'?';
+  const r=await fetch(`${API}/repos/${repo}/${path}${sep}_=${Date.now()}`,{
+    cache:'no-store',
+    headers:{'Authorization':`Bearer ${cfg.token}`,'Accept':'application/vnd.github.v3+json','If-None-Match':''}
+  });
+  if(!r.ok)throw new Error(`HTTP ${r.status}`);
+  return r.json();
+}
+
 async function loadExportFiles(){
   const el=document.getElementById('exportFileList');
   try{
     _exportFiles=[];
+    // ── Bot repo files ──
     for(const dir of _EXPORT_DIRS){
       try{
         const path=dir?`contents/${dir}`:'contents';
@@ -1682,20 +1695,35 @@ async function loadExportFiles(){
         if(!Array.isArray(items))continue;
         for(const item of items){
           if(item.type!=='file')continue;
-          // Skip hidden files in root (scanned separately via _EXPORT_DIRS)
           if(item.name.startsWith('.')&&dir==='')continue;
-          // Skip git placeholder files
           if(item.name==='.gitkeep')continue;
-          // Skip subdirectories we scan separately
           if(dir===''&&_EXPORT_DIRS.includes(item.name))continue;
           _exportFiles.push({
             path:item.path,
             name:item.name,
             dir:dir||'root',
+            repo:'bot',
           });
         }
       }catch(e){/* directory might not exist */}
     }
+    // ── Console repo files ──
+    try{
+      const items=await _ghFetchRepo(_CONSOLE_REPO,'contents');
+      if(Array.isArray(items)){
+        for(const item of items){
+          if(item.type!=='file')continue;
+          if(item.name.startsWith('.'))continue;
+          _exportFiles.push({
+            path:item.path,
+            name:item.name,
+            dir:'console',
+            repo:'console',
+          });
+        }
+      }
+    }catch(e){/* console repo may not be accessible */}
+
     _exportFilesLoaded=true;
     // Group by directory, sort by file type within each group
     const groups={};
@@ -1703,8 +1731,8 @@ async function loadExportFiles(){
       if(!groups[f.dir])groups[f.dir]=[];
       groups[f.dir].push(f);
     }
-    const dirOrder=['root','data','.github/workflows'];
-    const dirLabels={'root':'Root','data':'Data','github/workflows':'Workflows','.github/workflows':'Workflows'};
+    const dirOrder=['root','data','.github/workflows','console'];
+    const dirLabels={'root':'Bot — Root','data':'Bot — Data','.github/workflows':'Bot — Workflows','console':'Console'};
     let html='';
     let idx=0;
     for(const dir of dirOrder){
@@ -1713,7 +1741,7 @@ async function loadExportFiles(){
       files.sort((a,b)=>_fileTypeOrder(a.name)-_fileTypeOrder(b.name)||a.name.localeCompare(b.name));
       html+=`<div class="export-section"><div class="section-title">${dirLabels[dir]||dir}</div>`;
       for(const f of files){
-        html+=`<div class="export-item"><input type="checkbox" id="expf${idx}" data-path="${f.path}" data-name="${f.name}"><label for="expf${idx}">${f.name}</label></div>`;
+        html+=`<div class="export-item"><input type="checkbox" id="expf${idx}" data-path="${f.path}" data-name="${f.name}" data-repo="${f.repo||'bot'}"><label for="expf${idx}">${f.name}</label></div>`;
         idx++;
       }
       html+='</div>';
@@ -1733,14 +1761,21 @@ async function doExport(){
   btn.disabled=true;btn.textContent='Exporting...';
   try{
     const zip=new JSZip();
-    // Add selected repo files
     const fileCbs=document.querySelectorAll('#exportFileList input[type="checkbox"]:checked');
     for(const cb of fileCbs){
       const path=cb.dataset.path;
       const name=cb.dataset.name;
+      const repo=cb.dataset.repo||'bot';
       try{
-        const{content}=await ghGet(path);
-        zip.file(name,content);
+        if(repo==='console'){
+          // Fetch from console repo
+          const item=await _ghFetchRepo(_CONSOLE_REPO,`contents/${path}`);
+          const content=atob(item.content.replace(/\n/g,''));
+          zip.file(name,content);
+        }else{
+          const{content}=await ghGet(path);
+          zip.file(name,content);
+        }
       }catch(e){
         zip.file(name+'.error.txt',`Failed to fetch: ${e.message}`);
       }
