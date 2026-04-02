@@ -190,7 +190,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
     </div>
   </div>
   <div class="offline-banner" id="offlineBanner">
-    ⚠️ No internet connection. Showing cached data — there may have been runs since this snapshot.
+    â ï¸ No internet connection. Showing cached data â there may have been runs since this snapshot.
     <span id="offlineTs"></span>
   </div>
   <div id="setupPanel" class="setup">
@@ -216,7 +216,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
         <button class="btn btn-primary hidden" id="wlAddBtn" onclick="wlAdd()">Add</button>
       </div>
       <div id="wlList"></div>
-      <div class="empty-msg hidden" id="wlEmpty"><div class="em-icon">📋</div>No symbols on your watchlist.<br>Add a ticker to suggest it to Claude.</div>
+      <div class="empty-msg hidden" id="wlEmpty"><div class="em-icon">ð</div>No symbols on your watchlist.<br>Add a ticker to suggest it to Claude.</div>
       <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
           <div style="font-size:13px;font-weight:600">IPO Watch</div>
@@ -231,13 +231,13 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
           </div>
         </div>
         <div id="ipoList"></div>
-        <div class="empty-msg hidden" id="ipoEmpty" style="padding:16px"><div class="em-icon">🚀</div>No IPOs on watch.<br>Add anticipated IPOs for the bot to monitor.</div>
+        <div class="empty-msg hidden" id="ipoEmpty" style="padding:16px"><div class="em-icon">ð</div>No IPOs on watch.<br>Add anticipated IPOs for the bot to monitor.</div>
       </div>
     </div>
     <div class="tab-content active" id="tab-holdings">
       <div id="acctBar" style="margin-bottom:14px"></div>
       <div id="holdingsList"></div>
-      <div class="empty-msg hidden" id="holdingsEmpty"><div class="em-icon">💼</div>No positions held.</div>
+      <div class="empty-msg hidden" id="holdingsEmpty"><div class="em-icon">ð¼</div>No positions held.</div>
       <div class="updated-ts" id="holdingsTs"></div>
       <div id="equityChartBox" class="card hidden" style="padding:10px 8px">
         <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Equity History</div>
@@ -253,25 +253,25 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
       </div>
       <div class="sub-content" id="sub-events">
         <div class="month-nav">
-          <button class="nav-btn" id="prevMonth" onclick="histNav(-1)">◀</button>
+          <button class="nav-btn" id="prevMonth" onclick="histNav(-1)">â</button>
           <span class="month-label" id="monthLabel"></span>
-          <button class="nav-btn" id="nextMonth" onclick="histNav(1)">▶</button>
+          <button class="nav-btn" id="nextMonth" onclick="histNav(1)">â¶</button>
         </div>
         <div id="histList"></div>
-        <div class="empty-msg hidden" id="histEmpty"><div class="em-icon">📜</div>No events this month.</div>
+        <div class="empty-msg hidden" id="histEmpty"><div class="em-icon">ð</div>No events this month.</div>
       </div>
       <div class="sub-content" id="sub-upcoming">
         <div id="upcomingList"></div>
-        <div class="empty-msg hidden" id="upcomingEmpty"><div class="em-icon">📅</div>No upcoming scheduled runs.</div>
+        <div class="empty-msg hidden" id="upcomingEmpty"><div class="em-icon">ð</div>No upcoming scheduled runs.</div>
       </div>
       <div class="sub-content active" id="sub-pastruns">
         <div class="month-nav">
-          <button class="nav-btn" id="prevRunMonth" onclick="runHistNav(-1)">◀</button>
+          <button class="nav-btn" id="prevRunMonth" onclick="runHistNav(-1)">â</button>
           <span class="month-label" id="runMonthLabel"></span>
-          <button class="nav-btn" id="nextRunMonth" onclick="runHistNav(1)">▶</button>
+          <button class="nav-btn" id="nextRunMonth" onclick="runHistNav(1)">â¶</button>
         </div>
         <div id="pastRunsList"></div>
-        <div class="empty-msg hidden" id="pastRunsEmpty"><div class="em-icon">🤖</div>No runs recorded this month.</div>
+        <div class="empty-msg hidden" id="pastRunsEmpty"><div class="em-icon">ð¤</div>No runs recorded this month.</div>
       </div>
     </div>
     <div class="tab-content" id="tab-analytics">
@@ -325,7 +325,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
       </div>
       <div class="sub-content" id="sub-briefs">
         <div id="briefsList"></div>
-        <div class="empty-msg hidden" id="briefsEmpty"><div class="em-icon">🧠</div>No strategy briefs yet.<br>Opus generates one each Monday morning.</div>
+        <div class="empty-msg hidden" id="briefsEmpty"><div class="em-icon">ð§ </div>No strategy briefs yet.<br>Opus generates one each Monday morning.</div>
       </div>
     </div>
     <div class="tab-content" id="tab-control">
@@ -375,42 +375,42 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
 </div>
 <div class="toast" id="toast"></div>
 <script>
-// ══════════════════════════════════════════════════════════════════════════════
-// TraderBot Console — Single-page GitHub Pages app for monitoring the bot.
+// ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// TraderBot Console â Single-page GitHub Pages app for monitoring the bot.
 //
 // Architecture:
 //   - All data lives in a GitHub repo (portfolio_state.json, data/*.csv/json)
 //   - Authenticated via GitHub personal access token (stored in localStorage)
 //   - Every load/refresh fetches fresh data from GitHub API (cache-busted)
-//   - No backend — pure client-side JS reading repo files
+//   - No backend â pure client-side JS reading repo files
 //
 // Tabs:
-//   Watchlist   — manage symbols for Claude to evaluate (data/watchlist.txt)
-//   Holdings    — live portfolio state with age indicators + expandable theses
-//   History     — position opens/closes/scheduled runs (data/position_events.csv)
-//   Analytics   — sub-tabs: Performance, Strategy, Trades, Export, Costs, Briefs
-//   Run         — trigger bot runs via GitHub Actions workflow dispatch
+//   Watchlist   â manage symbols for Claude to evaluate (data/watchlist.txt)
+//   Holdings    â live portfolio state with age indicators + expandable theses
+//   History     â position opens/closes/scheduled runs (data/position_events.csv)
+//   Analytics   â sub-tabs: Performance, Strategy, Trades, Export, Costs, Briefs
+//   Run         â trigger bot runs via GitHub Actions workflow dispatch
 //
 // Data sources:
-//   portfolio_state.json      — latest portfolio snapshot (positions, theses, regime)
-//   data/watchlist.txt         — user's watchlist symbols with optional notes
-//   data/position_events.csv  — OPEN, CLOSE, PARTIAL_CLOSE, SCHEDULED_RUN events
-//   data/holdings_log.csv     — per-run position snapshots (equity chart source)
-//   data/trades_log.csv       — executed trades log
-//   data/strategy_memory.json — Claude's strategy memory (hypotheses, market view)
-//   data/benchmark_history.csv— SPY/QQQ/DIA benchmark prices for chart overlay
-//   data/api_costs.csv        — per-run API token/cost tracking
-//   data/strategy_briefs.json — weekly Opus 4.5 strategic outlook briefs
-//   data/symbols.json         — SEC ticker list for watchlist search
-// ══════════════════════════════════════════════════════════════════════════════
+//   portfolio_state.json      â latest portfolio snapshot (positions, theses, regime)
+//   data/watchlist.txt         â user's watchlist symbols with optional notes
+//   data/position_events.csv  â OPEN, CLOSE, PARTIAL_CLOSE, SCHEDULED_RUN events
+//   data/holdings_log.csv     â per-run position snapshots (equity chart source)
+//   data/trades_log.csv       â executed trades log
+//   data/strategy_memory.json â Claude's strategy memory (hypotheses, market view)
+//   data/benchmark_history.csvâ SPY/QQQ/DIA benchmark prices for chart overlay
+//   data/api_costs.csv        â per-run API token/cost tracking
+//   data/strategy_briefs.json â weekly Opus 4.5 strategic outlook briefs
+//   data/symbols.json         â SEC ticker list for watchlist search
+// ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
 const API='https://api.github.com';
-// ── Global state ──
+// ââ Global state ââ
 let cfg={},wlItems=[],wlSha=null,portfolio=null,events=[];
 let histMonth=new Date();histMonth.setDate(1);  // history tab month navigator
 const LS={get(k){try{return JSON.parse(localStorage.getItem('tb_'+k))}catch{return null}},set(k,v){localStorage.setItem('tb_'+k,JSON.stringify(v))},del(k){localStorage.removeItem('tb_'+k)}};
 
-// ── Utilities ──
+// ââ Utilities ââ
 function setBrightness(val){
   // val 0-100: interpolates --text2 and --text3 from dim to near-white
   // 0 = original dim (#8080a0 / #5a5a78), 100 = near-white (#d0d0e0 / #b0b0c8)
@@ -424,14 +424,14 @@ function setBrightness(val){
 function toast(m,t='ok'){const e=document.getElementById('toast');e.textContent=m;e.className=`toast show ${t}`;clearTimeout(e._t);e._t=setTimeout(()=>e.className='toast',2500)}
 function esc(s){if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML}
 function _tickerName(sym){const t=_allTickers.find(t=>t.ticker===sym);return t?t.title:''}
-// GitHub API wrapper — cache-busted with timestamp param, no-store, and
+// GitHub API wrapper â cache-busted with timestamp param, no-store, and
 // cleared ETag to ensure every call returns fresh data from the repo.
 async function gh(path,opts={}){const sep=path.includes('?')?'&':'?';const r=await fetch(`${API}/repos/${cfg.repo}/${path}${sep}_=${Date.now()}`,{...opts,cache:'no-store',headers:{'Authorization':`Bearer ${cfg.token}`,'Accept':'application/vnd.github.v3+json','If-None-Match':'',...(opts.headers||{})}});if(!r.ok)throw new Error(`HTTP ${r.status}`);return r.json()}
 function b64d(s){return decodeURIComponent(escape(atob(s.replace(/\n/g,''))))}
 async function ghGet(p){const d=await gh(`contents/${p}`);return{content:b64d(d.content),sha:d.sha}}
 async function ghPut(p,c,sha,msg){const b={message:msg,content:btoa(unescape(encodeURIComponent(c)))};if(sha)b.sha=sha;const d=await gh(`contents/${p}`,{method:'PUT',body:JSON.stringify(b)});return d.content.sha}
 
-// ── Connect ──
+// ââ Connect ââ
 // _R is the base64-encoded repo name (owner/repo). Decoded at runtime
 // to avoid GitHub's automated dependency scanners flagging the reference.
 const _R='bWdhdHRlbi9teWZpcnN0Z2l0cmVwbw==';
@@ -474,7 +474,7 @@ async function forceHardRefresh(){
   window.location.href=window.location.pathname+'?v='+Date.now();
 }
 
-// ── Tabs ──
+// ââ Tabs ââ
 function switchTab(name){
   const tabs=['holdings','history','analytics','watchlist','control'];
   document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',tabs[i]===name));
@@ -482,7 +482,7 @@ function switchTab(name){
   if(name==='holdings')setTimeout(renderEquityChart,50);
 }
 
-// ── Refresh ──
+// ââ Refresh ââ
 // All data loaders run in parallel via Promise.allSettled so one failure
 // doesn't block others. Results are cached to localStorage for offline mode.
 async function refreshAll(){
@@ -502,8 +502,8 @@ async function refreshAll(){
   if(failures.length>=loaders.length){toast('All data loads failed','err')}
 }
 
-// ── Watchlist ──
-// Manages data/watchlist.txt — a newline-separated list of ticker symbols
+// ââ Watchlist ââ
+// Manages data/watchlist.txt â a newline-separated list of ticker symbols
 // with optional notes after # or |. Supports inline editing (tap note to
 // expand, double-tap to edit), deletion with confirmation, and adding new
 // symbols via the SEC ticker search autocomplete. Changes are saved back
@@ -512,13 +512,13 @@ function parseWl(t){const o=[];for(const raw of t.split('\n')){const l=raw.trim(
 function serWl(){return wlItems.map(w=>w.note?`${w.symbol}  # ${w.note}`:w.symbol).join('\n')+(wlItems.length?'\n':'')}
 
 async function loadWl(){try{const{content,sha}=await ghGet('data/watchlist.txt');wlItems=parseWl(content);wlSha=sha}catch(e){wlItems=[];wlSha=null}renderWl()}
-async function saveWl(){try{wlSha=await ghPut('data/watchlist.txt',serWl(),wlSha,`watchlist: ${wlItems.length} symbol${wlItems.length!==1?'s':''}`);toast(`Saved — ${wlItems.length} symbol${wlItems.length!==1?'s':''}`)}catch(e){toast('Save failed: '+e.message,'err')}}
+async function saveWl(){try{wlSha=await ghPut('data/watchlist.txt',serWl(),wlSha,`watchlist: ${wlItems.length} symbol${wlItems.length!==1?'s':''}`);toast(`Saved â ${wlItems.length} symbol${wlItems.length!==1?'s':''}`)}catch(e){toast('Save failed: '+e.message,'err')}}
 
 function renderWl(){
   const list=document.getElementById('wlList'),empty=document.getElementById('wlEmpty');
   if(!wlItems.length){list.innerHTML='';empty.classList.remove('hidden');return}
   empty.classList.add('hidden');
-  list.innerHTML=wlItems.map((w,i)=>`<div class="card"><div class="wl-item"><span class="wl-ticker">${esc(w.symbol)}</span><span class="wl-note" id="wlN${i}" onclick="wlNoteToggle(${i})" ondblclick="wlEdit(${i})">${esc(w.note)||'—'}</span><div class="wl-actions"><button class="wl-btn" onclick="wlEdit(${i})" title="Edit">✎</button><button class="wl-btn del" onclick="wlDel(${i})" title="Remove">×</button></div></div></div>`).join('');
+  list.innerHTML=wlItems.map((w,i)=>`<div class="card"><div class="wl-item"><span class="wl-ticker">${esc(w.symbol)}</span><span class="wl-note" id="wlN${i}" onclick="wlNoteToggle(${i})" ondblclick="wlEdit(${i})">${esc(w.note)||'â'}</span><div class="wl-actions"><button class="wl-btn" onclick="wlEdit(${i})" title="Edit">â</button><button class="wl-btn del" onclick="wlDel(${i})" title="Remove">Ã</button></div></div></div>`).join('');
 }
 async function wlAdd(){
   if(!_selectedTicker){toast('Search and select a symbol first','err');return}
@@ -535,7 +535,7 @@ async function wlAdd(){
   await saveWl();
 }
 
-// ── SEC ticker search ──
+// ââ SEC ticker search ââ
 // Ticker autocomplete for the watchlist add bar. Loads data/symbols.json
 // (generated by the bot's final run daily) with 24h localStorage cache.
 // Supports exact match, prefix match, and company name substring search.
@@ -547,7 +547,7 @@ async function loadSecTickers(){
   // Try cache first (24h TTL)
   const cached=LS.get('sec_tickers');
   if(cached&&cached.ts&&(Date.now()-cached.ts<86400000)){_allTickers=cached.data;return}
-  // Fetch from repo — generated by the bot's final run each day
+  // Fetch from repo â generated by the bot's final run each day
   try{
     const{content}=await ghGet('data/symbols.json');
     const data=JSON.parse(content);
@@ -593,7 +593,7 @@ function pickTicker(ticker,title){
   document.getElementById('searchDrop').classList.remove('show');
   document.getElementById('wlSearch').value='';
   const sel=document.getElementById('searchSel');
-  sel.innerHTML=`${esc(ticker)} — ${esc(title)} <span class="sel-clear" onclick="clearPick()">×</span>`;
+  sel.innerHTML=`${esc(ticker)} â ${esc(title)} <span class="sel-clear" onclick="clearPick()">Ã</span>`;
   sel.classList.remove('hidden');
   document.getElementById('wlNote').classList.remove('hidden');
   document.getElementById('wlAddBtn').classList.remove('hidden');
@@ -621,8 +621,8 @@ function wlNoteToggle(i){const el=document.getElementById('wlN'+i);if(el)el.clas
 function wlEdit(i){const el=document.getElementById('wlN'+i);el.outerHTML=`<input class="wl-note-edit" id="wlE${i}" value="${esc(wlItems[i].note)}" onblur="wlEditDone(${i})" onkeydown="if(event.key==='Enter')this.blur()">`; document.getElementById('wlE'+i).focus()}
 async function wlEditDone(i){const el=document.getElementById('wlE'+i);if(!el)return;wlItems[i].note=el.value.trim();renderWl();await saveWl()}
 
-// ── IPO Watch ──
-// Manages data/ipo_watch.json — a list of anticipated IPOs for the bot
+// ââ IPO Watch ââ
+// Manages data/ipo_watch.json â a list of anticipated IPOs for the bot
 // to monitor. Opus briefs flag notable upcoming IPOs; morning runs
 // search for pricing/listing news on each watch name.
 let _ipoWatch=[];
@@ -642,7 +642,7 @@ async function saveIpoWatch(){
   try{
     const content=JSON.stringify(_ipoWatch,null,2);
     _ipoSha=await ghPut('data/ipo_watch.json',content,_ipoSha,`ipo_watch: ${_ipoWatch.length} name(s)`);
-    toast(`IPO watch saved — ${_ipoWatch.length} name(s)`);
+    toast(`IPO watch saved â ${_ipoWatch.length} name(s)`);
   }catch(e){toast('IPO save failed: '+e.message,'err')}
 }
 
@@ -651,7 +651,7 @@ function renderIpoWatch(){
   if(!_ipoWatch.length){list.innerHTML='';empty.classList.remove('hidden');return}
   empty.classList.add('hidden');
   list.innerHTML=_ipoWatch.map((w,i)=>{
-    return`<div class="card"><div class="wl-item"><span class="wl-ticker" style="color:var(--green);min-width:auto;flex:1">${esc(w.name||'?')}</span><span class="wl-note">${esc(w.note||'')}</span><div class="wl-actions"><button class="wl-btn del" onclick="ipoDel(${i})" title="Remove">×</button></div></div></div>`;
+    return`<div class="card"><div class="wl-item"><span class="wl-ticker" style="color:var(--green);min-width:auto;flex:1">${esc(w.name||'?')}</span><span class="wl-note">${esc(w.note||'')}</span><div class="wl-actions"><button class="wl-btn del" onclick="ipoDel(${i})" title="Remove">Ã</button></div></div></div>`;
   }).join('');
 }
 
@@ -682,7 +682,7 @@ async function ipoDel(i){
   await saveIpoWatch();toast(`Removed ${name}`);
 }
 
-// ── Holdings ──
+// ââ Holdings ââ
 // Renders portfolio from portfolio_state.json. Shows account stats (equity,
 // cash, invested, ATH, regime), position cards with P&L, and expandable
 // entry theses. Position age indicators (DAY X/Y pills) color-code each
@@ -703,15 +703,15 @@ function renderHoldings(){
   else{empty.classList.add('hidden');
     list.innerHTML=positions.map((p,i)=>{
       const pl=p.unrealized_pl||0,pct=p.unrealized_plpc||0,cls=pl>=0?'up':'down',sgn=pl>=0?'+':'';
-      const th=theses[p.symbol]||{},opened=dates[p.symbol]?dates[p.symbol].slice(0,10):'—';
+      const th=theses[p.symbol]||{},opened=dates[p.symbol]?dates[p.symbol].slice(0,10):'â';
       let ageBorder='var(--border)',ageTag='';
       if(dates[p.symbol]&&th.time_horizon_days){const od=new Date(dates[p.symbol]);const held=Math.floor((Date.now()-od.getTime())/86400000);const hz=th.time_horizon_days;const pctAge=held/hz;if(pctAge>=1){ageBorder='var(--red)';ageTag=`<span style="font-size:9px;padding:1px 5px;border-radius:3px;background:var(--red-bg);color:var(--red);font-weight:600;margin-left:6px">DAY ${held}/${hz}</span>`}else if(pctAge>=0.75){ageBorder='var(--yellow)';ageTag=`<span style="font-size:9px;padding:1px 5px;border-radius:3px;background:var(--yellow-bg);color:var(--yellow);font-weight:600;margin-left:6px">DAY ${held}/${hz}</span>`}else{ageTag=`<span style="font-size:9px;padding:1px 5px;border-radius:3px;background:var(--green-bg);color:var(--green);font-weight:600;margin-left:6px">DAY ${held}/${hz}</span>`}}
-      return`<div class="card expandable" style="border-color:${ageBorder}" onclick="toggleTh(${i})"><div class="pos-row"><div class="pos-sym">${esc(p.symbol)}<div style="font-size:10px;font-weight:400;color:var(--text3);font-family:var(--font-head);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:80px">${esc(_tickerName(p.symbol))}</div></div><div class="pos-mid"><div class="pos-alloc">${p.alloc_pct||0}% · ${p.side}${ageTag}</div><div class="pos-entry">${opened} @ $${(p.avg_entry_price||0).toFixed(2)}</div></div><div class="pos-pl ${cls}">${sgn}$${pl.toFixed(2)}<br><span style="font-size:11px">${sgn}${pct.toFixed(1)}%</span></div></div><div class="thesis-expand" id="th${i}"><div style="font-size:12px;color:var(--text2);margin-bottom:8px">${esc(_tickerName(p.symbol))}</div>${th.reason?`<div class="thesis-label">Why Opened</div><div>${esc(th.reason)}</div>`:''}${th.price_target?`<div class="thesis-label">Price Target</div><div>${esc(th.price_target)}</div>`:''}${th.exit_catalyst?`<div class="thesis-label">Exit Catalyst</div><div>${esc(th.exit_catalyst)}</div>`:''}${th.invalidation?`<div class="thesis-label">Invalidation</div><div>${esc(th.invalidation)}</div>`:''}${th.conviction?`<div class="thesis-label">Conviction</div><div>${th.conviction}/10</div>`:''}${th.time_horizon_days?`<div class="thesis-label">Time Horizon</div><div>${th.time_horizon_days} days</div>`:''}${!th.reason&&!th.price_target?'<div style="color:var(--text3)">No thesis recorded.</div>':''}</div></div>`}).join('')}
+      return`<div class="card expandable" style="border-color:${ageBorder}" onclick="toggleTh(${i})"><div class="pos-row"><div class="pos-sym">${esc(p.symbol)}<div style="font-size:10px;font-weight:400;color:var(--text3);font-family:var(--font-head);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:80px">${esc(_tickerName(p.symbol))}</div></div><div class="pos-mid"><div class="pos-alloc">${p.alloc_pct||0}% Â· ${p.side}${ageTag}</div><div class="pos-entry">${opened} @ $${(p.avg_entry_price||0).toFixed(2)}</div></div><div class="pos-pl ${cls}">${sgn}$${pl.toFixed(2)}<br><span style="font-size:11px">${sgn}${pct.toFixed(1)}%</span></div></div><div class="thesis-expand" id="th${i}"><div style="font-size:12px;color:var(--text2);margin-bottom:8px">${esc(_tickerName(p.symbol))}</div>${th.reason?`<div class="thesis-label">Why Opened</div><div>${esc(th.reason)}</div>`:''}${th.price_target?`<div class="thesis-label">Price Target</div><div>${esc(th.price_target)}</div>`:''}${th.exit_catalyst?`<div class="thesis-label">Exit Catalyst</div><div>${esc(th.exit_catalyst)}</div>`:''}${th.invalidation?`<div class="thesis-label">Invalidation</div><div>${esc(th.invalidation)}</div>`:''}${th.conviction?`<div class="thesis-label">Conviction</div><div>${th.conviction}/10</div>`:''}${th.time_horizon_days?`<div class="thesis-label">Time Horizon</div><div>${th.time_horizon_days} days</div>`:''}${!th.reason&&!th.price_target?'<div style="color:var(--text3)">No thesis recorded.</div>':''}</div></div>`}).join('')}
   const now=new Date();const tz=now.toLocaleTimeString('en-US',{timeZoneName:'short'}).split(' ').pop();tsEl.textContent=`Logs last consulted at: ${now.toLocaleDateString()} ${now.toLocaleTimeString()} ${tz}`;
 }
 function toggleTh(i){const e=document.getElementById('th'+i);if(e)e.classList.toggle('show')}
 
-// ── History ──
+// ââ History ââ
 // Reads position_events.csv and displays OPEN, CLOSE, PARTIAL_CLOSE, and
 // SCHEDULED_RUN events in a month-navigable timeline. Each event type has
 // a color-coded badge. SCHEDULED_RUN events show the event name (in the
@@ -746,7 +746,7 @@ function renderHist(){
 function toggleEv(i){const e=document.getElementById('ev'+i);if(e)e.classList.toggle('show')}
 function histNav(d){histMonth.setMonth(histMonth.getMonth()+d);renderHist()}
 
-// ── History sub-tabs ──
+// ââ History sub-tabs ââ
 function switchHistoryTab(name){
   const subs=['pastruns','upcoming','events'];
   document.querySelectorAll('#tab-history .sub-tab').forEach((t,i)=>t.classList.toggle('active',subs[i]===name));
@@ -755,7 +755,7 @@ function switchHistoryTab(name){
   if(name==='pastruns')renderPastRuns();
 }
 
-// ── Upcoming Scheduled Runs ──
+// ââ Upcoming Scheduled Runs ââ
 // Filters SCHEDULED_RUN events from position_events.csv where the
 // scheduled time (close_timestamp) is in the future.
 function renderUpcoming(){
@@ -778,7 +778,7 @@ function renderUpcoming(){
 }
 function toggleUpcoming(i){const e=document.getElementById('upc'+i);if(e)e.classList.toggle('show')}
 
-// ── Past Runs ──
+// ââ Past Runs ââ
 // Loads data/run_history.json and displays per-run decision records
 // paginated by month. Each run is expandable to show full reasoning,
 // thesis reviews, watchlist evaluations, trades, and errors.
@@ -803,7 +803,7 @@ function renderPastRuns(){
 
   const filt=_runHistory.filter(r=>{
     if(!r.date)return false;
-    try{const d=new Date(r.date);return d.getFullYear()===y&&d.getMonth()===m}catch{return false}
+    try{const parts=r.date.split('-');const yr=parseInt(parts[0]);const mo=parseInt(parts[1])-1;return yr===y&&mo===m}catch{return false}
   });
   filt.sort((a,b)=>(b.timestamp||'').localeCompare(a.timestamp||''));
 
@@ -844,7 +844,7 @@ function renderPastRuns(){
       detail+=`<div class="thesis-label">Thesis Reviews</div>`;
       for(const sym of trKeys){
         const rev=tr[sym]||'';
-        const icon=rev.toLowerCase().includes('intact')?'✅':rev.toLowerCase().includes('broken')?'❌':'⚠️';
+        const icon=rev.toLowerCase().includes('intact')?'â':rev.toLowerCase().includes('broken')?'â':'â ï¸';
         detail+=`<div style="margin-bottom:4px"><span style="font-family:var(--font-mono);font-weight:600;color:var(--accent)">${esc(sym)}</span> ${icon} ${esc(rev)}</div>`;
       }
       detail+='<div style="margin-bottom:8px"></div>';
@@ -857,7 +857,7 @@ function renderPastRuns(){
       detail+=`<div class="thesis-label">Watchlist Evaluations</div>`;
       for(const sym of wlKeys){
         const verdict=wl[sym]||'';
-        const icon=verdict.toLowerCase().startsWith('buy')?'✅':'⏭️';
+        const icon=verdict.toLowerCase().startsWith('buy')?'â':'â­ï¸';
         detail+=`<div style="margin-bottom:4px"><span style="font-family:var(--font-mono);font-weight:600;color:var(--accent)">${esc(sym)}</span> ${icon} ${esc(verdict)}</div>`;
       }
       detail+='<div style="margin-bottom:8px"></div>';
@@ -868,7 +868,7 @@ function renderPastRuns(){
       detail+=`<div class="thesis-label">Trades</div>`;
       for(const t of r.trades){
         const actColor=t.action==='buy'?'var(--green)':t.action==='sell'?'var(--red)':'var(--text2)';
-        detail+=`<div style="margin-bottom:4px"><span style="color:${actColor};font-weight:700;font-size:10px;text-transform:uppercase">${esc(t.action)}</span> <span style="font-family:var(--font-mono);font-weight:600">${esc(t.symbol)}</span> $${(t.notional||0).toFixed(0)} — ${esc(t.reason||'')}</div>`;
+        detail+=`<div style="margin-bottom:4px"><span style="color:${actColor};font-weight:700;font-size:10px;text-transform:uppercase">${esc(t.action)}</span> <span style="font-family:var(--font-mono);font-weight:600">${esc(t.symbol)}</span> $${(t.notional||0).toFixed(0)} â ${esc(t.reason||'')}</div>`;
       }
       detail+='<div style="margin-bottom:8px"></div>';
     }
@@ -882,7 +882,7 @@ function renderPastRuns(){
     }
 
     // Portfolio snapshot
-    detail+=`<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:10px;color:var(--text3)">Equity $${(r.equity||0).toFixed(2)} · Cash $${(r.cash||0).toFixed(2)} · ${r.num_positions||0} positions · ${r.macro_regime||'?'}</div>`;
+    detail+=`<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:10px;color:var(--text3)">Equity $${(r.equity||0).toFixed(2)} Â· Cash $${(r.cash||0).toFixed(2)} Â· ${r.num_positions||0} positions Â· ${r.macro_regime||'?'}</div>`;
 
     return`<div class="card expandable" onclick="togglePastRun(${i})"><div style="display:flex;align-items:center;gap:8px"><span style="font-family:var(--font-mono);font-size:11px;color:var(--text3);min-width:90px">${timeStr}</span><span style="font-size:10px;font-weight:700;color:${slotColor};min-width:38px">${slotLabel}</span><span style="flex:1;font-size:11px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc((r.assessment||'').slice(0,80))}</span>${tradeTag}${errTag}${testTag}</div><div class="thesis-expand" id="prun${i}"><div style="font-size:12px;line-height:1.6;color:var(--text2);margin-top:8px">${detail}</div></div></div>`;
   }).join('');
@@ -891,7 +891,7 @@ function renderPastRuns(){
 function togglePastRun(i){const e=document.getElementById('prun'+i);if(e)e.classList.toggle('show')}
 function runHistNav(d){_runHistMonth.setMonth(_runHistMonth.getMonth()+d);renderPastRuns()}
 
-// ── Equity chart ──
+// ââ Equity chart ââ
 // Canvas-rendered equity curve from holdings_log.csv with 7d/30d/All toggle.
 // Overlays benchmark lines (SPY, QQQ, DIA) normalized to % change from the
 // first data point. Trade event dots (buy=green triangle, sell=red triangle,
@@ -1026,8 +1026,8 @@ function renderEquityChart(){
   ctx.strokeStyle=lineCol;ctx.lineWidth=2;ctx.stroke();
   ctx.lineTo(pad.l+gW,pad.t+gH);ctx.lineTo(pad.l,pad.t+gH);ctx.closePath();
   ctx.fillStyle=fillCol;ctx.fill();
-  // ── Trade event dots ───────────────────────────────────────────────────
-  // Overlay buy (green ▲), sell (red ▼), and stop-fire (orange ◆) markers
+  // ââ Trade event dots âââââââââââââââââââââââââââââââââââââââââââââââââââ
+  // Overlay buy (green â²), sell (red â¼), and stop-fire (orange â) markers
   // on the equity curve at the date they occurred.
   const _dotDateSet=new Set(entries.map(e=>e[0])); // dates with equity data
   const _dotSize=4;
@@ -1080,7 +1080,7 @@ function renderEquityChart(){
     ctx.lineTo(x-_dotSize,y);
     ctx.closePath();ctx.fill();
   }
-  // Legend — drawn in the top padding zone, above the chart grid
+  // Legend â drawn in the top padding zone, above the chart grid
   ctx.font='9px IBM Plex Mono';ctx.textAlign='left';
   const lY1=12,lY2=24;
   let lx=pad.l+4;
@@ -1093,15 +1093,15 @@ function renderEquityChart(){
   if(_tradesLog.length||events.some(e=>e.event_type==='CLOSE')){
     ctx.font='9px IBM Plex Mono';ctx.textAlign='left';
     let lx2=pad.l+4;
-    ctx.fillStyle='#2ecc71';ctx.fillText('▲ Buy',lx2,lY2);lx2+=42;
-    ctx.fillStyle='#e74c3c';ctx.fillText('▼ Sell',lx2,lY2);lx2+=42;
-    ctx.fillStyle='#e67e22';ctx.fillText('◆ Stop',lx2,lY2);
+    ctx.fillStyle='#2ecc71';ctx.fillText('â² Buy',lx2,lY2);lx2+=42;
+    ctx.fillStyle='#e74c3c';ctx.fillText('â¼ Sell',lx2,lY2);lx2+=42;
+    ctx.fillStyle='#e67e22';ctx.fillText('â Stop',lx2,lY2);
   }
 }
 
 function setChartRange(r){_chartRange=r;renderEquityChart()}
 
-// ── Benchmark data ──
+// ââ Benchmark data ââ
 // Loads benchmark prices (SPY, QQQ, DIA) from data/benchmark_history.csv
 // for the equity chart overlay. Falls back to the legacy data/spy_history.csv
 // (SPY-only) if the multi-benchmark file doesn't exist yet.
@@ -1120,7 +1120,7 @@ async function loadSpyHistory(){
   renderEquityChart();
 }
 
-// ── P&L Dashboard ──
+// ââ P&L Dashboard ââ
 // Computes win rate, total P&L, expectancy, and best/worst trades from
 // CLOSE and PARTIAL_CLOSE events in position_events.csv. Displayed in
 // the Performance sub-tab under Analytics.
@@ -1128,7 +1128,7 @@ function renderPLDashboard(){
   const stats=document.getElementById('plStats');
   const details=document.getElementById('plDetails');
   const closes=events.filter(e=>['CLOSE','PARTIAL_CLOSE'].includes(e.event_type)&&e.realized_pl);
-  if(!closes.length){stats.innerHTML='';details.innerHTML='<div class="empty-msg"><div class="em-icon">📊</div>No closed trades yet.</div>';return}
+  if(!closes.length){stats.innerHTML='';details.innerHTML='<div class="empty-msg"><div class="em-icon">ð</div>No closed trades yet.</div>';return}
   const pls=closes.map(e=>parseFloat(e.realized_pl)||0);
   const wins=pls.filter(p=>p>0),losses=pls.filter(p=>p<0);
   const totalPL=pls.reduce((a,b)=>a+b,0);
@@ -1159,7 +1159,7 @@ function renderPLDashboard(){
   `;
 }
 
-// ── Trade Log ──
+// ââ Trade Log ââ
 // Reads data/trades_log.csv and displays all executed trades with
 // filterable symbol search and buy/sell action filter. Shown in the
 // Trades sub-tab under Analytics.
@@ -1175,7 +1175,7 @@ async function loadTradesLog(){
 
 function renderTrades(){
   const el=document.getElementById('tradeLog');
-  if(!_tradesLog.length){el.innerHTML='<div class="empty-msg"><div class="em-icon">📝</div>No trades logged yet.</div>';return}
+  if(!_tradesLog.length){el.innerHTML='<div class="empty-msg"><div class="em-icon">ð</div>No trades logged yet.</div>';return}
   const symFilter=(document.getElementById('tradeFilterSym')?.value||'').toUpperCase();
   const actFilter=document.getElementById('tradeFilterAction')?.value||'';
   let filtered=_tradesLog.slice().reverse();
@@ -1190,8 +1190,8 @@ function renderTrades(){
   }).join('')+(filtered.length>50?`<div style="text-align:center;color:var(--text3);padding:8px;font-size:11px">Showing 50 of ${filtered.length}</div>`:'');
 }
 
-// ── Strategy Memory ──
-// Displays Claude's strategy_memory.json — the persistent memory that
+// ââ Strategy Memory ââ
+// Displays Claude's strategy_memory.json â the persistent memory that
 // carries across runs. Shows market view, macro context, active hypotheses,
 // position-level theses with watch items, and recently exited positions.
 let _stratMem=null;
@@ -1207,7 +1207,7 @@ async function loadStratMemory(){
 
 function renderStratMemory(){
   const el=document.getElementById('stratMemory');
-  if(!_stratMem){el.innerHTML='<div class="empty-msg"><div class="em-icon">🧠</div>No strategy memory yet.</div>';return}
+  if(!_stratMem){el.innerHTML='<div class="empty-msg"><div class="em-icon">ð§ </div>No strategy memory yet.</div>';return}
   let html='';
   // Market view
   if(_stratMem.market_view){
@@ -1256,14 +1256,14 @@ function renderStratMemory(){
   el.innerHTML=html;
 }
 
-// ── Analytics sub-tabs ──
+// ââ Analytics sub-tabs ââ
 function switchSubTab(name){
   const subs=['perf','briefs','strategy','trades','costs'];
   document.querySelectorAll('#tab-analytics .sub-tab').forEach((t,i)=>t.classList.toggle('active',subs[i]===name));
   document.querySelectorAll('#tab-analytics .sub-content').forEach(sc=>sc.classList.toggle('active',sc.id==='sub-'+name));
 }
 
-// ── Control sub-tabs ──
+// ââ Control sub-tabs ââ
 function switchControlTab(name){
   const subs=['runs','ctrl-export','settings'];
   document.querySelectorAll('#tab-control .sub-tab').forEach((t,i)=>t.classList.toggle('active',subs[i]===name));
@@ -1271,7 +1271,7 @@ function switchControlTab(name){
   if(name==='ctrl-export')loadExportPanel();
 }
 
-// ── Stop/Resume Trading ──
+// ââ Stop/Resume Trading ââ
 // Toggle trading_halted in portfolio_state.json via GitHub API. When halted,
 // the bot's circuit breaker prevents all trades until manually resumed.
 // The button dynamically shows "Stop Trading" or "Resume Trading" and
@@ -1318,7 +1318,7 @@ async function toggleHalt(){
   }
 }
 
-// ── Run triggers ──
+// ââ Run triggers ââ
 // Triggers bot runs via GitHub Actions workflow_dispatch API. Supports
 // run (live trades) and test (no real orders) modes with morning/midday/
 // closing slot buttons. After triggering, all buttons are disabled for
@@ -1401,10 +1401,10 @@ async function triggerRun(slot){
   const workflow=isTest?'test.yml':'trader.yml';
   const cost=_estimateRunCost();
   let costNote=`\n\nEstimated cost: ~$${cost.toFixed(2)}`;
-  // Check if Monday morning — Opus brief may be generated
+  // Check if Monday morning â Opus brief may be generated
   if(slot==='morning'&&_isMonday()){
     const opusCost=_estimateOpusCost();
-    costNote+=`\n⚠️ Monday morning — may also generate an Opus strategy brief (+~$${opusCost.toFixed(2)})`;
+    costNote+=`\nâ ï¸ Monday morning â may also generate an Opus strategy brief (+~$${opusCost.toFixed(2)})`;
     costNote+=`\nTotal estimated: ~$${(cost+opusCost).toFixed(2)}`;
   }
   const msg=isTest
@@ -1434,8 +1434,8 @@ async function triggerRun(slot){
   }
 }
 
-// ── API Cost Dashboard ──
-// Reads data/api_costs.csv which logs every Anthropic API call — both
+// ââ API Cost Dashboard ââ
+// Reads data/api_costs.csv which logs every Anthropic API call â both
 // Haiku trading runs (slot=morning/midday/final) and Opus strategy briefs
 // (slot=opus_brief). Shows total/daily average/monthly estimate stats,
 // a daily cost bar chart, and a reverse-chronological run log.
@@ -1455,7 +1455,7 @@ function renderCostDashboard(){
   const chartBox=document.getElementById('costChart');
   if(!_apiCosts.length){
     stats.innerHTML='';
-    logEl.innerHTML='<div class="empty-msg"><div class="em-icon">💰</div>No API cost data yet.<br>Costs are logged after each bot run.</div>';
+    logEl.innerHTML='<div class="empty-msg"><div class="em-icon">ð°</div>No API cost data yet.<br>Costs are logged after each bot run.</div>';
     chartBox.style.display='none';
     return;
   }
@@ -1538,10 +1538,10 @@ function renderCostDashboard(){
     const tokens=parseInt(r.total_tokens)||0;
     const searches=parseInt(r.search_count)||0;
     const slotColor=slot==='MORNING'?'var(--blue)':slot==='FINAL'?'var(--accent)':'var(--text2)';
-    return`<div class="trade-row"><span class="trade-date">${ts}</span><span style="font-size:10px;font-weight:700;color:${slotColor};min-width:48px">${slot}</span><span style="font-family:var(--font-mono);font-size:11px;color:var(--text2);flex:1">${(tokens/1000).toFixed(1)}k tok · ${searches} search</span><span style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--accent)">$${cost.toFixed(3)}</span></div>`;
+    return`<div class="trade-row"><span class="trade-date">${ts}</span><span style="font-size:10px;font-weight:700;color:${slotColor};min-width:48px">${slot}</span><span style="font-family:var(--font-mono);font-size:11px;color:var(--text2);flex:1">${(tokens/1000).toFixed(1)}k tok Â· ${searches} search</span><span style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--accent)">$${cost.toFixed(3)}</span></div>`;
   }).join('');
 
-  // ── Budget display ──
+  // ââ Budget display ââ
   renderBudgetDisplay();
 }
 
@@ -1561,7 +1561,7 @@ function renderBudgetDisplay(){
     }
   }
   const remaining=bal-spent;
-  // Use overall daily average from ALL cost data for burn rate estimate —
+  // Use overall daily average from ALL cost data for burn rate estimate â
   // more accurate than post-set-date only, especially right after setting balance
   let totalSpentAll=0;
   const dates=new Set();
@@ -1574,7 +1574,7 @@ function renderBudgetDisplay(){
   const daysLeft=dailyBurn>0?remaining/dailyBurn:999;
   const color=daysLeft<3?'var(--red)':daysLeft<7?'var(--yellow)':'var(--green)';
   const setDs=setDate.slice(0,10);
-  el.innerHTML=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:6px"><div class="stat-box"><div class="stat-label">Remaining</div><div class="stat-val" style="color:${color}">$${remaining.toFixed(2)}</div></div><div class="stat-box"><div class="stat-label">Burn Rate</div><div class="stat-val">$${dailyBurn.toFixed(2)}/d</div></div><div class="stat-box"><div class="stat-label">Days Left</div><div class="stat-val" style="color:${color}">${daysLeft>90?'90+':Math.floor(daysLeft)}</div></div></div><div style="font-size:10px;color:var(--text3)">Set $${bal.toFixed(2)} on ${setDs} · spent $${spent.toFixed(2)} since</div>`;
+  el.innerHTML=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:6px"><div class="stat-box"><div class="stat-label">Remaining</div><div class="stat-val" style="color:${color}">$${remaining.toFixed(2)}</div></div><div class="stat-box"><div class="stat-label">Burn Rate</div><div class="stat-val">$${dailyBurn.toFixed(2)}/d</div></div><div class="stat-box"><div class="stat-label">Days Left</div><div class="stat-val" style="color:${color}">${daysLeft>90?'90+':Math.floor(daysLeft)}</div></div></div><div style="font-size:10px;color:var(--text3)">Set $${bal.toFixed(2)} on ${setDs} Â· spent $${spent.toFixed(2)} since</div>`;
 }
 
 function showBudgetEdit(){
@@ -1617,11 +1617,11 @@ async function saveBudget(){
   }catch(e){toast('Failed: '+e.message,'err')}
 }
 
-// ── Strategy Briefs ──
+// ââ Strategy Briefs ââ
 // Displays weekly Opus 4.5 strategic outlook briefs from
 // data/strategy_briefs.json. Shown in reverse chronological order with
 // expandable full text. Each card shows date, model, cost, token count,
-// and search count. Briefs are permanent records — never pruned.
+// and search count. Briefs are permanent records â never pruned.
 let _briefs=[];
 
 async function loadBriefs(){
@@ -1641,9 +1641,9 @@ function renderBriefs(){
   list.innerHTML=sorted.map((b,i)=>{
     let ds='';
     try{const d=new Date(b.date);ds=d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'})}catch{ds=b.date||'?'}
-    const costStr=b.cost_usd?` · $${b.cost_usd.toFixed(2)}`:'';
-    const tokStr=b.input_tokens?` · ${((b.input_tokens+b.output_tokens)/1000).toFixed(1)}k tok`:'';
-    const searchStr=b.search_count?` · ${b.search_count} search${b.search_count>1?'es':''}`:'';
+    const costStr=b.cost_usd?` Â· $${b.cost_usd.toFixed(2)}`:'';
+    const tokStr=b.input_tokens?` Â· ${((b.input_tokens+b.output_tokens)/1000).toFixed(1)}k tok`:'';
+    const searchStr=b.search_count?` Â· ${b.search_count} search${b.search_count>1?'es':''}`:'';
     const meta=`${costStr}${tokStr}${searchStr}`;
     const briefHtml=esc(b.brief).replace(/\n\n/g,'</p><p style="margin:0 0 10px">').replace(/\n/g,'<br>');
     return`<div class="card expandable" onclick="toggleBrief(${i})"><div style="display:flex;align-items:center;justify-content:space-between"><div><span style="font-weight:600;font-size:13px">${ds}</span><span style="font-size:11px;color:var(--text3);margin-left:8px">${b.model||''}</span></div><span style="font-size:10px;color:var(--text3);font-family:var(--font-mono)">${meta}</span></div><div class="thesis-expand" id="brief${i}"><p style="margin:0 0 10px;font-size:12px;line-height:1.6;color:var(--text2)">${briefHtml}</p></div></div>`;
@@ -1652,7 +1652,7 @@ function renderBriefs(){
 
 function toggleBrief(i){const e=document.getElementById('brief'+i);if(e)e.classList.toggle('show')}
 
-// ── Export ──
+// ââ Export ââ
 // Lists all repo files from root, data/, and .github/workflows/ with
 // checkboxes. Selected files are fetched via GitHub API, bundled into a
 // zip using JSZip, and downloaded. Files are sorted by type (yml first,
@@ -1688,7 +1688,7 @@ async function loadExportFiles(){
   const el=document.getElementById('exportFileList');
   try{
     _exportFiles=[];
-    // ── Bot repo files ──
+    // ââ Bot repo files ââ
     for(const dir of _EXPORT_DIRS){
       try{
         const path=dir?`contents/${dir}`:'contents';
@@ -1708,7 +1708,7 @@ async function loadExportFiles(){
         }
       }catch(e){/* directory might not exist */}
     }
-    // ── Console repo files ──
+    // ââ Console repo files ââ
     try{
       const items=await _ghFetchRepo(_CONSOLE_REPO,'contents');
       if(Array.isArray(items)){
@@ -1733,7 +1733,7 @@ async function loadExportFiles(){
       groups[f.dir].push(f);
     }
     const dirOrder=['root','data','.github/workflows','console'];
-    const dirLabels={'root':'Bot — Root','data':'Bot — Data','.github/workflows':'Bot — Workflows','console':'Console'};
+    const dirLabels={'root':'Bot â Root','data':'Bot â Data','.github/workflows':'Bot â Workflows','console':'Console'};
     let html='';
     let idx=0;
     for(const dir of dirOrder){
@@ -1798,16 +1798,16 @@ async function doExport(){
   }
 }
 
-// ── Deep Links ──
+// ââ Deep Links ââ
 // Parses window.location.hash to navigate directly to a specific tab,
 // sub-tab, and item. Format: #tab/subtab/identifier
 // Examples:
-//   #holdings/TLT        → Holdings tab, expand TLT card
-//   #analytics/costs      → Analytics > Costs sub-tab
-//   #analytics/briefs/latest → Analytics > Briefs, expand newest
-//   #control/settings     → Control > Settings sub-tab
-//   #history/pastruns     → History > Past Runs sub-tab
-//   #history/upcoming     → History > Upcoming sub-tab
+//   #holdings/TLT        â Holdings tab, expand TLT card
+//   #analytics/costs      â Analytics > Costs sub-tab
+//   #analytics/briefs/latest â Analytics > Briefs, expand newest
+//   #control/settings     â Control > Settings sub-tab
+//   #history/pastruns     â History > Past Runs sub-tab
+//   #history/upcoming     â History > Upcoming sub-tab
 function handleDeepLink(){
   const hash=window.location.hash.replace(/^#/,'');
   if(!hash)return;
@@ -1833,7 +1833,7 @@ function handleDeepLink(){
   // Expand specific item after a short delay (DOM needs to render)
   setTimeout(()=>{
     if(tab==='holdings'&&sub){
-      // sub is the symbol name — find and expand matching position card
+      // sub is the symbol name â find and expand matching position card
       const sym=sub.toUpperCase();
       const positions=portfolio?portfolio.positions||[]:[];
       const idx=positions.findIndex(p=>p.symbol===sym);
@@ -1851,7 +1851,7 @@ function handleDeepLink(){
   history.replaceState(null,null,' ');
 }
 
-// ── Init ──
+// ââ Init ââ
 // On load: restore brightness, authenticate, fetch all data, then
 // process any deep link hash. Registers online/offline and resize handlers.
 (async function(){
