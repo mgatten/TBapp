@@ -250,6 +250,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
         <button class="sub-tab active" onclick="switchHistoryTab('pastruns')">Past Runs</button>
         <button class="sub-tab" onclick="switchHistoryTab('upcoming')">Upcoming</button>
         <button class="sub-tab" onclick="switchHistoryTab('events')">Events</button>
+        <button class="sub-tab" onclick="switchHistoryTab('ama')">AMA</button>
       </div>
       <div class="sub-content" id="sub-events">
         <div class="month-nav">
@@ -272,6 +273,16 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
         </div>
         <div id="pastRunsList"></div>
         <div class="empty-msg hidden" id="pastRunsEmpty"><div class="em-icon">ð¤</div>No runs recorded this month.</div>
+      </div>
+      <div class="sub-content" id="sub-ama">
+        <div style="margin-bottom:14px">
+          <textarea class="field-input" id="amaInput" placeholder="Ask Claude about strategy, positions, market outlook..." rows="3" style="resize:vertical;font-family:var(--font-head);margin-bottom:8px"></textarea>
+          <button class="btn btn-primary" onclick="submitAma()" id="amaSubmitBtn">Submit Question</button>
+          <div style="font-size:10px;color:var(--text3);margin-top:6px">Your question will be answered on the next bot run.</div>
+        </div>
+        <div id="amaPending"></div>
+        <div id="amaLog"></div>
+        <div class="empty-msg hidden" id="amaEmpty"><div class="em-icon">💬</div>No questions asked yet.</div>
       </div>
     </div>
     <div class="tab-content" id="tab-analytics">
@@ -494,7 +505,7 @@ async function refreshAll(){
     return;
   }
   document.getElementById('offlineBanner').classList.remove('show');
-  const loaders=[loadWl,loadPortfolio,loadEvents,loadSecTickers,loadHoldingsLog,loadTradesLog,loadStratMemory,loadSpyHistory,loadApiCosts,loadBriefs,loadRunHistory,loadIpoWatch];
+  const loaders=[loadWl,loadPortfolio,loadEvents,loadSecTickers,loadHoldingsLog,loadTradesLog,loadStratMemory,loadSpyHistory,loadApiCosts,loadBriefs,loadRunHistory,loadIpoWatch,loadAma];
   const results=await Promise.allSettled(loaders.map(fn=>fn()));
   const failures=results.filter(r=>r.status==='rejected');
   if(failures.length){console.warn('Some loaders failed:',failures.map(f=>f.reason?.message))}
@@ -723,7 +734,7 @@ function parseCSV(text){
   return lines.slice(1).map(line=>{const v=[];let c='',q=false;for(let ch of line){if(ch==='"')q=!q;else if(ch===','&&!q){v.push(c.trim());c=''}else c+=ch}v.push(c.trim());const o={};hdr.forEach((h,i)=>o[h]=v[i]||'');return o});
 }
 
-async function loadEvents(){try{const{content}=await ghGet('data/position_events.csv');events=parseCSV(content).filter(e=>['OPEN','CLOSE','PARTIAL_CLOSE','SCHEDULED_RUN'].includes(e.event_type))}catch(e){events=[]}renderHist()}
+async function loadEvents(){try{const{content}=await ghGet('data/position_events.csv');events=parseCSV(content).filter(e=>['OPEN','CLOSE','PARTIAL_CLOSE'].includes(e.event_type))}catch(e){events=[]}renderHist()}
 
 function renderHist(){
   const list=document.getElementById('histList'),empty=document.getElementById('histEmpty'),label=document.getElementById('monthLabel'),nBtn=document.getElementById('nextMonth');
@@ -737,10 +748,9 @@ function renderHist(){
   empty.classList.add('hidden');
   list.innerHTML=filt.map((e,i)=>{
     const ts=e.close_timestamp||e.open_timestamp||'';let ds='';try{ds=new Date(ts).toLocaleDateString('en-US',{month:'short',day:'numeric'})}catch{ds=ts.slice(0,10)}
-    const tp=e.event_type,bc=tp==='OPEN'?'open':tp==='CLOSE'?'close':tp==='SCHEDULED_RUN'?'scheduled':'partial',bt=tp==='OPEN'?'OPEN':tp==='CLOSE'?'CLOSE':tp==='SCHEDULED_RUN'?'SCHED':'PARTIAL';
-    let ph='';if(tp!=='OPEN'&&tp!=='SCHEDULED_RUN'&&e.realized_pl){const pl=parseFloat(e.realized_pl)||0,pc=parseFloat(e.realized_pl_pct)||0,c=pl>=0?'up':'down',s=pl>=0?'+':'';ph=`<span class="evt-pl ${c}">${s}$${pl.toFixed(2)} (${s}${pc.toFixed(1)}%)</span>`}
-    if(tp==='SCHEDULED_RUN'&&e.close_timestamp){try{const sd=new Date(e.close_timestamp);ph=`<span style="font-size:11px;color:var(--text2);margin-left:auto;font-family:var(--font-mono)">${sd.toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short'})}</span>`}catch{}}
-    const reason=tp==='OPEN'?(e.open_reason||''):tp==='SCHEDULED_RUN'?(e.open_reason||''):(e.close_reason||'');
+    const tp=e.event_type,bc=tp==='OPEN'?'open':tp==='CLOSE'?'close':'partial',bt=tp==='OPEN'?'OPEN':tp==='CLOSE'?'CLOSE':'PARTIAL';
+    let ph='';if(tp!=='OPEN'&&e.realized_pl){const pl=parseFloat(e.realized_pl)||0,pc=parseFloat(e.realized_pl_pct)||0,c=pl>=0?'up':'down',s=pl>=0?'+':'';ph=`<span class="evt-pl ${c}">${s}$${pl.toFixed(2)} (${s}${pc.toFixed(1)}%)</span>`}
+    const reason=tp==='OPEN'?(e.open_reason||''):(e.close_reason||'');
     return`<div class="card ${reason?'expandable':''}" ${reason?`onclick="toggleEv(${i})"`:''}><div class="evt-row"><span class="evt-date">${ds}</span><span class="evt-badge ${bc}">${bt}</span><span class="evt-sym">${esc(e.symbol)}</span>${ph}</div>${reason?`<div class="evt-detail" id="ev${i}">${esc(reason)}</div>`:''}</div>`}).join('');
 }
 function toggleEv(i){const e=document.getElementById('ev'+i);if(e)e.classList.toggle('show')}
@@ -748,35 +758,183 @@ function histNav(d){histMonth.setMonth(histMonth.getMonth()+d);renderHist()}
 
 // ââ History sub-tabs ââ
 function switchHistoryTab(name){
-  const subs=['pastruns','upcoming','events'];
+  const subs=['pastruns','upcoming','events','ama'];
   document.querySelectorAll('#tab-history .sub-tab').forEach((t,i)=>t.classList.toggle('active',subs[i]===name));
   document.querySelectorAll('#tab-history .sub-content').forEach(sc=>sc.classList.toggle('active',sc.id==='sub-'+name));
   if(name==='upcoming')renderUpcoming();
   if(name==='pastruns')renderPastRuns();
+  if(name==='ama')renderAma();
 }
 
 // ââ Upcoming Scheduled Runs ââ
-// Filters SCHEDULED_RUN events from position_events.csv where the
-// scheduled time (close_timestamp) is in the future.
+// Upcoming Scheduled Runs — reads from portfolio_state.json
+// (event_triggered_runs), the single source of truth for scheduled events.
+// Delete button removes from cron-job.org, removes from state, and adds
+// to cancelled_events list so the bot won't reschedule it.
 function renderUpcoming(){
   const list=document.getElementById('upcomingList'),empty=document.getElementById('upcomingEmpty');
+  if(!portfolio||!portfolio.event_triggered_runs){list.innerHTML='';empty.classList.remove('hidden');return}
   const now=new Date();
-  const upcoming=events.filter(e=>{
-    if(e.event_type!=='SCHEDULED_RUN')return false;
-    if(!e.close_timestamp)return false;
-    try{return new Date(e.close_timestamp)>now}catch{return false}
-  });
-  upcoming.sort((a,b)=>(a.close_timestamp||'').localeCompare(b.close_timestamp||''));
+  const runs=portfolio.event_triggered_runs;
+  const upcoming=[];
+  for(const[jobId,info]of Object.entries(runs)){
+    if(!info.scheduled)continue;
+    try{
+      const sd=new Date(info.scheduled);
+      if(sd>now)upcoming.push({jobId,event:info.event||'?',scheduled:info.scheduled,reason:info.reason||'',event_id:info.event_id||''});
+    }catch{}
+  }
+  upcoming.sort((a,b)=>(a.scheduled||'').localeCompare(b.scheduled||''));
   if(!upcoming.length){list.innerHTML='';empty.classList.remove('hidden');return}
   empty.classList.add('hidden');
   list.innerHTML=upcoming.map((e,i)=>{
     let schedStr='';
-    try{const sd=new Date(e.close_timestamp);schedStr=sd.toLocaleString('en-US',{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short'})}catch{schedStr=e.close_timestamp||'?'}
-    const reason=e.open_reason||'';
-    return`<div class="card ${reason?'expandable':''}" ${reason?`onclick="toggleUpcoming(${i})"`:''}><div class="evt-row"><span class="evt-badge scheduled">SCHED</span><span class="evt-sym" style="flex:1">${esc(e.symbol)}</span><span style="font-size:11px;color:var(--text2);font-family:var(--font-mono)">${schedStr}</span></div>${reason?`<div class="evt-detail" id="upc${i}">${esc(reason)}</div>`:''}</div>`;
+    try{const sd=new Date(e.scheduled);schedStr=sd.toLocaleString('en-US',{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short'})}catch{schedStr=e.scheduled||'?'}
+    const reason=e.reason||'';
+    return`<div class="card"><div class="evt-row"><span class="evt-badge scheduled">SCHED</span><span class="evt-sym" style="flex:1;cursor:pointer" onclick="toggleUpcoming(${i})">${esc(e.event)}</span><span style="font-size:11px;color:var(--text2);font-family:var(--font-mono)">${schedStr}</span><button class="wl-btn del" onclick="cancelEvent('${esc(e.jobId)}','${esc(e.event)}','${esc(e.scheduled)}','${esc(e.event_id)}')" title="Cancel" style="margin-left:8px">×</button></div>${reason?`<div class="evt-detail" id="upc${i}">${esc(reason)}</div>`:''}</div>`;
   }).join('');
 }
 function toggleUpcoming(i){const e=document.getElementById('upc'+i);if(e)e.classList.toggle('show')}
+
+async function cancelEvent(jobId,eventName,scheduled,eventId){
+  if(!confirm(`Cancel scheduled event?\n\n${eventName}\n\nThis will delete it from cron-job.org and prevent the bot from rescheduling it.`))return;
+  try{
+    // 1. Delete from cron-job.org
+    try{
+      const cronKey=portfolio._cronjob_api_key||'';
+      // We can't call cron-job.org directly from the browser (CORS).
+      // Instead, we just remove it from the state and the bot's cleanup
+      // will handle the cron-job.org deletion on the next run.
+    }catch(e){}
+
+    // 2. Fetch current portfolio_state.json, remove the event, add to cancellation list
+    const d=await gh('contents/portfolio_state.json');
+    const state=JSON.parse(b64d(d.content));
+
+    // Remove from event_triggered_runs
+    const runs=state.event_triggered_runs||{};
+    delete runs[jobId];
+    state.event_triggered_runs=runs;
+
+    // Add to cancelled_events list
+    if(!state.cancelled_events)state.cancelled_events=[];
+    state.cancelled_events.push({
+      event_id:eventId,
+      event:eventName,
+      scheduled:scheduled,
+      cancelled_at:new Date().toISOString(),
+    });
+
+    // Save
+    const newContent=btoa(unescape(encodeURIComponent(JSON.stringify(state,null,2))));
+    await gh('contents/portfolio_state.json',{
+      method:'PUT',
+      body:JSON.stringify({
+        message:`Cancel event: ${eventName}`,
+        content:newContent,
+        sha:d.sha,
+      }),
+    });
+
+    // Update local state
+    portfolio.event_triggered_runs=runs;
+    portfolio.cancelled_events=state.cancelled_events;
+    renderUpcoming();
+    toast(`Cancelled: ${eventName}`);
+  }catch(e){
+    toast('Cancel failed: '+e.message,'err');
+  }
+}
+
+
+// -- Ask Me Anything (AMA) --
+// Submit questions to data/ama_queue.json via GitHub API.
+// The bot reads them on the next run, injects into Claude's prompt,
+// extracts answers, saves to data/ama_log.json, and clears the queue.
+
+let _amaQueue=[];
+let _amaLog=[];
+let _amaQueueSha=null;
+let _amaLogSha=null;
+
+async function loadAma(){
+  try{const{content,sha}=await ghGet('data/ama_queue.json');_amaQueue=JSON.parse(content);_amaQueueSha=sha;if(!Array.isArray(_amaQueue))_amaQueue=[]}catch{_amaQueue=[];_amaQueueSha=null}
+  try{const{content,sha}=await ghGet('data/ama_log.json');_amaLog=JSON.parse(content);_amaLogSha=sha;if(!Array.isArray(_amaLog))_amaLog=[]}catch{_amaLog=[];_amaLogSha=null}
+  renderAma();
+}
+
+function renderAma(){
+  const pending=document.getElementById('amaPending');
+  const logEl=document.getElementById('amaLog');
+  const empty=document.getElementById('amaEmpty');
+
+  // Pending questions
+  if(_amaQueue.length){
+    pending.innerHTML='<div class="section-title">Pending (next run)</div>'+_amaQueue.map((q,i)=>{
+      const qText=q.question||q;
+      return`<div class="card"><div style="display:flex;align-items:flex-start;gap:8px"><span style="flex:1;font-size:12px;color:var(--text)">${esc(typeof qText==='string'?qText:JSON.stringify(qText))}</span><button class="wl-btn del" onclick="deleteAmaQ(${i})" title="Remove">×</button></div></div>`;
+    }).join('');
+  }else{pending.innerHTML=''}
+
+  // Answered log
+  if(_amaLog.length){
+    empty.classList.add('hidden');
+    const sorted=_amaLog.slice().reverse();
+    logEl.innerHTML='<div class="section-title">Past Q&A</div>'+sorted.map((qa,i)=>{
+      let ts='';
+      try{const d=new Date(qa.timestamp);ts=d.toLocaleDateString('en-US',{month:'short',day:'numeric'})+' '+d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}catch{ts=qa.timestamp||''}
+      return`<div class="card expandable" onclick="toggleAmaLog(${i})"><div style="display:flex;align-items:flex-start;gap:8px"><span style="font-size:12px;color:var(--accent);font-weight:600;min-width:16px">Q:</span><span style="flex:1;font-size:12px;color:var(--text)">${esc(qa.question||'?')}</span><span style="font-size:10px;color:var(--text3);font-family:var(--font-mono);white-space:nowrap">${ts}</span><button class="wl-btn del" onclick="event.stopPropagation();deleteAmaLog(${i})" title="Delete">×</button></div><div class="thesis-expand" id="amaL${i}"><div style="margin-top:8px;font-size:12px;line-height:1.6;color:var(--text2)"><span style="color:var(--green);font-weight:600">A:</span> ${esc(qa.answer||'No answer')}</div></div></div>`;
+    }).join('');
+  }else if(!_amaQueue.length){
+    logEl.innerHTML='';
+    empty.classList.remove('hidden');
+  }else{
+    logEl.innerHTML='';
+    empty.classList.add('hidden');
+  }
+}
+
+function toggleAmaLog(i){const e=document.getElementById('amaL'+i);if(e)e.classList.toggle('show')}
+
+async function submitAma(){
+  const input=document.getElementById('amaInput');
+  const q=input.value.trim();
+  if(!q){toast('Enter a question','err');return}
+  try{
+    _amaQueue.push({question:q,submitted:new Date().toISOString()});
+    const content=JSON.stringify(_amaQueue,null,2);
+    _amaQueueSha=await ghPut('data/ama_queue.json',content,_amaQueueSha,'AMA: new question');
+    input.value='';
+    renderAma();
+    toast('Question submitted');
+  }catch(e){
+    _amaQueue.pop();
+    toast('Submit failed: '+e.message,'err');
+  }
+}
+
+async function deleteAmaQ(i){
+  if(!confirm('Remove this pending question?'))return;
+  try{
+    _amaQueue.splice(i,1);
+    const content=JSON.stringify(_amaQueue,null,2);
+    _amaQueueSha=await ghPut('data/ama_queue.json',content,_amaQueueSha,'AMA: removed question');
+    renderAma();
+    toast('Question removed');
+  }catch(e){toast('Delete failed: '+e.message,'err')}
+}
+
+async function deleteAmaLog(i){
+  if(!confirm('Delete this Q&A from history?'))return;
+  try{
+    const realIdx=_amaLog.length-1-i;
+    _amaLog.splice(realIdx,1);
+    const content=JSON.stringify(_amaLog,null,1);
+    _amaLogSha=await ghPut('data/ama_log.json',content,_amaLogSha,'AMA: deleted Q&A');
+    renderAma();
+    toast('Q&A deleted');
+  }catch(e){toast('Delete failed: '+e.message,'err')}
+}
 
 // ââ Past Runs ââ
 // Loads data/run_history.json and displays per-run decision records
@@ -1089,13 +1247,22 @@ function renderEquityChart(){
     if(!benchPcts[b.key])continue;
     ctx.fillStyle=b.color_d;ctx.fillText(b.label,lx,lY1);lx+=b.label.length*6+10;
   }
-  // Event dot legend (second row)
+  // Event dot legend (second row) — draw shapes instead of Unicode glyphs
   if(_tradesLog.length||events.some(e=>e.event_type==='CLOSE')){
     ctx.font='9px IBM Plex Mono';ctx.textAlign='left';
     let lx2=pad.l+4;
-    ctx.fillStyle='#2ecc71';ctx.fillText('â² Buy',lx2,lY2);lx2+=42;
-    ctx.fillStyle='#e74c3c';ctx.fillText('â¼ Sell',lx2,lY2);lx2+=42;
-    ctx.fillStyle='#e67e22';ctx.fillText('â Stop',lx2,lY2);
+    // Green triangle up for Buy
+    ctx.fillStyle='#2ecc71';
+    ctx.beginPath();ctx.moveTo(lx2+4,lY2-5);ctx.lineTo(lx2,lY2+1);ctx.lineTo(lx2+8,lY2+1);ctx.closePath();ctx.fill();
+    ctx.fillText('Buy',lx2+12,lY2);lx2+=42;
+    // Red triangle down for Sell
+    ctx.fillStyle='#e74c3c';
+    ctx.beginPath();ctx.moveTo(lx2+4,lY2+1);ctx.lineTo(lx2,lY2-5);ctx.lineTo(lx2+8,lY2-5);ctx.closePath();ctx.fill();
+    ctx.fillText('Sell',lx2+12,lY2);lx2+=42;
+    // Orange diamond for Stop
+    ctx.fillStyle='#e67e22';
+    ctx.beginPath();ctx.moveTo(lx2+4,lY2-5);ctx.lineTo(lx2+8,lY2-2);ctx.lineTo(lx2+4,lY2+1);ctx.lineTo(lx2,lY2-2);ctx.closePath();ctx.fill();
+    ctx.fillText('Stop',lx2+12,lY2);
   }
 }
 
