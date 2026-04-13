@@ -184,7 +184,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
     <h1>TraderBot</h1>
   </div>
   <div id="brandedHeader" class="header hidden">
-    <h1><img src="https://raw.githubusercontent.com/mgatten/TBapp/main/tinylogo.jpg" alt="" style="height:24px;vertical-align:middle;margin-right:6px"><span onclick="alert('Build: Gawp! ')" style="cursor:pointer">TraderBot</span></h1>
+    <h1><img src="https://raw.githubusercontent.com/mgatten/TBapp/main/tinylogo.jpg" alt="" style="height:24px;vertical-align:middle;margin-right:6px"><span onclick="alert('Build: 2026-03-27 23:00 ET')" style="cursor:pointer">TraderBot</span></h1>
     <div class="header-right">
       <input type="range" min="0" max="100" id="brightnessSlider" class="brightness-slider" oninput="setBrightness(this.value)" title="Text brightness">
     </div>
@@ -1937,19 +1937,18 @@ async function doExport(){
       const repo=cb.dataset.repo||'bot';
       try{
         if(repo==='console'){
-          // Fetch from console repo
           const item=await _ghFetchRepo(_CONSOLE_REPO,`contents/${path}`);
           const content=atob(item.content.replace(/\n/g,''));
-          zip.file(name,content);
+          zip.file(`console/${path}`,content);
         }else{
           const{content}=await ghGet(path);
-          zip.file(name,content);
+          zip.file(`traderbot/${path}`,content);
         }
       }catch(e){
-        zip.file(name+'.error.txt',`Failed to fetch: ${e.message}`);
+        const prefix=repo==='console'?'console':'traderbot';
+        zip.file(`${prefix}/${path}.error.txt`,`Failed to fetch: ${e.message}`);
       }
     }
-    // Generate and download
     const now=new Date();
     const pad=n=>String(n).padStart(2,'0');
     const fname=`TraderBotExport-${pad(now.getMonth()+1)}-${pad(now.getDate())}-${now.getFullYear()}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.zip`;
