@@ -190,7 +190,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
     </div>
   </div>
   <div class="offline-banner" id="offlineBanner">
-    ⚠ï¸ No internet connection. Showing cached data — there may have been runs since this snapshot.
+    ⚠️ No internet connection. Showing cached data — there may have been runs since this snapshot.
     <span id="offlineTs"></span>
   </div>
   <div id="setupPanel" class="setup">
@@ -1003,7 +1003,7 @@ function renderPastRuns(){
       detail+=`<div class="thesis-label">Thesis Reviews</div>`;
       for(const sym of trKeys){
         const rev=tr[sym]||'';
-        const icon=rev.toLowerCase().includes('intact')?'✅':rev.toLowerCase().includes('broken')?'❌':'⚠ï¸';
+        const icon=rev.toLowerCase().includes('intact')?'✅':rev.toLowerCase().includes('broken')?'❌':'⚠️';
         detail+=`<div style="margin-bottom:4px"><span style="font-family:var(--font-mono);font-weight:600;color:var(--accent)">${esc(sym)}</span> ${icon} ${esc(rev)}</div>`;
       }
       detail+='<div style="margin-bottom:8px"></div>';
@@ -1016,7 +1016,7 @@ function renderPastRuns(){
       detail+=`<div class="thesis-label">Watchlist Evaluations</div>`;
       for(const sym of wlKeys){
         const verdict=wl[sym]||'';
-        const icon=verdict.toLowerCase().startsWith('buy')?'✅':'⏭ï¸';
+        const icon=verdict.toLowerCase().startsWith('buy')?'✅':'⏭️';
         detail+=`<div style="margin-bottom:4px"><span style="font-family:var(--font-mono);font-weight:600;color:var(--accent)">${esc(sym)}</span> ${icon} ${esc(verdict)}</div>`;
       }
       detail+='<div style="margin-bottom:8px"></div>';
@@ -1572,7 +1572,7 @@ async function triggerRun(slot){
   // Check if Monday morning — Opus brief may be generated
   if(slot==='morning'&&_isMonday()){
     const opusCost=_estimateOpusCost();
-    costNote+=`\n⚠ï¸ Monday morning — may also generate an Opus strategy brief (+~$${opusCost.toFixed(2)})`;
+    costNote+=`\n⚠️ Monday morning — may also generate an Opus strategy brief (+~$${opusCost.toFixed(2)})`;
     costNote+=`\nTotal estimated: ~$${(cost+opusCost).toFixed(2)}`;
   }
   const msg=isTest
