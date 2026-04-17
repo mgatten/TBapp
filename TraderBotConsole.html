@@ -442,6 +442,46 @@ function b64d(s){return decodeURIComponent(escape(atob(s.replace(/\n/g,''))))}
 async function ghGet(p){const d=await gh(`contents/${p}`);return{content:b64d(d.content),sha:d.sha}}
 async function ghPut(p,c,sha,msg){const b={message:msg,content:btoa(unescape(encodeURIComponent(c)))};if(sha)b.sha=sha;const d=await gh(`contents/${p}`,{method:'PUT',body:JSON.stringify(b)});return d.content.sha}
 
+// ── Safe state-key updater (Fixes #43, #44, #48) ──
+// Merge-updates specific keys in portfolio_state.json without clobbering the
+// rest of the file. Handles the race where the bot writes between the
+// console's fetch and PUT by retrying on 409 (sha mismatch) with a refetch.
+//
+// Usage:
+//   await updateStateKeys({trading_halted: true}, "Halt trading via console");
+//   await updateStateKeys({api_credit_balance: 10, api_credit_set_date: ts}, "...");
+//
+// NEVER write back the entire state dict from the console — always use this
+// helper with just the keys you want to change. Full-state PUTs silently
+// overwrite anything the bot wrote between fetch and PUT (positions, theses,
+// circuit-breaker status, etc.).
+async function updateStateKeys(keyMap, commitMsg, maxRetries=3) {
+  let lastErr = null;
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      // Always refetch on each attempt — stale sha is the whole reason for retry
+      const d = await gh('contents/portfolio_state.json');
+      const state = JSON.parse(b64d(d.content));
+      // Merge only the whitelisted keys
+      Object.assign(state, keyMap);
+      const newContent = btoa(unescape(encodeURIComponent(JSON.stringify(state, null, 2))));
+      await gh('contents/portfolio_state.json', {
+        method: 'PUT',
+        body: JSON.stringify({message: commitMsg, content: newContent, sha: d.sha})
+      });
+      return state;
+    } catch (e) {
+      lastErr = e;
+      // Only retry on 409 (sha mismatch = concurrent write). Other errors
+      // (auth, network, 5xx) should fail immediately.
+      if (!String(e.message||'').includes('409')) throw e;
+      // Brief backoff before retry — let the bot's write settle
+      await new Promise(r => setTimeout(r, 300 * (attempt + 1)));
+    }
+  }
+  throw lastErr || new Error('updateStateKeys: exhausted retries');
+}
+
 // ── Connect ──
 // _R is the base64-encoded repo name (owner/repo). Decoded at runtime
 // to avoid GitHub's automated dependency scanners flagging the reference.
@@ -799,46 +839,51 @@ function toggleUpcoming(i){const e=document.getElementById('upc'+i);if(e)e.class
 async function cancelEvent(jobId,eventName,scheduled,eventId){
   if(!confirm(`Cancel scheduled event?\n\n${eventName}\n\nThis will delete it from cron-job.org and prevent the bot from rescheduling it.`))return;
   try{
-    // 1. Delete from cron-job.org
-    try{
-      const cronKey=portfolio._cronjob_api_key||'';
-      // We can't call cron-job.org directly from the browser (CORS).
-      // Instead, we just remove it from the state and the bot's cleanup
-      // will handle the cron-job.org deletion on the next run.
-    }catch(e){}
-
-    // 2. Fetch current portfolio_state.json, remove the event, add to cancellation list
-    const d=await gh('contents/portfolio_state.json');
-    const state=JSON.parse(b64d(d.content));
-
-    // Remove from event_triggered_runs
-    const runs=state.event_triggered_runs||{};
-    delete runs[jobId];
-    state.event_triggered_runs=runs;
-
-    // Add to cancelled_events list
-    if(!state.cancelled_events)state.cancelled_events=[];
-    state.cancelled_events.push({
-      event_id:eventId,
-      event:eventName,
-      scheduled:scheduled,
-      cancelled_at:new Date().toISOString(),
-    });
-
-    // Save
-    const newContent=btoa(unescape(encodeURIComponent(JSON.stringify(state,null,2))));
-    await gh('contents/portfolio_state.json',{
-      method:'PUT',
-      body:JSON.stringify({
-        message:`Cancel event: ${eventName}`,
-        content:newContent,
-        sha:d.sha,
-      }),
-    });
+    // FIX #48: Use safe state-key updater. Previously overwrote full state
+    // which could revert bot's mid-run writes of positions, theses, etc.
+    //
+    // Special case: cancelEvent needs to compute the new state from the
+    // CURRENT state (delete a key from event_triggered_runs, append to
+    // cancelled_events). We read fresh each attempt so both operations
+    // work on current data, then write only the two keys we changed.
+    let finalEventRuns = null;
+    let finalCancelled = null;
+    let lastErr = null;
+    for (let attempt=0; attempt<3; attempt++) {
+      try {
+        const d = await gh('contents/portfolio_state.json');
+        const state = JSON.parse(b64d(d.content));
+        const runs = {...(state.event_triggered_runs||{})};
+        delete runs[jobId];
+        const cancelled = [...(state.cancelled_events||[])];
+        cancelled.push({
+          event_id: eventId,
+          event: eventName,
+          scheduled: scheduled,
+          cancelled_at: new Date().toISOString(),
+        });
+        // Merge just our two keys back
+        state.event_triggered_runs = runs;
+        state.cancelled_events = cancelled;
+        const newContent = btoa(unescape(encodeURIComponent(JSON.stringify(state,null,2))));
+        await gh('contents/portfolio_state.json', {
+          method: 'PUT',
+          body: JSON.stringify({message:`Cancel event: ${eventName}`, content:newContent, sha:d.sha})
+        });
+        finalEventRuns = runs;
+        finalCancelled = cancelled;
+        break;
+      } catch (e) {
+        lastErr = e;
+        if (!String(e.message||'').includes('409')) throw e;
+        await new Promise(r => setTimeout(r, 300 * (attempt+1)));
+      }
+    }
+    if (finalEventRuns === null) throw lastErr || new Error('cancelEvent: retries exhausted');
 
     // Update local state
-    portfolio.event_triggered_runs=runs;
-    portfolio.cancelled_events=state.cancelled_events;
+    portfolio.event_triggered_runs = finalEventRuns;
+    portfolio.cancelled_events = finalCancelled;
     renderUpcoming();
     toast(`Cancelled: ${eventName}`);
   }catch(e){
@@ -915,10 +960,39 @@ async function submitAma(){
 
 async function deleteAmaQ(i){
   if(!confirm('Remove this pending question?'))return;
+  // FIX #36: Identify the target question by its content (question + submitted
+  // timestamp) rather than the array index. If the bot processes the queue
+  // between render and delete, the index shifts — content identification is
+  // stable across that race. Also refetches before delete to use a fresh sha.
+  const targetQ = _amaQueue[i];
+  if(!targetQ){toast('Question not found','err');return}
+  const targetId = JSON.stringify({q:targetQ.question, s:targetQ.submitted});
   try{
-    _amaQueue.splice(i,1);
-    const content=JSON.stringify(_amaQueue,null,2);
-    _amaQueueSha=await ghPut('data/ama_queue.json',content,_amaQueueSha,'AMA: removed question');
+    // Refetch fresh to avoid sha mismatch and use current data
+    let freshQueue = [];
+    let freshSha = null;
+    try{
+      const {content,sha} = await ghGet('data/ama_queue.json');
+      freshQueue = JSON.parse(content);
+      if(!Array.isArray(freshQueue)) freshQueue = [];
+      freshSha = sha;
+    }catch{ freshQueue = []; freshSha = null }
+    // Find by content — may have shifted or may have been processed
+    const realIdx = freshQueue.findIndex(q =>
+      JSON.stringify({q:q.question, s:q.submitted}) === targetId
+    );
+    if(realIdx < 0){
+      // Bot already processed it — update local state and toast informatively
+      _amaQueue = freshQueue;
+      _amaQueueSha = freshSha;
+      renderAma();
+      toast('Already processed by bot','ok');
+      return;
+    }
+    freshQueue.splice(realIdx,1);
+    const content = JSON.stringify(freshQueue,null,2);
+    _amaQueueSha = await ghPut('data/ama_queue.json', content, freshSha, 'AMA: removed question');
+    _amaQueue = freshQueue;
     renderAma();
     toast('Question removed');
   }catch(e){toast('Delete failed: '+e.message,'err')}
@@ -926,11 +1000,38 @@ async function deleteAmaQ(i){
 
 async function deleteAmaLog(i){
   if(!confirm('Delete this Q&A from history?'))return;
+  // FIX #37: Identify the target log entry by its timestamp+question rather
+  // than reverse-index arithmetic against current length. If the bot appended
+  // new Q&A entries between render and click, the reverse index points at
+  // the wrong entry. Content identification is stable.
+  const realIdx = _amaLog.length - 1 - i;
+  const targetQA = _amaLog[realIdx];
+  if(!targetQA){toast('Entry not found','err');return}
+  const targetId = JSON.stringify({q:targetQA.question, t:targetQA.timestamp});
   try{
-    const realIdx=_amaLog.length-1-i;
-    _amaLog.splice(realIdx,1);
-    const content=JSON.stringify(_amaLog,null,1);
-    _amaLogSha=await ghPut('data/ama_log.json',content,_amaLogSha,'AMA: deleted Q&A');
+    // Refetch fresh state to include any new bot-appended entries
+    let freshLog = [];
+    let freshSha = null;
+    try{
+      const {content,sha} = await ghGet('data/ama_log.json');
+      freshLog = JSON.parse(content);
+      if(!Array.isArray(freshLog)) freshLog = [];
+      freshSha = sha;
+    }catch{ freshLog = []; freshSha = null }
+    const actualIdx = freshLog.findIndex(qa =>
+      JSON.stringify({q:qa.question, t:qa.timestamp}) === targetId
+    );
+    if(actualIdx < 0){
+      toast('Entry no longer exists','err');
+      _amaLog = freshLog;
+      _amaLogSha = freshSha;
+      renderAma();
+      return;
+    }
+    freshLog.splice(actualIdx,1);
+    const content = JSON.stringify(freshLog,null,1);
+    _amaLogSha = await ghPut('data/ama_log.json', content, freshSha, 'AMA: deleted Q&A');
+    _amaLog = freshLog;
     renderAma();
     toast('Q&A deleted');
   }catch(e){toast('Delete failed: '+e.message,'err')}
@@ -1465,19 +1566,13 @@ async function toggleHalt(){
   const action=halted?'RESUME':'STOP';
   if(!confirm(`${action} all trading?\n\n${halted?'This will allow the bot to trade again on the next run.':'This will prevent the bot from making any trades until you resume.'}`))return;
   try{
-    // Fetch current state to get sha
-    const d=await gh('contents/portfolio_state.json');
-    const state=JSON.parse(b64d(d.content));
-    state.trading_halted=!halted;
-    const newContent=btoa(unescape(encodeURIComponent(JSON.stringify(state,null,2))));
-    await gh('contents/portfolio_state.json',{
-      method:'PUT',
-      body:JSON.stringify({
-        message:`${halted?'Resume':'Stop'} trading via console`,
-        content:newContent,
-        sha:d.sha,
-      }),
-    });
+    // FIX #44: Use safe state-key updater. Previously did full-state fetch-
+    // modify-write which could silently revert a circuit-breaker if the bot
+    // wrote trading_halted=true between our fetch and PUT.
+    await updateStateKeys(
+      {trading_halted: !halted},
+      `${halted?'Resume':'Stop'} trading via console`
+    );
     portfolio.trading_halted=!halted;
     renderHaltBtn();
     toast(`Trading ${halted?'resumed':'stopped'}`);
@@ -1768,17 +1863,16 @@ async function saveBudget(){
   const val=parseFloat(document.getElementById('budgetInput').value);
   if(isNaN(val)||val<0){toast('Enter a valid amount','err');return}
   try{
-    const d=await gh('contents/portfolio_state.json');
-    const state=JSON.parse(b64d(d.content));
-    state.api_credit_balance=val;
-    state.api_credit_set_date=new Date().toISOString();
-    const newContent=btoa(unescape(encodeURIComponent(JSON.stringify(state,null,2))));
-    await gh('contents/portfolio_state.json',{
-      method:'PUT',
-      body:JSON.stringify({message:'Update API credit balance via console',content:newContent,sha:d.sha}),
-    });
+    // FIX #43: Use safe state-key updater. Previously overwrote the entire
+    // portfolio_state.json with a snapshot that was stale by the time we
+    // wrote — bot's fresh positions/theses could be reverted.
+    const setDate = new Date().toISOString();
+    await updateStateKeys(
+      {api_credit_balance: val, api_credit_set_date: setDate},
+      'Update API credit balance via console'
+    );
     portfolio.api_credit_balance=val;
-    portfolio.api_credit_set_date=state.api_credit_set_date;
+    portfolio.api_credit_set_date=setDate;
     cancelBudgetEdit();
     renderBudgetDisplay();
     toast(`Budget set to $${val.toFixed(2)}`);
