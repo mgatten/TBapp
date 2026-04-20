@@ -184,7 +184,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
     <h1>TraderBot</h1>
   </div>
   <div id="brandedHeader" class="header hidden">
-    <h1><img src="https://raw.githubusercontent.com/mgatten/TBapp/main/tinylogo.jpg" alt="" style="height:24px;vertical-align:middle;margin-right:6px"><span onclick="alert('Build: 2026-03-27 23:00 ET')" style="cursor:pointer">TraderBot</span></h1>
+    <h1><img src="https://raw.githubusercontent.com/mgatten/TBapp/main/tinylogo.jpg" alt="" style="height:24px;vertical-align:middle;margin-right:6px"><span onclick="showBuildInfo()" style="cursor:pointer">TraderBot</span></h1>
     <div class="header-right">
       <input type="range" min="0" max="100" id="brightnessSlider" class="brightness-slider" oninput="setBrightness(this.value)" title="Text brightness">
     </div>
@@ -433,6 +433,39 @@ function setBrightness(val){
   LS.set('brightness',val);
 }
 function toast(m,t='ok'){const e=document.getElementById('toast');e.textContent=m;e.className=`toast show ${t}`;clearTimeout(e._t);e._t=setTimeout(()=>e.className='toast',2500)}
+
+// FIX #50: Fetch latest console-repo commit on demand and show its date and
+// short SHA. Previously the logo click handler showed a hardcoded build date
+// string that was stale on every release the author forgot to update. Now
+// it's read from the actual deployment at click time.
+async function showBuildInfo(){
+  try{
+    const r = await fetch(`${API}/repos/mgatten/TBapp/commits/main`, {
+      cache: 'no-store',
+      headers: {
+        'Authorization': `Bearer ${cfg.token}`,
+        'Accept': 'application/vnd.github.v3+json',
+      }
+    });
+    if(!r.ok) throw new Error(`HTTP ${r.status}`);
+    const d = await r.json();
+    const sha = (d.sha || '').slice(0, 7);
+    const when = d.commit && d.commit.committer && d.commit.committer.date;
+    let formatted = '';
+    if(when){
+      try{
+        formatted = new Date(when).toLocaleString('en-US', {
+          weekday: 'short', month: 'short', day: 'numeric',
+          hour: 'numeric', minute: '2-digit', timeZoneName: 'short',
+        });
+      }catch{ formatted = when; }
+    }
+    const msg = d.commit && d.commit.message ? d.commit.message.split('\n')[0].slice(0, 100) : '';
+    alert(`Console build\nCommit ${sha}\n${formatted}\n\n${msg}`);
+  }catch(e){
+    alert('Could not fetch build info: '+e.message);
+  }
+}
 function esc(s){if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML}
 function _tickerName(sym){const t=_allTickers.find(t=>t.ticker===sym);return t?t.title:''}
 // GitHub API wrapper — cache-busted with timestamp param, no-store, and
@@ -1396,7 +1429,15 @@ async function loadSpyHistory(){
 function renderPLDashboard(){
   const stats=document.getElementById('plStats');
   const details=document.getElementById('plDetails');
-  const closes=events.filter(e=>['CLOSE','PARTIAL_CLOSE'].includes(e.event_type)&&e.realized_pl);
+  // FIX #40: Include CLOSE/PARTIAL_CLOSE rows even when realized_pl is "" or
+  // undefined. Previously the `&& e.realized_pl` truthy-check dropped real
+  // closed trades where the fill price couldn't be fetched from activities —
+  // those rows have blank realized_pl but they're still real trades. We now
+  // include them with realized_pl treated as 0, which correctly reflects
+  // "unknown P&L" in the total and keeps the trade in the count/win rate
+  // denominator. If realized_pl was genuinely negative, it would have been
+  // written as a negative string; blank is unambiguously "unknown".
+  const closes=events.filter(e=>['CLOSE','PARTIAL_CLOSE'].includes(e.event_type));
   if(!closes.length){stats.innerHTML='';details.innerHTML='<div class="empty-msg"><div class="em-icon">📊</div>No closed trades yet.</div>';return}
   const pls=closes.map(e=>parseFloat(e.realized_pl)||0);
   const wins=pls.filter(p=>p>0),losses=pls.filter(p=>p<0);
@@ -1585,7 +1626,7 @@ async function toggleHalt(){
 // Triggers bot runs via GitHub Actions workflow_dispatch API. Supports
 // run (live trades) and test (no real orders) modes with morning/midday/
 // closing slot buttons. After triggering, all buttons are disabled for
-// 7 minutes to prevent duplicate runs. Cooldown persists across page
+// 4 minutes to prevent duplicate runs. Cooldown persists across page
 // reloads via localStorage.
 let _runCooldownTimer=null;
 let _runMode='run';
@@ -1678,7 +1719,11 @@ async function triggerRun(slot){
   status.textContent=`Triggering ${label} ${modeLabel} run...`;
   status.classList.remove('hidden');
   try{
-    await fetch(`${API}/repos/${cfg.repo}/actions/workflows/${workflow}/dispatches`,{
+    // FIX #46: Check response.ok. Previously the fetch call was awaited but
+    // the Response's status was ignored, so a 404 (workflow not found),
+    // 403 (bad token permissions), or 422 (invalid ref) would still show
+    // "Run triggered" — user thought the run was coming but it wasn't.
+    const r = await fetch(`${API}/repos/${cfg.repo}/actions/workflows/${workflow}/dispatches`,{
       method:'POST',
       headers:{
         'Authorization':`Bearer ${cfg.token}`,
@@ -1687,6 +1732,11 @@ async function triggerRun(slot){
       },
       body:JSON.stringify({ref:'main',inputs:{slot:slot}}),
     });
+    if(!r.ok){
+      let body = '';
+      try{ body = await r.text(); }catch{}
+      throw new Error(`HTTP ${r.status}${body?': '+body.slice(0,200):''}`);
+    }
     status.textContent=`${label} ${modeLabel} run triggered. It may take several minutes to complete.${isTest?'':' Refresh Holdings afterward to see results.'}`;
     _startCooldown();
     toast(`${label} ${modeLabel} run triggered`);
@@ -1824,20 +1874,47 @@ function renderBudgetDisplay(){
     }
   }
   const remaining=bal-spent;
-  // Use overall daily average from ALL cost data for burn rate estimate —
-  // more accurate than post-set-date only, especially right after setting balance
-  let totalSpentAll=0;
-  const dates=new Set();
+  // FIX #42: Use max(rolling 7-day average, post-set-date average).
+  // Previously used all-time average, which drifts low when run cadence
+  // changes (e.g., moving from test-only to production 3×/day). That under-
+  // estimated current burn by ~2× and inflated "days left" — users could
+  // blow through the budget faster than the display suggested. The rolling
+  // 7-day window reflects actual current behavior; the post-set-date fallback
+  // covers the first week after a balance reset when the 7-day window has
+  // only a few data points.
+  const now=new Date();
+  const cutoff7=new Date(now.getTime() - 7*24*60*60*1000);
+  const cutoff7Iso=cutoff7.toISOString();
+  // 7-day rolling window
+  let spent7=0;
+  const dates7=new Set();
   for(const r of _apiCosts){
-    totalSpentAll+=parseFloat(r.estimated_cost_usd||0);
-    if(r.timestamp)dates.add(r.timestamp.slice(0,10));
+    if((r.timestamp||'')>=cutoff7Iso){
+      spent7+=parseFloat(r.estimated_cost_usd||0);
+      if(r.timestamp)dates7.add(r.timestamp.slice(0,10));
+    }
   }
-  const tradingDays=Math.max(1,dates.size);
-  const dailyBurn=totalSpentAll/tradingDays;
+  const days7=Math.max(1,dates7.size);
+  const burn7=spent7/days7;
+  // Post-set-date average
+  let spentSinceSet=0;
+  const datesSinceSet=new Set();
+  for(const r of _apiCosts){
+    if((r.timestamp||'')>=setDate){
+      spentSinceSet+=parseFloat(r.estimated_cost_usd||0);
+      if(r.timestamp)datesSinceSet.add(r.timestamp.slice(0,10));
+    }
+  }
+  const daysSinceSet=Math.max(1,datesSinceSet.size);
+  const burnSinceSet=spentSinceSet/daysSinceSet;
+  // Take the higher of the two — conservative estimate protects against
+  // under-forecasting burn when cadence has recently increased.
+  const dailyBurn=Math.max(burn7, burnSinceSet);
   const daysLeft=dailyBurn>0?remaining/dailyBurn:999;
   const color=daysLeft<3?'var(--red)':daysLeft<7?'var(--yellow)':'var(--green)';
   const setDs=setDate.slice(0,10);
-  el.innerHTML=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:6px"><div class="stat-box"><div class="stat-label">Remaining</div><div class="stat-val" style="color:${color}">$${remaining.toFixed(2)}</div></div><div class="stat-box"><div class="stat-label">Burn Rate</div><div class="stat-val">$${dailyBurn.toFixed(2)}/d</div></div><div class="stat-box"><div class="stat-label">Days Left</div><div class="stat-val" style="color:${color}">${daysLeft>90?'90+':Math.floor(daysLeft)}</div></div></div><div style="font-size:10px;color:var(--text3)">Set $${bal.toFixed(2)} on ${setDs} · spent $${spent.toFixed(2)} since</div>`;
+  const burnSource=burn7>=burnSinceSet?'7d':'since set';
+  el.innerHTML=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:6px"><div class="stat-box"><div class="stat-label">Remaining</div><div class="stat-val" style="color:${color}">$${remaining.toFixed(2)}</div></div><div class="stat-box"><div class="stat-label">Burn Rate</div><div class="stat-val">$${dailyBurn.toFixed(2)}/d</div></div><div class="stat-box"><div class="stat-label">Days Left</div><div class="stat-val" style="color:${color}">${daysLeft>90?'90+':Math.floor(daysLeft)}</div></div></div><div style="font-size:10px;color:var(--text3)">Set $${bal.toFixed(2)} on ${setDs} · spent $${spent.toFixed(2)} since · burn from ${burnSource}</div>`;
 }
 
 function showBudgetEdit(){
