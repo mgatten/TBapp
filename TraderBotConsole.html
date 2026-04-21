@@ -471,7 +471,16 @@ function _tickerName(sym){const t=_allTickers.find(t=>t.ticker===sym);return t?t
 // GitHub API wrapper — cache-busted with timestamp param, no-store, and
 // cleared ETag to ensure every call returns fresh data from the repo.
 async function gh(path,opts={}){const sep=path.includes('?')?'&':'?';const r=await fetch(`${API}/repos/${cfg.repo}/${path}${sep}_=${Date.now()}`,{...opts,cache:'no-store',headers:{'Authorization':`Bearer ${cfg.token}`,'Accept':'application/vnd.github.v3+json','If-None-Match':'',...(opts.headers||{})}});if(!r.ok)throw new Error(`HTTP ${r.status}`);return r.json()}
-function b64d(s){return decodeURIComponent(escape(atob(s.replace(/\n/g,''))))}
+// FIX #26: Use TextDecoder for proper UTF-8 decode. Previously used the
+// deprecated escape() function, which silently drops characters outside
+// Latin-1 and is the root cause of the UTF-8 corruption (#33) that kept
+// resurfacing. TextDecoder handles the full UTF-8 spec correctly.
+function b64d(s){
+  const bin = atob(s.replace(/\n/g,''));
+  const bytes = new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
+  return new TextDecoder('utf-8').decode(bytes);
+}
 async function ghGet(p){const d=await gh(`contents/${p}`);return{content:b64d(d.content),sha:d.sha}}
 async function ghPut(p,c,sha,msg){const b={message:msg,content:btoa(unescape(encodeURIComponent(c)))};if(sha)b.sha=sha;const d=await gh(`contents/${p}`,{method:'PUT',body:JSON.stringify(b)});return d.content.sha}
 
@@ -1246,14 +1255,29 @@ function renderEquityChart(){
   const eqBase=entries[0][1];
   const eqPcts=entries.map(e=>((e[1]-eqBase)/eqBase)*100);
   const labels=entries.map(e=>e[0].slice(5));
+  // FIX #34: Find earliest date that has BOTH an equity entry AND a benchmark
+  // value, per-benchmark. Previously used entries[0][0] as the base date
+  // unconditionally — if that specific date had no benchmark record (different
+  // cron schedule, missed day, partial data), the entire overlay vanished.
+  // Now each benchmark gets its own base date (first entry date where that
+  // benchmark has a value), normalizing from the earliest alignable point.
   const benchPcts={};
   for(const b of benchmarks){
-    const firstDate=entries[0][0];
-    const base=benchLookup[firstDate]?.[b.key];
-    if(base){
-      benchPcts[b.key]=entries.map(e=>{
+    let baseIdx = -1;
+    let base = null;
+    for(let i=0;i<entries.length;i++){
+      const v=benchLookup[entries[i][0]]?.[b.key];
+      if(v!=null){
+        baseIdx = i;
+        base = v;
+        break;
+      }
+    }
+    if(base!=null){
+      benchPcts[b.key]=entries.map((e,i)=>{
+        if(i<baseIdx)return null;   // no overlay before alignment point
         const v=benchLookup[e[0]]?.[b.key];
-        return v?((v-base)/base)*100:null;
+        return v!=null?((v-base)/base)*100:null;
       });
     }
   }
