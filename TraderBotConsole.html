@@ -791,7 +791,7 @@ async function loadPortfolio(){try{const{content}=await ghGet('portfolio_state.j
 function renderHoldings(){
   const bar=document.getElementById('acctBar'),list=document.getElementById('holdingsList'),empty=document.getElementById('holdingsEmpty'),tsEl=document.getElementById('holdingsTs');
   if(!portfolio){bar.innerHTML='';list.innerHTML='';empty.classList.remove('hidden');tsEl.textContent='';return}
-  const eq=portfolio.equity||0,cash=portfolio.cash||0,inv=eq-cash,ath=portfolio.equity_hwm||eq,positions=portfolio.positions||[],theses=portfolio.entry_theses||{},dates=portfolio.position_open_dates||{};
+  const eq=portfolio.equity||0,cash=portfolio.cash||0,inv=eq-cash,ath=portfolio.equity_lifetime_hwm||portfolio.equity_hwm||eq,positions=portfolio.positions||[],theses=portfolio.entry_theses||{},dates=portfolio.position_open_dates||{};
   const regime=portfolio.macro_regime||'NEUTRAL';
   const _regimeColor=regime==='RISK_OFF'?'var(--red)':regime==='RISK_ON'?'var(--green)':'var(--yellow)';
   const _regimeLabel=regime==='RISK_OFF'?'Risk Off':regime==='RISK_ON'?'Risk On':'Neutral';
@@ -803,7 +803,7 @@ function renderHoldings(){
       const th=theses[p.symbol]||{},opened=dates[p.symbol]?dates[p.symbol].slice(0,10):'â';
       let ageBorder='var(--border)',ageTag='';
       if(dates[p.symbol]&&th.time_horizon_days){const od=new Date(dates[p.symbol]);const held=Math.floor((Date.now()-od.getTime())/86400000);const hz=th.time_horizon_days;const pctAge=held/hz;if(pctAge>=1){ageBorder='var(--red)';ageTag=`<span style="font-size:9px;padding:1px 5px;border-radius:3px;background:var(--red-bg);color:var(--red);font-weight:600;margin-left:6px">DAY ${held}/${hz}</span>`}else if(pctAge>=0.75){ageBorder='var(--yellow)';ageTag=`<span style="font-size:9px;padding:1px 5px;border-radius:3px;background:var(--yellow-bg);color:var(--yellow);font-weight:600;margin-left:6px">DAY ${held}/${hz}</span>`}else{ageTag=`<span style="font-size:9px;padding:1px 5px;border-radius:3px;background:var(--green-bg);color:var(--green);font-weight:600;margin-left:6px">DAY ${held}/${hz}</span>`}}
-      return`<div class="card expandable" style="border-color:${ageBorder}" onclick="toggleTh(${i})"><div class="pos-row"><div class="pos-sym">${esc(p.symbol)}<div style="font-size:10px;font-weight:400;color:var(--text3);font-family:var(--font-head);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:80px">${esc(_tickerName(p.symbol))}</div></div><div class="pos-mid"><div class="pos-alloc">${p.alloc_pct||0}% Â· ${p.side}${ageTag}</div><div class="pos-entry">${opened} @ $${(p.avg_entry_price||0).toFixed(2)}</div></div><div class="pos-pl ${cls}">${sgn}$${pl.toFixed(2)}<br><span style="font-size:11px">${sgn}${pct.toFixed(1)}%</span></div></div><div class="thesis-expand" id="th${i}"><div style="font-size:12px;color:var(--text2);margin-bottom:8px">${esc(_tickerName(p.symbol))}</div>${th.reason?`<div class="thesis-label">Why Opened</div><div>${esc(th.reason)}</div>`:''}${th.price_target?`<div class="thesis-label">Price Target</div><div>${esc(th.price_target)}</div>`:''}${th.exit_catalyst?`<div class="thesis-label">Exit Catalyst</div><div>${esc(th.exit_catalyst)}</div>`:''}${th.invalidation?`<div class="thesis-label">Invalidation</div><div>${esc(th.invalidation)}</div>`:''}${th.conviction?`<div class="thesis-label">Conviction</div><div>${th.conviction}/10</div>`:''}${th.time_horizon_days?`<div class="thesis-label">Time Horizon</div><div>${th.time_horizon_days} days</div>`:''}${!th.reason&&!th.price_target?'<div style="color:var(--text3)">No thesis recorded.</div>':''}</div></div>`}).join('')}
+      return`<div class="card expandable" style="border-color:${ageBorder}" onclick="toggleTh(${i})"><div class="pos-row"><div class="pos-sym">${esc(p.symbol)}<div style="font-size:10px;font-weight:400;color:var(--text3);font-family:var(--font-head);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:80px">${esc(_tickerName(p.symbol))}</div></div><div class="pos-mid"><div class="pos-alloc">${p.alloc_pct||0}% · ${p.side}${ageTag}</div><div class="pos-entry">${opened} @ $${(p.avg_entry_price||0).toFixed(2)}</div></div><div class="pos-pl ${cls}">${sgn}$${pl.toFixed(2)}<br><span style="font-size:11px">${sgn}${pct.toFixed(1)}%</span></div></div><div class="thesis-expand" id="th${i}"><div style="font-size:12px;color:var(--text2);margin-bottom:8px">${esc(_tickerName(p.symbol))}</div>${th.reason?`<div class="thesis-label">Why Opened</div><div>${esc(th.reason)}</div>`:''}${th.price_target?`<div class="thesis-label">Price Target</div><div>${esc(th.price_target)}</div>`:''}${th.exit_catalyst?`<div class="thesis-label">Exit Catalyst</div><div>${esc(th.exit_catalyst)}</div>`:''}${th.invalidation?`<div class="thesis-label">Invalidation</div><div>${esc(th.invalidation)}</div>`:''}${th.conviction?`<div class="thesis-label">Conviction</div><div>${th.conviction}/10</div>`:''}${th.time_horizon_days?`<div class="thesis-label">Time Horizon</div><div>${th.time_horizon_days} days</div>`:''}${!th.reason&&!th.price_target?'<div style="color:var(--text3)">No thesis recorded.</div>':''}</div></div>`}).join('')}
   const now=new Date();const tz=now.toLocaleTimeString('en-US',{timeZoneName:'short'}).split(' ').pop();tsEl.textContent=`Logs last consulted at: ${now.toLocaleDateString()} ${now.toLocaleTimeString()} ${tz}`;
 }
 function toggleTh(i){const e=document.getElementById('th'+i);if(e)e.classList.toggle('show')}
@@ -1198,7 +1198,7 @@ function renderPastRuns(){
     }
 
     // Portfolio snapshot
-    detail+=`<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:10px;color:var(--text3)">Equity $${(r.equity||0).toFixed(2)} Â· Cash $${(r.cash||0).toFixed(2)} Â· ${r.num_positions||0} positions Â· ${r.macro_regime||'?'}</div>`;
+    detail+=`<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:10px;color:var(--text3)">Equity $${(r.equity||0).toFixed(2)} · Cash $${(r.cash||0).toFixed(2)} · ${r.num_positions||0} positions · ${r.macro_regime||'?'}</div>`;
 
     return`<div class="card expandable" onclick="togglePastRun(${i})"><div style="display:flex;align-items:center;gap:8px"><span style="font-family:var(--font-mono);font-size:11px;color:var(--text3);min-width:90px">${timeStr}</span><span style="font-size:10px;font-weight:700;color:${slotColor};min-width:38px">${slotLabel}</span><span style="flex:1;font-size:11px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc((r.assessment||'').slice(0,80))}</span>${tradeTag}${errTag}${testTag}</div><div class="thesis-expand" id="prun${i}"><div style="font-size:12px;line-height:1.6;color:var(--text2);margin-top:8px">${detail}</div></div></div>`;
   }).join('');
@@ -1889,7 +1889,7 @@ function renderCostDashboard(){
     const tokens=parseInt(r.total_tokens)||0;
     const searches=parseInt(r.search_count)||0;
     const slotColor=slot==='MORNING'?'var(--blue)':slot==='FINAL'?'var(--accent)':'var(--text2)';
-    return`<div class="trade-row"><span class="trade-date">${ts}</span><span style="font-size:10px;font-weight:700;color:${slotColor};min-width:48px">${slot}</span><span style="font-family:var(--font-mono);font-size:11px;color:var(--text2);flex:1">${(tokens/1000).toFixed(1)}k tok Â· ${searches} search</span><span style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--accent)">$${cost.toFixed(3)}</span></div>`;
+    return`<div class="trade-row"><span class="trade-date">${ts}</span><span style="font-size:10px;font-weight:700;color:${slotColor};min-width:48px">${slot}</span><span style="font-family:var(--font-mono);font-size:11px;color:var(--text2);flex:1">${(tokens/1000).toFixed(1)}k tok · ${searches} search</span><span style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--accent)">$${cost.toFixed(3)}</span></div>`;
   }).join('');
 
   // ââ Budget display ââ
@@ -1952,7 +1952,7 @@ function renderBudgetDisplay(){
   const color=daysLeft<3?'var(--red)':daysLeft<7?'var(--yellow)':'var(--green)';
   const setDs=setDate.slice(0,10);
   const burnSource=burn7>=burnSinceSet?'7d':'since set';
-  el.innerHTML=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:6px"><div class="stat-box"><div class="stat-label">Remaining</div><div class="stat-val" style="color:${color}">$${remaining.toFixed(2)}</div></div><div class="stat-box"><div class="stat-label">Burn Rate</div><div class="stat-val">$${dailyBurn.toFixed(2)}/d</div></div><div class="stat-box"><div class="stat-label">Days Left</div><div class="stat-val" style="color:${color}">${daysLeft>90?'90+':Math.floor(daysLeft)}</div></div></div><div style="font-size:10px;color:var(--text3)">Set $${bal.toFixed(2)} on ${setDs} Â· spent $${spent.toFixed(2)} since Â· burn from ${burnSource}</div>`;
+  el.innerHTML=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:6px"><div class="stat-box"><div class="stat-label">Remaining</div><div class="stat-val" style="color:${color}">$${remaining.toFixed(2)}</div></div><div class="stat-box"><div class="stat-label">Burn Rate</div><div class="stat-val">$${dailyBurn.toFixed(2)}/d</div></div><div class="stat-box"><div class="stat-label">Days Left</div><div class="stat-val" style="color:${color}">${daysLeft>90?'90+':Math.floor(daysLeft)}</div></div></div><div style="font-size:10px;color:var(--text3)">Set $${bal.toFixed(2)} on ${setDs} · spent $${spent.toFixed(2)} since · burn from ${burnSource}</div>`;
 }
 
 function showBudgetEdit(){
@@ -2018,9 +2018,9 @@ function renderBriefs(){
   list.innerHTML=sorted.map((b,i)=>{
     let ds='';
     try{const d=new Date(b.date);ds=d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'})}catch{ds=b.date||'?'}
-    const costStr=b.cost_usd?` Â· $${b.cost_usd.toFixed(2)}`:'';
-    const tokStr=b.input_tokens?` Â· ${((b.input_tokens+b.output_tokens)/1000).toFixed(1)}k tok`:'';
-    const searchStr=b.search_count?` Â· ${b.search_count} search${b.search_count>1?'es':''}`:'';
+    const costStr=b.cost_usd?` · $${b.cost_usd.toFixed(2)}`:'';
+    const tokStr=b.input_tokens?` · ${((b.input_tokens+b.output_tokens)/1000).toFixed(1)}k tok`:'';
+    const searchStr=b.search_count?` · ${b.search_count} search${b.search_count>1?'es':''}`:'';
     const meta=`${costStr}${tokStr}${searchStr}`;
     const briefHtml=esc(b.brief).replace(/\n\n/g,'</p><p style="margin:0 0 10px">').replace(/\n/g,'<br>');
     return`<div class="card expandable" onclick="toggleBrief(${i})"><div style="display:flex;align-items:center;justify-content:space-between"><div><span style="font-weight:600;font-size:13px">${ds}</span><span style="font-size:11px;color:var(--text3);margin-left:8px">${b.model||''}</span></div><span style="font-size:10px;color:var(--text3);font-family:var(--font-mono)">${meta}</span></div><div class="thesis-expand" id="brief${i}"><p style="margin:0 0 10px;font-size:12px;line-height:1.6;color:var(--text2)">${briefHtml}</p></div></div>`;
