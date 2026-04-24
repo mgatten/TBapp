@@ -106,7 +106,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
 .evt-detail{margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:12px;color:var(--text2);line-height:1.5;display:none}
 .evt-detail.show{display:block}
 .empty-msg{text-align:center;padding:36px 16px;color:var(--text3);font-size:13px;line-height:1.6}
-.empty-msg .em-icon{font-size:28px;margin-bottom:10px}
+.empty-msg .em-icon{font-size:14px;margin-bottom:10px;font-family:var(--font-mono);color:var(--text3);letter-spacing:1px}
 .updated-ts{font-size:10px;color:var(--text3);font-family:var(--font-mono);text-align:center;padding:8px 0}
 .offline-banner{background:var(--yellow-bg);border:1px solid var(--yellow);border-radius:var(--radius-sm);padding:10px 14px;font-size:12px;color:var(--text);line-height:1.5;margin-top:12px;display:none}
 .offline-banner.show{display:block}
@@ -190,7 +190,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
     </div>
   </div>
   <div class="offline-banner" id="offlineBanner">
-    &#x26A0;&#xFE0F; No internet connection. Showing cached data -- there may have been runs since this snapshot.
+    [!] No internet connection. Showing cached data -- there may have been runs since this snapshot.
     <span id="offlineTs"></span>
   </div>
   <div id="setupPanel" class="setup">
@@ -216,7 +216,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
         <button class="btn btn-primary hidden" id="wlAddBtn" onclick="wlAdd()">Add</button>
       </div>
       <div id="wlList"></div>
-      <div class="empty-msg hidden" id="wlEmpty"><div class="em-icon">&#x1F4CB;</div>No symbols on your watchlist.<br>Add a ticker to suggest it to Claude.</div>
+      <div class="empty-msg hidden" id="wlEmpty"><div class="em-icon">[list]</div>No symbols on your watchlist.<br>Add a ticker to suggest it to Claude.</div>
       <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
           <div style="font-size:13px;font-weight:600">IPO Watch</div>
@@ -231,13 +231,13 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
           </div>
         </div>
         <div id="ipoList"></div>
-        <div class="empty-msg hidden" id="ipoEmpty" style="padding:16px"><div class="em-icon">&#x1F4CB;</div>No IPOs on watch.<br>Add anticipated IPOs for the bot to monitor.</div>
+        <div class="empty-msg hidden" id="ipoEmpty" style="padding:16px"><div class="em-icon">[list]</div>No IPOs on watch.<br>Add anticipated IPOs for the bot to monitor.</div>
       </div>
     </div>
     <div class="tab-content active" id="tab-holdings">
       <div id="acctBar" style="margin-bottom:14px"></div>
       <div id="holdingsList"></div>
-      <div class="empty-msg hidden" id="holdingsEmpty"><div class="em-icon">&#x1F4BC;</div>No positions held.</div>
+      <div class="empty-msg hidden" id="holdingsEmpty"><div class="em-icon">[portfolio]</div>No positions held.</div>
       <div class="updated-ts" id="holdingsTs"></div>
       <div id="equityChartBox" class="card hidden" style="padding:10px 8px">
         <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Equity History</div>
@@ -254,25 +254,25 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
       </div>
       <div class="sub-content" id="sub-events">
         <div class="month-nav">
-          <button class="nav-btn" id="prevMonth" onclick="histNav(-1)">&#x25C0;</button>
+          <button class="nav-btn" id="prevMonth" onclick="histNav(-1)"><</button>
           <span class="month-label" id="monthLabel"></span>
-          <button class="nav-btn" id="nextMonth" onclick="histNav(1)">&#x25B6;</button>
+          <button class="nav-btn" id="nextMonth" onclick="histNav(1)">></button>
         </div>
         <div id="histList"></div>
-        <div class="empty-msg hidden" id="histEmpty"><div class="em-icon">&#x1F4CB;</div>No events this month.</div>
+        <div class="empty-msg hidden" id="histEmpty"><div class="em-icon">[list]</div>No events this month.</div>
       </div>
       <div class="sub-content" id="sub-upcoming">
         <div id="upcomingList"></div>
-        <div class="empty-msg hidden" id="upcomingEmpty"><div class="em-icon">&#x1F4CB;</div>No upcoming scheduled runs.</div>
+        <div class="empty-msg hidden" id="upcomingEmpty"><div class="em-icon">[list]</div>No upcoming scheduled runs.</div>
       </div> 
       <div class="sub-content active" id="sub-pastruns">
         <div class="month-nav">
-          <button class="nav-btn" id="prevRunMonth" onclick="runHistNav(-1)">&#x25C0;</button>
+          <button class="nav-btn" id="prevRunMonth" onclick="runHistNav(-1)"><</button>
           <span class="month-label" id="runMonthLabel"></span>
-          <button class="nav-btn" id="nextRunMonth" onclick="runHistNav(1)">&#x25B6;</button>
+          <button class="nav-btn" id="nextRunMonth" onclick="runHistNav(1)">></button>
         </div>
         <div id="pastRunsList"></div>
-        <div class="empty-msg hidden" id="pastRunsEmpty"><div class="em-icon">&#x1F916;</div>No runs recorded this month.</div>
+        <div class="empty-msg hidden" id="pastRunsEmpty"><div class="em-icon">[bot]</div>No runs recorded this month.</div>
       </div>
       <div class="sub-content" id="sub-ama">
         <div style="margin-bottom:14px">
@@ -282,7 +282,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
         </div>
         <div id="amaPending"></div>
         <div id="amaLog"></div>
-        <div class="empty-msg hidden" id="amaEmpty"><div class="em-icon">&#x1F4AC;</div>No questions asked yet.</div>
+        <div class="empty-msg hidden" id="amaEmpty"><div class="em-icon">[chat]</div>No questions asked yet.</div>
       </div>
     </div>
     <div class="tab-content" id="tab-analytics">
@@ -336,7 +336,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
       </div>
       <div class="sub-content" id="sub-briefs">
         <div id="briefsList"></div>
-        <div class="empty-msg hidden" id="briefsEmpty"><div class="em-icon">&#x1F9E0;</div>No strategy briefs yet.<br>Opus generates one each Monday morning.</div>
+        <div class="empty-msg hidden" id="briefsEmpty"><div class="em-icon">[brain]</div>No strategy briefs yet.<br>Opus generates one each Monday morning.</div>
       </div>
     </div>
     <div class="tab-content" id="tab-control">
@@ -466,7 +466,12 @@ async function showBuildInfo(){
     alert('Could not fetch build info: '+e.message);
   }
 }
-function esc(s){if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function esc(s){if(!s)return'';const d=document.createElement('div');d.textContent=stripGarble(String(s));return d.innerHTML}
+// Strip corrupted UTF-8 emoji sequences from data strings.
+// When UTF-8 emoji are misread as Latin-1 and re-saved, each emoji byte
+// becomes a character in U+00C0-U+00FF range followed by U+0080-U+00FF.
+// This strips those sequences, plus orphaned C1 control chars.
+function stripGarble(s){return s.replace(/[\u00c0-\u00ff][\u0080-\u00ff]*/g,'').replace(/[\u0080-\u009f]/g,'').replace(/\s{2,}/g,' ').trim()}
 function _tickerName(sym){const t=_allTickers.find(t=>t.ticker===sym);return t?t.title:''}
 // GitHub API wrapper -- cache-busted with timestamp param, no-store, and
 // cleared ETag to ensure every call returns fresh data from the repo.
@@ -615,7 +620,7 @@ function renderWl(){
   const list=document.getElementById('wlList'),empty=document.getElementById('wlEmpty');
   if(!wlItems.length){list.innerHTML='';empty.classList.remove('hidden');return}
   empty.classList.add('hidden');
-  list.innerHTML=wlItems.map((w,i)=>`<div class="card"><div class="wl-item"><span class="wl-ticker">${esc(w.symbol)}</span><span class="wl-note" id="wlN${i}" onclick="wlNoteToggle(${i})" ondblclick="wlEdit(${i})">${esc(w.note)||'—'}</span><div class="wl-actions"><button class="wl-btn" onclick="wlEdit(${i})" title="Edit">&#x270F;</button><button class="wl-btn del" onclick="wlDel(${i})" title="Remove">×</button></div></div></div>`).join('');
+  list.innerHTML=wlItems.map((w,i)=>`<div class="card"><div class="wl-item"><span class="wl-ticker">${esc(w.symbol)}</span><span class="wl-note" id="wlN${i}" onclick="wlNoteToggle(${i})" ondblclick="wlEdit(${i})">${esc(w.note)||'-'}</span><div class="wl-actions"><button class="wl-btn" onclick="wlEdit(${i})" title="Edit">[edit]</button><button class="wl-btn del" onclick="wlDel(${i})" title="Remove">x</button></div></div></div>`).join('');
 }
 async function wlAdd(){
   if(!_selectedTicker){toast('Search and select a symbol first','err');return}
@@ -690,7 +695,7 @@ function pickTicker(ticker,title){
   document.getElementById('searchDrop').classList.remove('show');
   document.getElementById('wlSearch').value='';
   const sel=document.getElementById('searchSel');
-  sel.innerHTML=`${esc(ticker)} -- ${esc(title)} <span class="sel-clear" onclick="clearPick()">×</span>`;
+  sel.innerHTML=`${esc(ticker)} -- ${esc(title)} <span class="sel-clear" onclick="clearPick()">x</span>`;
   sel.classList.remove('hidden');
   document.getElementById('wlNote').classList.remove('hidden');
   document.getElementById('wlAddBtn').classList.remove('hidden');
@@ -748,7 +753,7 @@ function renderIpoWatch(){
   if(!_ipoWatch.length){list.innerHTML='';empty.classList.remove('hidden');return}
   empty.classList.add('hidden');
   list.innerHTML=_ipoWatch.map((w,i)=>{
-    return`<div class="card"><div class="wl-item"><span class="wl-ticker" style="color:var(--green);min-width:auto;flex:1">${esc(w.name||'?')}</span><span class="wl-note">${esc(w.note||'')}</span><div class="wl-actions"><button class="wl-btn del" onclick="ipoDel(${i})" title="Remove">×</button></div></div></div>`;
+    return`<div class="card"><div class="wl-item"><span class="wl-ticker" style="color:var(--green);min-width:auto;flex:1">${esc(w.name||'?')}</span><span class="wl-note">${esc(w.note||'')}</span><div class="wl-actions"><button class="wl-btn del" onclick="ipoDel(${i})" title="Remove">x</button></div></div></div>`;
   }).join('');
 }
 
@@ -800,7 +805,7 @@ function renderHoldings(){
   else{empty.classList.add('hidden');
     list.innerHTML=positions.map((p,i)=>{
       const pl=p.unrealized_pl||0,pct=p.unrealized_plpc||0,cls=pl>=0?'up':'down',sgn=pl>=0?'+':'';
-      const th=theses[p.symbol]||{},opened=dates[p.symbol]?dates[p.symbol].slice(0,10):'—';
+      const th=theses[p.symbol]||{},opened=dates[p.symbol]?dates[p.symbol].slice(0,10):'-';
       let ageBorder='var(--border)',ageTag='';
       if(dates[p.symbol]&&th.time_horizon_days){const od=new Date(dates[p.symbol]);const held=Math.floor((Date.now()-od.getTime())/86400000);const hz=th.time_horizon_days;const pctAge=held/hz;if(pctAge>=1){ageBorder='var(--red)';ageTag=`<span style="font-size:9px;padding:1px 5px;border-radius:3px;background:var(--red-bg);color:var(--red);font-weight:600;margin-left:6px">DAY ${held}/${hz}</span>`}else if(pctAge>=0.75){ageBorder='var(--yellow)';ageTag=`<span style="font-size:9px;padding:1px 5px;border-radius:3px;background:var(--yellow-bg);color:var(--yellow);font-weight:600;margin-left:6px">DAY ${held}/${hz}</span>`}else{ageTag=`<span style="font-size:9px;padding:1px 5px;border-radius:3px;background:var(--green-bg);color:var(--green);font-weight:600;margin-left:6px">DAY ${held}/${hz}</span>`}}
       return`<div class="card expandable" style="border-color:${ageBorder}" onclick="toggleTh(${i})"><div class="pos-row"><div class="pos-sym">${esc(p.symbol)}<div style="font-size:10px;font-weight:400;color:var(--text3);font-family:var(--font-head);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:80px">${esc(_tickerName(p.symbol))}</div></div><div class="pos-mid"><div class="pos-alloc">${p.alloc_pct||0}% &middot; ${p.side}${ageTag}</div><div class="pos-entry">${opened} @ $${(p.avg_entry_price||0).toFixed(2)}</div></div><div class="pos-pl ${cls}">${sgn}$${pl.toFixed(2)}<br><span style="font-size:11px">${sgn}${pct.toFixed(1)}%</span></div></div><div class="thesis-expand" id="th${i}"><div style="font-size:12px;color:var(--text2);margin-bottom:8px">${esc(_tickerName(p.symbol))}</div>${th.reason?`<div class="thesis-label">Why Opened</div><div>${esc(th.reason)}</div>`:''}${th.price_target?`<div class="thesis-label">Price Target</div><div>${esc(th.price_target)}</div>`:''}${th.exit_catalyst?`<div class="thesis-label">Exit Catalyst</div><div>${esc(th.exit_catalyst)}</div>`:''}${th.invalidation?`<div class="thesis-label">Invalidation</div><div>${esc(th.invalidation)}</div>`:''}${th.conviction?`<div class="thesis-label">Conviction</div><div>${th.conviction}/10</div>`:''}${th.time_horizon_days?`<div class="thesis-label">Time Horizon</div><div>${th.time_horizon_days} days</div>`:''}${!th.reason&&!th.price_target?'<div style="color:var(--text3)">No thesis recorded.</div>':''}</div></div>`}).join('')}
@@ -877,7 +882,7 @@ function renderUpcoming(){
     let schedStr='';
     try{const sd=new Date(e.scheduled);schedStr=sd.toLocaleString('en-US',{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short'})}catch{schedStr=e.scheduled||'?'}
     const reason=e.reason||'';
-    return`<div class="card"><div class="evt-row"><span class="evt-badge scheduled">SCHED</span><span class="evt-sym" style="flex:1;cursor:pointer" onclick="toggleUpcoming(${i})">${esc(e.event)}</span><span style="font-size:11px;color:var(--text2);font-family:var(--font-mono)">${schedStr}</span><button class="wl-btn del" onclick="cancelEvent('${esc(e.jobId)}','${esc(e.event)}','${esc(e.scheduled)}','${esc(e.event_id)}')" title="Cancel" style="margin-left:8px">×</button></div>${reason?`<div class="evt-detail" id="upc${i}">${esc(reason)}</div>`:''}</div>`;
+    return`<div class="card"><div class="evt-row"><span class="evt-badge scheduled">SCHED</span><span class="evt-sym" style="flex:1;cursor:pointer" onclick="toggleUpcoming(${i})">${esc(e.event)}</span><span style="font-size:11px;color:var(--text2);font-family:var(--font-mono)">${schedStr}</span><button class="wl-btn del" onclick="cancelEvent('${esc(e.jobId)}','${esc(e.event)}','${esc(e.scheduled)}','${esc(e.event_id)}')" title="Cancel" style="margin-left:8px">x</button></div>${reason?`<div class="evt-detail" id="upc${i}">${esc(reason)}</div>`:''}</div>`;
   }).join('');
 }
 function toggleUpcoming(i){const e=document.getElementById('upc'+i);if(e)e.classList.toggle('show')}
@@ -963,7 +968,7 @@ function renderAma(){
   if(_amaQueue.length){
     pending.innerHTML='<div class="section-title">Pending (next run)</div>'+_amaQueue.map((q,i)=>{
       const qText=q.question||q;
-      return`<div class="card"><div style="display:flex;align-items:flex-start;gap:8px"><span style="flex:1;font-size:12px;color:var(--text)">${esc(typeof qText==='string'?qText:JSON.stringify(qText))}</span><button class="wl-btn del" onclick="deleteAmaQ(${i})" title="Remove">×</button></div></div>`;
+      return`<div class="card"><div style="display:flex;align-items:flex-start;gap:8px"><span style="flex:1;font-size:12px;color:var(--text)">${esc(typeof qText==='string'?qText:JSON.stringify(qText))}</span><button class="wl-btn del" onclick="deleteAmaQ(${i})" title="Remove">x</button></div></div>`;
     }).join('');
   }else{pending.innerHTML=''}
 
@@ -974,7 +979,7 @@ function renderAma(){
     logEl.innerHTML='<div class="section-title">Past Q&A</div>'+sorted.map((qa,i)=>{
       let ts='';
       try{const d=new Date(qa.timestamp);ts=d.toLocaleDateString('en-US',{month:'short',day:'numeric'})+' '+d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}catch{ts=qa.timestamp||''}
-      return`<div class="card expandable" onclick="toggleAmaLog(${i})"><div style="display:flex;align-items:flex-start;gap:8px"><span style="font-size:12px;color:var(--accent);font-weight:600;min-width:16px">Q:</span><span style="flex:1;font-size:12px;color:var(--text)">${esc(qa.question||'?')}</span><span style="font-size:10px;color:var(--text3);font-family:var(--font-mono);white-space:nowrap">${ts}</span><button class="wl-btn del" onclick="event.stopPropagation();deleteAmaLog(${i})" title="Delete">×</button></div><div class="thesis-expand" id="amaL${i}"><div style="margin-top:8px;font-size:12px;line-height:1.6;color:var(--text2)"><span style="color:var(--green);font-weight:600">A:</span> ${esc(qa.answer||'No answer')}</div></div></div>`;
+      return`<div class="card expandable" onclick="toggleAmaLog(${i})"><div style="display:flex;align-items:flex-start;gap:8px"><span style="font-size:12px;color:var(--accent);font-weight:600;min-width:16px">Q:</span><span style="flex:1;font-size:12px;color:var(--text)">${esc(qa.question||'?')}</span><span style="font-size:10px;color:var(--text3);font-family:var(--font-mono);white-space:nowrap">${ts}</span><button class="wl-btn del" onclick="event.stopPropagation();deleteAmaLog(${i})" title="Delete">x</button></div><div class="thesis-expand" id="amaL${i}"><div style="margin-top:8px;font-size:12px;line-height:1.6;color:var(--text2)"><span style="color:var(--green);font-weight:600">A:</span> ${esc(qa.answer||'No answer')}</div></div></div>`;
     }).join('');
   }else if(!_amaQueue.length){
     logEl.innerHTML='';
@@ -1150,7 +1155,7 @@ function renderPastRuns(){
       detail+=`<div class="thesis-label">Thesis Reviews</div>`;
       for(const sym of trKeys){
         const rev=tr[sym]||'';
-        const icon=rev.toLowerCase().includes('intact')?'✅':rev.toLowerCase().includes('broken')?'❌':'⚠️';&#xFE0F;';
+        const icon=rev.toLowerCase().includes('intact')?'[OK]':rev.toLowerCase().includes('broken')?'[!!]':'[??]';&#xFE0F;';
         detail+=`<div style="margin-bottom:4px"><span style="font-family:var(--font-mono);font-weight:600;color:var(--accent)">${esc(sym)}</span> ${icon} ${esc(rev)}</div>`;
       }
       detail+='<div style="margin-bottom:8px"></div>';
@@ -1163,7 +1168,7 @@ function renderPastRuns(){
       detail+=`<div class="thesis-label">Watchlist Evaluations</div>`;
       for(const sym of wlKeys){
         const verdict=wl[sym]||'';
-        const icon=verdict.toLowerCase().startsWith('buy')?'✅':'⚠️';';
+        const icon=verdict.toLowerCase().startsWith('buy')?'[BUY]':'[PASS]';';
         detail+=`<div style="margin-bottom:4px"><span style="font-family:var(--font-mono);font-weight:600;color:var(--accent)">${esc(sym)}</span> ${icon} ${esc(verdict)}</div>`;
       }
       detail+='<div style="margin-bottom:8px"></div>';
@@ -1174,7 +1179,7 @@ function renderPastRuns(){
       detail+=`<div class="thesis-label">Trades</div>`;
       for(const t of r.trades){
         const actColor=t.action==='buy'?'var(--green)':t.action==='sell'?'var(--red)':'var(--text2)';
-        detail+=`<div style="margin-bottom:4px"><span style="color:${actColor};font-weight:700;font-size:10px;text-transform:uppercase">${esc(t.action)}</span> <span style="font-family:var(--font-mono);font-weight:600">${esc(t.symbol)}</span> $${(t.notional||0).toFixed(0)} &#x2192; ${esc(t.reason||'')}</div>`;
+        detail+=`<div style="margin-bottom:4px"><span style="color:${actColor};font-weight:700;font-size:10px;text-transform:uppercase">${esc(t.action)}</span> <span style="font-family:var(--font-mono);font-weight:600">${esc(t.symbol)}</span> $${(t.notional||0).toFixed(0)} -> ${esc(t.reason||'')}</div>`;
       }
       detail+='<div style="margin-bottom:8px"></div>';
     }
@@ -1358,7 +1363,7 @@ function renderEquityChart(){
   ctx.lineTo(pad.l+gW,pad.t+gH);ctx.lineTo(pad.l,pad.t+gH);ctx.closePath();
   ctx.fillStyle=fillCol;ctx.fill();
   // -- Trade event dots ===================================================
-  // Overlay buy (green &#x25B2;), sell (red &#x203C;), and stop-fire (orange arrow) markers
+  // Overlay buy (green ^), sell (red !!), and stop-fire (orange arrow) markers
   // on the equity curve at the date they occurred.
   const _dotDateSet=new Set(entries.map(e=>e[0])); // dates with equity data
   const _dotSize=4;
@@ -1476,7 +1481,7 @@ function renderPLDashboard(){
   // denominator. If realized_pl was genuinely negative, it would have been
   // written as a negative string; blank is unambiguously "unknown".
   const closes=events.filter(e=>['CLOSE','PARTIAL_CLOSE'].includes(e.event_type));
-  if(!closes.length){stats.innerHTML='';details.innerHTML='<div class="empty-msg"><div class="em-icon">&#x1F4CB;</div>No closed trades yet.</div>';return}
+  if(!closes.length){stats.innerHTML='';details.innerHTML='<div class="empty-msg"><div class="em-icon">[list]</div>No closed trades yet.</div>';return}
   const pls=closes.map(e=>parseFloat(e.realized_pl)||0);
   const wins=pls.filter(p=>p>0),losses=pls.filter(p=>p<0);
   const totalPL=pls.reduce((a,b)=>a+b,0);
@@ -1523,7 +1528,7 @@ async function loadTradesLog(){
 
 function renderTrades(){
   const el=document.getElementById('tradeLog');
-  if(!_tradesLog.length){el.innerHTML='<div class="empty-msg"><div class="em-icon">&#x1F4CB;</div>No trades logged yet.</div>';return}
+  if(!_tradesLog.length){el.innerHTML='<div class="empty-msg"><div class="em-icon">[list]</div>No trades logged yet.</div>';return}
   const symFilter=(document.getElementById('tradeFilterSym')?.value||'').toUpperCase();
   const actFilter=document.getElementById('tradeFilterAction')?.value||'';
   let filtered=_tradesLog.slice().reverse();
@@ -1555,7 +1560,7 @@ async function loadStratMemory(){
 
 function renderStratMemory(){
   const el=document.getElementById('stratMemory');
-  if(!_stratMem){el.innerHTML='<div class="empty-msg"><div class="em-icon">&#x1F9E0;</div>No strategy memory yet.</div>';return}
+  if(!_stratMem){el.innerHTML='<div class="empty-msg"><div class="em-icon">[brain]</div>No strategy memory yet.</div>';return}
   let html='';
   // Market view
   if(_stratMem.market_view){
@@ -1746,7 +1751,7 @@ async function triggerRun(slot){
   // Check if Monday morning -- Opus brief may be generated
   if(slot==='morning'&&_isMonday()){
     const opusCost=_estimateOpusCost();
-    costNote+=`\n&#x26A0;&#xFE0F; Monday morning -- may also generate an Opus strategy brief (+~$${opusCost.toFixed(2)})`;
+    costNote+=`\n[!] Monday morning -- may also generate an Opus strategy brief (+~$${opusCost.toFixed(2)})`;
     costNote+=`\nTotal estimated: ~$${(cost+opusCost).toFixed(2)}`;
   }
   const msg=isTest
@@ -1806,7 +1811,7 @@ function renderCostDashboard(){
   const chartBox=document.getElementById('costChart');
   if(!_apiCosts.length){
     stats.innerHTML='';
-    logEl.innerHTML='<div class="empty-msg"><div class="em-icon">&#x1F4B0;</div>No API cost data yet.<br>Costs are logged after each bot run.</div>';
+    logEl.innerHTML='<div class="empty-msg"><div class="em-icon">[money]</div>No API cost data yet.<br>Costs are logged after each bot run.</div>';
     chartBox.style.display='none';
     return;
   }
