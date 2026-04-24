@@ -1155,7 +1155,7 @@ function renderPastRuns(){
       detail+=`<div class="thesis-label">Thesis Reviews</div>`;
       for(const sym of trKeys){
         const rev=tr[sym]||'';
-        const icon=rev.toLowerCase().includes('intact')?'[OK]':rev.toLowerCase().includes('broken')?'[!!]':'[??]';&#xFE0F;';
+        const icon=rev.toLowerCase().includes('intact')?'[OK]':rev.toLowerCase().includes('broken')?'[!!]':'[??]';
         detail+=`<div style="margin-bottom:4px"><span style="font-family:var(--font-mono);font-weight:600;color:var(--accent)">${esc(sym)}</span> ${icon} ${esc(rev)}</div>`;
       }
       detail+='<div style="margin-bottom:8px"></div>';
@@ -1168,7 +1168,7 @@ function renderPastRuns(){
       detail+=`<div class="thesis-label">Watchlist Evaluations</div>`;
       for(const sym of wlKeys){
         const verdict=wl[sym]||'';
-        const icon=verdict.toLowerCase().startsWith('buy')?'[BUY]':'[PASS]';';
+        const icon=verdict.toLowerCase().startsWith('buy')?'[BUY]':'[PASS]';
         detail+=`<div style="margin-bottom:4px"><span style="font-family:var(--font-mono);font-weight:600;color:var(--accent)">${esc(sym)}</span> ${icon} ${esc(verdict)}</div>`;
       }
       detail+='<div style="margin-bottom:8px"></div>';
