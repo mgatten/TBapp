@@ -131,6 +131,8 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
 .sub-content.active{display:block}
 .section-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
 .trade-filters{display:flex;gap:6px;margin-bottom:10px}
+#tradeFilterSymContainer{flex:1;display:flex}
+#tradeFilterSymContainer>*{width:100%}
 .filter-input,.filter-select{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;color:var(--text);font-size:12px;font-family:var(--font-head);outline:none}
 .filter-input:focus,.filter-select:focus{border-color:var(--accent)}
 .filter-select{-webkit-appearance:none;appearance:none}
@@ -303,7 +305,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
       </div>
       <div class="sub-content" id="sub-trades">
         <div class="trade-filters" id="tradeFilters">
-          <input type="text" class="filter-input" id="tradeFilterSym" placeholder="filter by symbol" oninput="renderTrades()">
+          <span id="tradeFilterSymContainer"><input type="text" class="filter-input" id="tradeFilterSym" placeholder="filter by symbol" oninput="renderTrades()"></span>
           <select class="filter-select" id="tradeFilterAction" onchange="renderTrades()">
             <option value="">all actions</option>
             <option value="buy">buy</option>
@@ -1524,16 +1526,42 @@ async function loadTradesLog(){
     const{content}=await ghGet('data/trades_log.csv');
     _tradesLog=parseCSV(content);
   }catch(e){_tradesLog=[]}
+  _buildSymFilter();
   renderTrades();
+}
+
+function _buildSymFilter(){
+  const container=document.getElementById('tradeFilterSymContainer');
+  if(!container)return;
+  // Collect unique symbols from trade log
+  const syms=new Set();
+  _tradesLog.forEach(t=>{if(t.symbol)syms.add(t.symbol.toUpperCase())});
+  const sorted=[...syms].sort();
+  if(sorted.length>0&&sorted.length<=30){
+    // Build a select dropdown with symbol + company name
+    let html='<select class="filter-select" id="tradeFilterSym" onchange="renderTrades()">';
+    html+='<option value="">all symbols</option>';
+    sorted.forEach(s=>{
+      const name=_tickerName(s);
+      const label=name?s+' - '+name:s;
+      html+='<option value="'+s+'">'+label+'</option>';
+    });
+    html+='</select>';
+    container.innerHTML=html;
+  }else{
+    // Too many symbols or none -- freeform text input
+    container.innerHTML='<input type="text" class="filter-input" id="tradeFilterSym" placeholder="filter by symbol" oninput="renderTrades()">';
+  }
 }
 
 function renderTrades(){
   const el=document.getElementById('tradeLog');
   if(!_tradesLog.length){el.innerHTML='<div class="empty-msg"><div class="em-icon">[list]</div>No trades logged yet.</div>';return}
-  const symFilter=(document.getElementById('tradeFilterSym')?.value||'').toUpperCase();
+  const symEl=document.getElementById('tradeFilterSym');
+  const symFilter=(symEl?.value||'').toUpperCase();
   const actFilter=document.getElementById('tradeFilterAction')?.value||'';
   let filtered=_tradesLog.slice().reverse();
-  if(symFilter)filtered=filtered.filter(t=>(t.symbol||'').toUpperCase().includes(symFilter));
+  if(symFilter)filtered=filtered.filter(t=>(t.symbol||'').toUpperCase()===symFilter||(t.symbol||'').toUpperCase().includes(symFilter));
   if(actFilter)filtered=filtered.filter(t=>(t.action||'').toLowerCase()===actFilter);
   if(!filtered.length){el.innerHTML='<div style="text-align:center;color:var(--text3);padding:20px;font-size:12px">No matching trades.</div>';return}
   el.innerHTML=filtered.slice(0,50).map(t=>{
