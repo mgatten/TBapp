@@ -190,7 +190,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
     </div>
   </div>
   <div class="offline-banner" id="offlineBanner">
-    â ï¸ No internet connection. Showing cached data â there may have been runs since this snapshot.
+    Ã¢ÂÂ Ã¯Â¸Â No internet connection. Showing cached data Ã¢ÂÂ there may have been runs since this snapshot.
     <span id="offlineTs"></span>
   </div>
   <div id="setupPanel" class="setup">
@@ -216,7 +216,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
         <button class="btn btn-primary hidden" id="wlAddBtn" onclick="wlAdd()">Add</button>
       </div>
       <div id="wlList"></div>
-      <div class="empty-msg hidden" id="wlEmpty"><div class="em-icon">ð</div>No symbols on your watchlist.<br>Add a ticker to suggest it to Claude.</div>
+      <div class="empty-msg hidden" id="wlEmpty"><div class="em-icon">Ã°ÂÂÂ</div>No symbols on your watchlist.<br>Add a ticker to suggest it to Claude.</div>
       <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
           <div style="font-size:13px;font-weight:600">IPO Watch</div>
@@ -231,13 +231,13 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
           </div>
         </div>
         <div id="ipoList"></div>
-        <div class="empty-msg hidden" id="ipoEmpty" style="padding:16px"><div class="em-icon">ð</div>No IPOs on watch.<br>Add anticipated IPOs for the bot to monitor.</div>
+        <div class="empty-msg hidden" id="ipoEmpty" style="padding:16px"><div class="em-icon">Ã°ÂÂÂ</div>No IPOs on watch.<br>Add anticipated IPOs for the bot to monitor.</div>
       </div>
     </div>
     <div class="tab-content active" id="tab-holdings">
       <div id="acctBar" style="margin-bottom:14px"></div>
       <div id="holdingsList"></div>
-      <div class="empty-msg hidden" id="holdingsEmpty"><div class="em-icon">ð¼</div>No positions held.</div>
+      <div class="empty-msg hidden" id="holdingsEmpty"><div class="em-icon">Ã°ÂÂÂ¼</div>No positions held.</div>
       <div class="updated-ts" id="holdingsTs"></div>
       <div id="equityChartBox" class="card hidden" style="padding:10px 8px">
         <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Equity History</div>
@@ -254,25 +254,25 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
       </div>
       <div class="sub-content" id="sub-events">
         <div class="month-nav">
-          <button class="nav-btn" id="prevMonth" onclick="histNav(-1)">â</button>
+          <button class="nav-btn" id="prevMonth" onclick="histNav(-1)">Ã¢ÂÂ</button>
           <span class="month-label" id="monthLabel"></span>
-          <button class="nav-btn" id="nextMonth" onclick="histNav(1)">â¶</button>
+          <button class="nav-btn" id="nextMonth" onclick="histNav(1)">Ã¢ÂÂ¶</button>
         </div>
         <div id="histList"></div>
-        <div class="empty-msg hidden" id="histEmpty"><div class="em-icon">ð</div>No events this month.</div>
+        <div class="empty-msg hidden" id="histEmpty"><div class="em-icon">Ã°ÂÂÂ</div>No events this month.</div>
       </div>
       <div class="sub-content" id="sub-upcoming">
         <div id="upcomingList"></div>
-        <div class="empty-msg hidden" id="upcomingEmpty"><div class="em-icon">ð</div>No upcoming scheduled runs.</div>
+        <div class="empty-msg hidden" id="upcomingEmpty"><div class="em-icon">Ã°ÂÂÂ</div>No upcoming scheduled runs.</div>
       </div> 
       <div class="sub-content active" id="sub-pastruns">
         <div class="month-nav">
-          <button class="nav-btn" id="prevRunMonth" onclick="runHistNav(-1)">â</button>
+          <button class="nav-btn" id="prevRunMonth" onclick="runHistNav(-1)">Ã¢ÂÂ</button>
           <span class="month-label" id="runMonthLabel"></span>
-          <button class="nav-btn" id="nextRunMonth" onclick="runHistNav(1)">â¶</button>
+          <button class="nav-btn" id="nextRunMonth" onclick="runHistNav(1)">Ã¢ÂÂ¶</button>
         </div>
         <div id="pastRunsList"></div>
-        <div class="empty-msg hidden" id="pastRunsEmpty"><div class="em-icon">ð¤</div>No runs recorded this month.</div>
+        <div class="empty-msg hidden" id="pastRunsEmpty"><div class="em-icon">Ã°ÂÂ¤Â</div>No runs recorded this month.</div>
       </div>
       <div class="sub-content" id="sub-ama">
         <div style="margin-bottom:14px">
@@ -282,7 +282,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
         </div>
         <div id="amaPending"></div>
         <div id="amaLog"></div>
-        <div class="empty-msg hidden" id="amaEmpty"><div class="em-icon">ð¬</div>No questions asked yet.</div>
+        <div class="empty-msg hidden" id="amaEmpty"><div class="em-icon">Ã°ÂÂÂ¬</div>No questions asked yet.</div>
       </div>
     </div>
     <div class="tab-content" id="tab-analytics">
@@ -336,7 +336,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
       </div>
       <div class="sub-content" id="sub-briefs">
         <div id="briefsList"></div>
-        <div class="empty-msg hidden" id="briefsEmpty"><div class="em-icon">ð§ </div>No strategy briefs yet.<br>Opus generates one each Monday morning.</div>
+        <div class="empty-msg hidden" id="briefsEmpty"><div class="em-icon">Ã°ÂÂ§Â </div>No strategy briefs yet.<br>Opus generates one each Monday morning.</div>
       </div>
     </div>
     <div class="tab-content" id="tab-control">
@@ -386,42 +386,42 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
 </div>
 <div class="toast" id="toast"></div>
 <script>
-// ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
-// TraderBot Console â Single-page GitHub Pages app for monitoring the bot.
+// Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// TraderBot Console Ã¢ÂÂ Single-page GitHub Pages app for monitoring the bot.
 //
 // Architecture:
 //   - All data lives in a GitHub repo (portfolio_state.json, data/*.csv/json)
 //   - Authenticated via GitHub personal access token (stored in localStorage)
 //   - Every load/refresh fetches fresh data from GitHub API (cache-busted)
-//   - No backend â pure client-side JS reading repo files
+//   - No backend Ã¢ÂÂ pure client-side JS reading repo files
 //
 // Tabs:
-//   Watchlist   â manage symbols for Claude to evaluate (data/watchlist.txt)
-//   Holdings    â live portfolio state with age indicators + expandable theses
-//   History     â position opens/closes/scheduled runs (data/position_events.csv)
-//   Analytics   â sub-tabs: Performance, Strategy, Trades, Export, Costs, Briefs
-//   Run         â trigger bot runs via GitHub Actions workflow dispatch
+//   Watchlist   Ã¢ÂÂ manage symbols for Claude to evaluate (data/watchlist.txt)
+//   Holdings    Ã¢ÂÂ live portfolio state with age indicators + expandable theses
+//   History     Ã¢ÂÂ position opens/closes/scheduled runs (data/position_events.csv)
+//   Analytics   Ã¢ÂÂ sub-tabs: Performance, Strategy, Trades, Export, Costs, Briefs
+//   Run         Ã¢ÂÂ trigger bot runs via GitHub Actions workflow dispatch
 //
 // Data sources:
-//   portfolio_state.json      â latest portfolio snapshot (positions, theses, regime)
-//   data/watchlist.txt         â user's watchlist symbols with optional notes
-//   data/position_events.csv  â OPEN, CLOSE, PARTIAL_CLOSE, SCHEDULED_RUN events
-//   data/holdings_log.csv     â per-run position snapshots (equity chart source)
-//   data/trades_log.csv       â executed trades log
-//   data/strategy_memory.json â Claude's strategy memory (hypotheses, market view)
-//   data/benchmark_history.csvâ SPY/QQQ/DIA benchmark prices for chart overlay
-//   data/api_costs.csv        â per-run API token/cost tracking
-//   data/strategy_briefs.json â weekly Opus 4.5 strategic outlook briefs
-//   data/symbols.json         â SEC ticker list for watchlist search
-// ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+//   portfolio_state.json      Ã¢ÂÂ latest portfolio snapshot (positions, theses, regime)
+//   data/watchlist.txt         Ã¢ÂÂ user's watchlist symbols with optional notes
+//   data/position_events.csv  Ã¢ÂÂ OPEN, CLOSE, PARTIAL_CLOSE, SCHEDULED_RUN events
+//   data/holdings_log.csv     Ã¢ÂÂ per-run position snapshots (equity chart source)
+//   data/trades_log.csv       Ã¢ÂÂ executed trades log
+//   data/strategy_memory.json Ã¢ÂÂ Claude's strategy memory (hypotheses, market view)
+//   data/benchmark_history.csvÃ¢ÂÂ SPY/QQQ/DIA benchmark prices for chart overlay
+//   data/api_costs.csv        Ã¢ÂÂ per-run API token/cost tracking
+//   data/strategy_briefs.json Ã¢ÂÂ weekly Opus 4.5 strategic outlook briefs
+//   data/symbols.json         Ã¢ÂÂ SEC ticker list for watchlist search
+// Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 
 const API='https://api.github.com';
-// ââ Global state ââ
+// Ã¢ÂÂÃ¢ÂÂ Global state Ã¢ÂÂÃ¢ÂÂ
 let cfg={},wlItems=[],wlSha=null,portfolio=null,events=[];
 let histMonth=new Date();histMonth.setDate(1);  // history tab month navigator
 const LS={get(k){try{return JSON.parse(localStorage.getItem('tb_'+k))}catch{return null}},set(k,v){localStorage.setItem('tb_'+k,JSON.stringify(v))},del(k){localStorage.removeItem('tb_'+k)}};
 
-// ââ Utilities ââ
+// Ã¢ÂÂÃ¢ÂÂ Utilities Ã¢ÂÂÃ¢ÂÂ
 function setBrightness(val){
   // val 0-100: interpolates --text2 and --text3 from dim to near-white
   // 0 = original dim (#8080a0 / #5a5a78), 100 = near-white (#d0d0e0 / #b0b0c8)
@@ -468,7 +468,7 @@ async function showBuildInfo(){
 }
 function esc(s){if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML}
 function _tickerName(sym){const t=_allTickers.find(t=>t.ticker===sym);return t?t.title:''}
-// GitHub API wrapper â cache-busted with timestamp param, no-store, and
+// GitHub API wrapper Ã¢ÂÂ cache-busted with timestamp param, no-store, and
 // cleared ETag to ensure every call returns fresh data from the repo.
 async function gh(path,opts={}){const sep=path.includes('?')?'&':'?';const r=await fetch(`${API}/repos/${cfg.repo}/${path}${sep}_=${Date.now()}`,{...opts,cache:'no-store',headers:{'Authorization':`Bearer ${cfg.token}`,'Accept':'application/vnd.github.v3+json','If-None-Match':'',...(opts.headers||{})}});if(!r.ok)throw new Error(`HTTP ${r.status}`);return r.json()}
 // FIX #26: Use TextDecoder for proper UTF-8 decode. Previously used the
@@ -488,7 +488,7 @@ async function ghGet(p){const d=await gh(`contents/${p}`);return{content:b64d(d.
 function utf8ToB64(s){return btoa(new TextEncoder().encode(s).reduce((a,b)=>a+String.fromCharCode(b),''))}
 async function ghPut(p,c,sha,msg){const b={message:msg,content:utf8ToB64(c)};if(sha)b.sha=sha;const d=await gh(`contents/${p}`,{method:'PUT',body:JSON.stringify(b)});return d.content.sha}
 
-// ââ Safe state-key updater (Fixes #43, #44, #48) ââ
+// Ã¢ÂÂÃ¢ÂÂ Safe state-key updater (Fixes #43, #44, #48) Ã¢ÂÂÃ¢ÂÂ
 // Merge-updates specific keys in portfolio_state.json without clobbering the
 // rest of the file. Handles the race where the bot writes between the
 // console's fetch and PUT by retrying on 409 (sha mismatch) with a refetch.
@@ -497,7 +497,7 @@ async function ghPut(p,c,sha,msg){const b={message:msg,content:utf8ToB64(c)};if(
 //   await updateStateKeys({trading_halted: true}, "Halt trading via console");
 //   await updateStateKeys({api_credit_balance: 10, api_credit_set_date: ts}, "...");
 //
-// NEVER write back the entire state dict from the console â always use this
+// NEVER write back the entire state dict from the console Ã¢ÂÂ always use this
 // helper with just the keys you want to change. Full-state PUTs silently
 // overwrite anything the bot wrote between fetch and PUT (positions, theses,
 // circuit-breaker status, etc.).
@@ -505,7 +505,7 @@ async function updateStateKeys(keyMap, commitMsg, maxRetries=3) {
   let lastErr = null;
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
-      // Always refetch on each attempt â stale sha is the whole reason for retry
+      // Always refetch on each attempt Ã¢ÂÂ stale sha is the whole reason for retry
       const d = await gh('contents/portfolio_state.json');
       const state = JSON.parse(b64d(d.content));
       // Merge only the whitelisted keys
@@ -521,14 +521,14 @@ async function updateStateKeys(keyMap, commitMsg, maxRetries=3) {
       // Only retry on 409 (sha mismatch = concurrent write). Other errors
       // (auth, network, 5xx) should fail immediately.
       if (!String(e.message||'').includes('409')) throw e;
-      // Brief backoff before retry â let the bot's write settle
+      // Brief backoff before retry Ã¢ÂÂ let the bot's write settle
       await new Promise(r => setTimeout(r, 300 * (attempt + 1)));
     }
   }
   throw lastErr || new Error('updateStateKeys: exhausted retries');
 }
 
-// ââ Connect ââ
+// Ã¢ÂÂÃ¢ÂÂ Connect Ã¢ÂÂÃ¢ÂÂ
 // _R is the base64-encoded repo name (owner/repo). Decoded at runtime
 // to avoid GitHub's automated dependency scanners flagging the reference.
 const _R='bWdhdHRlbi9teWZpcnN0Z2l0cmVwbw==';
@@ -571,7 +571,7 @@ async function forceHardRefresh(){
   window.location.href=window.location.pathname+'?v='+Date.now();
 }
 
-// ââ Tabs ââ
+// Ã¢ÂÂÃ¢ÂÂ Tabs Ã¢ÂÂÃ¢ÂÂ
 function switchTab(name){
   const tabs=['holdings','history','analytics','watchlist','control'];
   document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',tabs[i]===name));
@@ -579,7 +579,7 @@ function switchTab(name){
   if(name==='holdings')setTimeout(renderEquityChart,50);
 }
 
-// ââ Refresh ââ
+// Ã¢ÂÂÃ¢ÂÂ Refresh Ã¢ÂÂÃ¢ÂÂ
 // All data loaders run in parallel via Promise.allSettled so one failure
 // doesn't block others. Results are cached to localStorage for offline mode.
 async function refreshAll(){
@@ -599,8 +599,8 @@ async function refreshAll(){
   if(failures.length>=loaders.length){toast('All data loads failed','err')}
 }
 
-// ââ Watchlist ââ
-// Manages data/watchlist.txt â a newline-separated list of ticker symbols
+// Ã¢ÂÂÃ¢ÂÂ Watchlist Ã¢ÂÂÃ¢ÂÂ
+// Manages data/watchlist.txt Ã¢ÂÂ a newline-separated list of ticker symbols
 // with optional notes after # or |. Supports inline editing (tap note to
 // expand, double-tap to edit), deletion with confirmation, and adding new
 // symbols via the SEC ticker search autocomplete. Changes are saved back
@@ -609,13 +609,13 @@ function parseWl(t){const o=[];for(const raw of t.split('\n')){const l=raw.trim(
 function serWl(){return wlItems.map(w=>w.note?`${w.symbol}  # ${w.note}`:w.symbol).join('\n')+(wlItems.length?'\n':'')}
 
 async function loadWl(){try{const{content,sha}=await ghGet('data/watchlist.txt');wlItems=parseWl(content);wlSha=sha}catch(e){wlItems=[];wlSha=null}renderWl()}
-async function saveWl(){try{wlSha=await ghPut('data/watchlist.txt',serWl(),wlSha,`watchlist: ${wlItems.length} symbol${wlItems.length!==1?'s':''}`);toast(`Saved â ${wlItems.length} symbol${wlItems.length!==1?'s':''}`)}catch(e){toast('Save failed: '+e.message,'err')}}
+async function saveWl(){try{wlSha=await ghPut('data/watchlist.txt',serWl(),wlSha,`watchlist: ${wlItems.length} symbol${wlItems.length!==1?'s':''}`);toast(`Saved Ã¢ÂÂ ${wlItems.length} symbol${wlItems.length!==1?'s':''}`)}catch(e){toast('Save failed: '+e.message,'err')}}
 
 function renderWl(){
   const list=document.getElementById('wlList'),empty=document.getElementById('wlEmpty');
   if(!wlItems.length){list.innerHTML='';empty.classList.remove('hidden');return}
   empty.classList.add('hidden');
-  list.innerHTML=wlItems.map((w,i)=>`<div class="card"><div class="wl-item"><span class="wl-ticker">${esc(w.symbol)}</span><span class="wl-note" id="wlN${i}" onclick="wlNoteToggle(${i})" ondblclick="wlEdit(${i})">${esc(w.note)||'â'}</span><div class="wl-actions"><button class="wl-btn" onclick="wlEdit(${i})" title="Edit">â</button><button class="wl-btn del" onclick="wlDel(${i})" title="Remove">Ã</button></div></div></div>`).join('');
+  list.innerHTML=wlItems.map((w,i)=>`<div class="card"><div class="wl-item"><span class="wl-ticker">${esc(w.symbol)}</span><span class="wl-note" id="wlN${i}" onclick="wlNoteToggle(${i})" ondblclick="wlEdit(${i})">${esc(w.note)||'Ã¢ÂÂ'}</span><div class="wl-actions"><button class="wl-btn" onclick="wlEdit(${i})" title="Edit">Ã¢ÂÂ</button><button class="wl-btn del" onclick="wlDel(${i})" title="Remove">ÃÂ</button></div></div></div>`).join('');
 }
 async function wlAdd(){
   if(!_selectedTicker){toast('Search and select a symbol first','err');return}
@@ -632,7 +632,7 @@ async function wlAdd(){
   await saveWl();
 }
 
-// ââ SEC ticker search ââ
+// Ã¢ÂÂÃ¢ÂÂ SEC ticker search Ã¢ÂÂÃ¢ÂÂ
 // Ticker autocomplete for the watchlist add bar. Loads data/symbols.json
 // (generated by the bot's final run daily) with 24h localStorage cache.
 // Supports exact match, prefix match, and company name substring search.
@@ -644,7 +644,7 @@ async function loadSecTickers(){
   // Try cache first (24h TTL)
   const cached=LS.get('sec_tickers');
   if(cached&&cached.ts&&(Date.now()-cached.ts<86400000)){_allTickers=cached.data;return}
-  // Fetch from repo â generated by the bot's final run each day
+  // Fetch from repo Ã¢ÂÂ generated by the bot's final run each day
   try{
     const{content}=await ghGet('data/symbols.json');
     const data=JSON.parse(content);
@@ -690,7 +690,7 @@ function pickTicker(ticker,title){
   document.getElementById('searchDrop').classList.remove('show');
   document.getElementById('wlSearch').value='';
   const sel=document.getElementById('searchSel');
-  sel.innerHTML=`${esc(ticker)} â ${esc(title)} <span class="sel-clear" onclick="clearPick()">Ã</span>`;
+  sel.innerHTML=`${esc(ticker)} Ã¢ÂÂ ${esc(title)} <span class="sel-clear" onclick="clearPick()">ÃÂ</span>`;
   sel.classList.remove('hidden');
   document.getElementById('wlNote').classList.remove('hidden');
   document.getElementById('wlAddBtn').classList.remove('hidden');
@@ -718,8 +718,8 @@ function wlNoteToggle(i){const el=document.getElementById('wlN'+i);if(el)el.clas
 function wlEdit(i){const el=document.getElementById('wlN'+i);el.outerHTML=`<input class="wl-note-edit" id="wlE${i}" value="${esc(wlItems[i].note)}" onblur="wlEditDone(${i})" onkeydown="if(event.key==='Enter')this.blur()">`; document.getElementById('wlE'+i).focus()}
 async function wlEditDone(i){const el=document.getElementById('wlE'+i);if(!el)return;wlItems[i].note=el.value.trim();renderWl();await saveWl()}
 
-// ââ IPO Watch ââ
-// Manages data/ipo_watch.json â a list of anticipated IPOs for the bot
+// Ã¢ÂÂÃ¢ÂÂ IPO Watch Ã¢ÂÂÃ¢ÂÂ
+// Manages data/ipo_watch.json Ã¢ÂÂ a list of anticipated IPOs for the bot
 // to monitor. Opus briefs flag notable upcoming IPOs; morning runs
 // search for pricing/listing news on each watch name.
 let _ipoWatch=[];
@@ -739,7 +739,7 @@ async function saveIpoWatch(){
   try{
     const content=JSON.stringify(_ipoWatch,null,2);
     _ipoSha=await ghPut('data/ipo_watch.json',content,_ipoSha,`ipo_watch: ${_ipoWatch.length} name(s)`);
-    toast(`IPO watch saved â ${_ipoWatch.length} name(s)`);
+    toast(`IPO watch saved Ã¢ÂÂ ${_ipoWatch.length} name(s)`);
   }catch(e){toast('IPO save failed: '+e.message,'err')}
 }
 
@@ -748,7 +748,7 @@ function renderIpoWatch(){
   if(!_ipoWatch.length){list.innerHTML='';empty.classList.remove('hidden');return}
   empty.classList.add('hidden');
   list.innerHTML=_ipoWatch.map((w,i)=>{
-    return`<div class="card"><div class="wl-item"><span class="wl-ticker" style="color:var(--green);min-width:auto;flex:1">${esc(w.name||'?')}</span><span class="wl-note">${esc(w.note||'')}</span><div class="wl-actions"><button class="wl-btn del" onclick="ipoDel(${i})" title="Remove">Ã</button></div></div></div>`;
+    return`<div class="card"><div class="wl-item"><span class="wl-ticker" style="color:var(--green);min-width:auto;flex:1">${esc(w.name||'?')}</span><span class="wl-note">${esc(w.note||'')}</span><div class="wl-actions"><button class="wl-btn del" onclick="ipoDel(${i})" title="Remove">ÃÂ</button></div></div></div>`;
   }).join('');
 }
 
@@ -779,7 +779,7 @@ async function ipoDel(i){
   await saveIpoWatch();toast(`Removed ${name}`);
 }
 
-// ââ Holdings ââ
+// Ã¢ÂÂÃ¢ÂÂ Holdings Ã¢ÂÂÃ¢ÂÂ
 // Renders portfolio from portfolio_state.json. Shows account stats (equity,
 // cash, invested, ATH, regime), position cards with P&L, and expandable
 // entry theses. Position age indicators (DAY X/Y pills) color-code each
@@ -800,15 +800,15 @@ function renderHoldings(){
   else{empty.classList.add('hidden');
     list.innerHTML=positions.map((p,i)=>{
       const pl=p.unrealized_pl||0,pct=p.unrealized_plpc||0,cls=pl>=0?'up':'down',sgn=pl>=0?'+':'';
-      const th=theses[p.symbol]||{},opened=dates[p.symbol]?dates[p.symbol].slice(0,10):'â';
+      const th=theses[p.symbol]||{},opened=dates[p.symbol]?dates[p.symbol].slice(0,10):'Ã¢ÂÂ';
       let ageBorder='var(--border)',ageTag='';
       if(dates[p.symbol]&&th.time_horizon_days){const od=new Date(dates[p.symbol]);const held=Math.floor((Date.now()-od.getTime())/86400000);const hz=th.time_horizon_days;const pctAge=held/hz;if(pctAge>=1){ageBorder='var(--red)';ageTag=`<span style="font-size:9px;padding:1px 5px;border-radius:3px;background:var(--red-bg);color:var(--red);font-weight:600;margin-left:6px">DAY ${held}/${hz}</span>`}else if(pctAge>=0.75){ageBorder='var(--yellow)';ageTag=`<span style="font-size:9px;padding:1px 5px;border-radius:3px;background:var(--yellow-bg);color:var(--yellow);font-weight:600;margin-left:6px">DAY ${held}/${hz}</span>`}else{ageTag=`<span style="font-size:9px;padding:1px 5px;border-radius:3px;background:var(--green-bg);color:var(--green);font-weight:600;margin-left:6px">DAY ${held}/${hz}</span>`}}
-      return`<div class="card expandable" style="border-color:${ageBorder}" onclick="toggleTh(${i})"><div class="pos-row"><div class="pos-sym">${esc(p.symbol)}<div style="font-size:10px;font-weight:400;color:var(--text3);font-family:var(--font-head);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:80px">${esc(_tickerName(p.symbol))}</div></div><div class="pos-mid"><div class="pos-alloc">${p.alloc_pct||0}% · ${p.side}${ageTag}</div><div class="pos-entry">${opened} @ $${(p.avg_entry_price||0).toFixed(2)}</div></div><div class="pos-pl ${cls}">${sgn}$${pl.toFixed(2)}<br><span style="font-size:11px">${sgn}${pct.toFixed(1)}%</span></div></div><div class="thesis-expand" id="th${i}"><div style="font-size:12px;color:var(--text2);margin-bottom:8px">${esc(_tickerName(p.symbol))}</div>${th.reason?`<div class="thesis-label">Why Opened</div><div>${esc(th.reason)}</div>`:''}${th.price_target?`<div class="thesis-label">Price Target</div><div>${esc(th.price_target)}</div>`:''}${th.exit_catalyst?`<div class="thesis-label">Exit Catalyst</div><div>${esc(th.exit_catalyst)}</div>`:''}${th.invalidation?`<div class="thesis-label">Invalidation</div><div>${esc(th.invalidation)}</div>`:''}${th.conviction?`<div class="thesis-label">Conviction</div><div>${th.conviction}/10</div>`:''}${th.time_horizon_days?`<div class="thesis-label">Time Horizon</div><div>${th.time_horizon_days} days</div>`:''}${!th.reason&&!th.price_target?'<div style="color:var(--text3)">No thesis recorded.</div>':''}</div></div>`}).join('')}
+      return`<div class="card expandable" style="border-color:${ageBorder}" onclick="toggleTh(${i})"><div class="pos-row"><div class="pos-sym">${esc(p.symbol)}<div style="font-size:10px;font-weight:400;color:var(--text3);font-family:var(--font-head);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:80px">${esc(_tickerName(p.symbol))}</div></div><div class="pos-mid"><div class="pos-alloc">${p.alloc_pct||0}% Â· ${p.side}${ageTag}</div><div class="pos-entry">${opened} @ $${(p.avg_entry_price||0).toFixed(2)}</div></div><div class="pos-pl ${cls}">${sgn}$${pl.toFixed(2)}<br><span style="font-size:11px">${sgn}${pct.toFixed(1)}%</span></div></div><div class="thesis-expand" id="th${i}"><div style="font-size:12px;color:var(--text2);margin-bottom:8px">${esc(_tickerName(p.symbol))}</div>${th.reason?`<div class="thesis-label">Why Opened</div><div>${esc(th.reason)}</div>`:''}${th.price_target?`<div class="thesis-label">Price Target</div><div>${esc(th.price_target)}</div>`:''}${th.exit_catalyst?`<div class="thesis-label">Exit Catalyst</div><div>${esc(th.exit_catalyst)}</div>`:''}${th.invalidation?`<div class="thesis-label">Invalidation</div><div>${esc(th.invalidation)}</div>`:''}${th.conviction?`<div class="thesis-label">Conviction</div><div>${th.conviction}/10</div>`:''}${th.time_horizon_days?`<div class="thesis-label">Time Horizon</div><div>${th.time_horizon_days} days</div>`:''}${!th.reason&&!th.price_target?'<div style="color:var(--text3)">No thesis recorded.</div>':''}</div></div>`}).join('')}
   const now=new Date();const tz=now.toLocaleTimeString('en-US',{timeZoneName:'short'}).split(' ').pop();tsEl.textContent=`Logs last consulted at: ${now.toLocaleDateString()} ${now.toLocaleTimeString()} ${tz}`;
 }
 function toggleTh(i){const e=document.getElementById('th'+i);if(e)e.classList.toggle('show')}
 
-// ââ History ââ
+// Ã¢ÂÂÃ¢ÂÂ History Ã¢ÂÂÃ¢ÂÂ
 // Reads position_events.csv and displays OPEN, CLOSE, PARTIAL_CLOSE, and
 // SCHEDULED_RUN events in a month-navigable timeline. Each event type has
 // a color-coded badge. SCHEDULED_RUN events show the event name (in the
@@ -842,7 +842,7 @@ function renderHist(){
 function toggleEv(i){const e=document.getElementById('ev'+i);if(e)e.classList.toggle('show')}
 function histNav(d){histMonth.setMonth(histMonth.getMonth()+d);renderHist()}
 
-// ââ History sub-tabs ââ
+// Ã¢ÂÂÃ¢ÂÂ History sub-tabs Ã¢ÂÂÃ¢ÂÂ
 function switchHistoryTab(name){
   const subs=['pastruns','upcoming','events','ama'];
   document.querySelectorAll('#tab-history .sub-tab').forEach((t,i)=>t.classList.toggle('active',subs[i]===name));
@@ -852,8 +852,8 @@ function switchHistoryTab(name){
   if(name==='ama')renderAma();
 }
 
-// ââ Upcoming Scheduled Runs ââ
-// Upcoming Scheduled Runs â reads from portfolio_state.json
+// Ã¢ÂÂÃ¢ÂÂ Upcoming Scheduled Runs Ã¢ÂÂÃ¢ÂÂ
+// Upcoming Scheduled Runs Ã¢ÂÂ reads from portfolio_state.json
 // (event_triggered_runs), the single source of truth for scheduled events.
 // Delete button removes from cron-job.org, removes from state, and adds
 // to cancelled_events list so the bot won't reschedule it.
@@ -877,7 +877,7 @@ function renderUpcoming(){
     let schedStr='';
     try{const sd=new Date(e.scheduled);schedStr=sd.toLocaleString('en-US',{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short'})}catch{schedStr=e.scheduled||'?'}
     const reason=e.reason||'';
-    return`<div class="card"><div class="evt-row"><span class="evt-badge scheduled">SCHED</span><span class="evt-sym" style="flex:1;cursor:pointer" onclick="toggleUpcoming(${i})">${esc(e.event)}</span><span style="font-size:11px;color:var(--text2);font-family:var(--font-mono)">${schedStr}</span><button class="wl-btn del" onclick="cancelEvent('${esc(e.jobId)}','${esc(e.event)}','${esc(e.scheduled)}','${esc(e.event_id)}')" title="Cancel" style="margin-left:8px">Ã</button></div>${reason?`<div class="evt-detail" id="upc${i}">${esc(reason)}</div>`:''}</div>`;
+    return`<div class="card"><div class="evt-row"><span class="evt-badge scheduled">SCHED</span><span class="evt-sym" style="flex:1;cursor:pointer" onclick="toggleUpcoming(${i})">${esc(e.event)}</span><span style="font-size:11px;color:var(--text2);font-family:var(--font-mono)">${schedStr}</span><button class="wl-btn del" onclick="cancelEvent('${esc(e.jobId)}','${esc(e.event)}','${esc(e.scheduled)}','${esc(e.event_id)}')" title="Cancel" style="margin-left:8px">ÃÂ</button></div>${reason?`<div class="evt-detail" id="upc${i}">${esc(reason)}</div>`:''}</div>`;
   }).join('');
 }
 function toggleUpcoming(i){const e=document.getElementById('upc'+i);if(e)e.classList.toggle('show')}
@@ -963,7 +963,7 @@ function renderAma(){
   if(_amaQueue.length){
     pending.innerHTML='<div class="section-title">Pending (next run)</div>'+_amaQueue.map((q,i)=>{
       const qText=q.question||q;
-      return`<div class="card"><div style="display:flex;align-items:flex-start;gap:8px"><span style="flex:1;font-size:12px;color:var(--text)">${esc(typeof qText==='string'?qText:JSON.stringify(qText))}</span><button class="wl-btn del" onclick="deleteAmaQ(${i})" title="Remove">Ã</button></div></div>`;
+      return`<div class="card"><div style="display:flex;align-items:flex-start;gap:8px"><span style="flex:1;font-size:12px;color:var(--text)">${esc(typeof qText==='string'?qText:JSON.stringify(qText))}</span><button class="wl-btn del" onclick="deleteAmaQ(${i})" title="Remove">ÃÂ</button></div></div>`;
     }).join('');
   }else{pending.innerHTML=''}
 
@@ -974,7 +974,7 @@ function renderAma(){
     logEl.innerHTML='<div class="section-title">Past Q&A</div>'+sorted.map((qa,i)=>{
       let ts='';
       try{const d=new Date(qa.timestamp);ts=d.toLocaleDateString('en-US',{month:'short',day:'numeric'})+' '+d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}catch{ts=qa.timestamp||''}
-      return`<div class="card expandable" onclick="toggleAmaLog(${i})"><div style="display:flex;align-items:flex-start;gap:8px"><span style="font-size:12px;color:var(--accent);font-weight:600;min-width:16px">Q:</span><span style="flex:1;font-size:12px;color:var(--text)">${esc(qa.question||'?')}</span><span style="font-size:10px;color:var(--text3);font-family:var(--font-mono);white-space:nowrap">${ts}</span><button class="wl-btn del" onclick="event.stopPropagation();deleteAmaLog(${i})" title="Delete">Ã</button></div><div class="thesis-expand" id="amaL${i}"><div style="margin-top:8px;font-size:12px;line-height:1.6;color:var(--text2)"><span style="color:var(--green);font-weight:600">A:</span> ${esc(qa.answer||'No answer')}</div></div></div>`;
+      return`<div class="card expandable" onclick="toggleAmaLog(${i})"><div style="display:flex;align-items:flex-start;gap:8px"><span style="font-size:12px;color:var(--accent);font-weight:600;min-width:16px">Q:</span><span style="flex:1;font-size:12px;color:var(--text)">${esc(qa.question||'?')}</span><span style="font-size:10px;color:var(--text3);font-family:var(--font-mono);white-space:nowrap">${ts}</span><button class="wl-btn del" onclick="event.stopPropagation();deleteAmaLog(${i})" title="Delete">ÃÂ</button></div><div class="thesis-expand" id="amaL${i}"><div style="margin-top:8px;font-size:12px;line-height:1.6;color:var(--text2)"><span style="color:var(--green);font-weight:600">A:</span> ${esc(qa.answer||'No answer')}</div></div></div>`;
     }).join('');
   }else if(!_amaQueue.length){
     logEl.innerHTML='';
@@ -1008,7 +1008,7 @@ async function deleteAmaQ(i){
   if(!confirm('Remove this pending question?'))return;
   // FIX #36: Identify the target question by its content (question + submitted
   // timestamp) rather than the array index. If the bot processes the queue
-  // between render and delete, the index shifts â content identification is
+  // between render and delete, the index shifts Ã¢ÂÂ content identification is
   // stable across that race. Also refetches before delete to use a fresh sha.
   const targetQ = _amaQueue[i];
   if(!targetQ){toast('Question not found','err');return}
@@ -1023,12 +1023,12 @@ async function deleteAmaQ(i){
       if(!Array.isArray(freshQueue)) freshQueue = [];
       freshSha = sha;
     }catch{ freshQueue = []; freshSha = null }
-    // Find by content â may have shifted or may have been processed
+    // Find by content Ã¢ÂÂ may have shifted or may have been processed
     const realIdx = freshQueue.findIndex(q =>
       JSON.stringify({q:q.question, s:q.submitted}) === targetId
     );
     if(realIdx < 0){
-      // Bot already processed it â update local state and toast informatively
+      // Bot already processed it Ã¢ÂÂ update local state and toast informatively
       _amaQueue = freshQueue;
       _amaQueueSha = freshSha;
       renderAma();
@@ -1083,7 +1083,7 @@ async function deleteAmaLog(i){
   }catch(e){toast('Delete failed: '+e.message,'err')}
 }
 
-// ââ Past Runs ââ
+// Ã¢ÂÂÃ¢ÂÂ Past Runs Ã¢ÂÂÃ¢ÂÂ
 // Loads data/run_history.json and displays per-run decision records
 // paginated by month. Each run is expandable to show full reasoning,
 // thesis reviews, watchlist evaluations, trades, and errors.
@@ -1150,7 +1150,7 @@ function renderPastRuns(){
       detail+=`<div class="thesis-label">Thesis Reviews</div>`;
       for(const sym of trKeys){
         const rev=tr[sym]||'';
-        const icon=rev.toLowerCase().includes('intact')?'â':rev.toLowerCase().includes('broken')?'â':'â ï¸';
+        const icon=rev.toLowerCase().includes('intact')?'Ã¢ÂÂ':rev.toLowerCase().includes('broken')?'Ã¢ÂÂ':'Ã¢ÂÂ Ã¯Â¸Â';
         detail+=`<div style="margin-bottom:4px"><span style="font-family:var(--font-mono);font-weight:600;color:var(--accent)">${esc(sym)}</span> ${icon} ${esc(rev)}</div>`;
       }
       detail+='<div style="margin-bottom:8px"></div>';
@@ -1163,7 +1163,7 @@ function renderPastRuns(){
       detail+=`<div class="thesis-label">Watchlist Evaluations</div>`;
       for(const sym of wlKeys){
         const verdict=wl[sym]||'';
-        const icon=verdict.toLowerCase().startsWith('buy')?'â':'â­ï¸';
+        const icon=verdict.toLowerCase().startsWith('buy')?'Ã¢ÂÂ':'Ã¢ÂÂ­Ã¯Â¸Â';
         detail+=`<div style="margin-bottom:4px"><span style="font-family:var(--font-mono);font-weight:600;color:var(--accent)">${esc(sym)}</span> ${icon} ${esc(verdict)}</div>`;
       }
       detail+='<div style="margin-bottom:8px"></div>';
@@ -1174,12 +1174,12 @@ function renderPastRuns(){
       detail+=`<div class="thesis-label">Trades</div>`;
       for(const t of r.trades){
         const actColor=t.action==='buy'?'var(--green)':t.action==='sell'?'var(--red)':'var(--text2)';
-        detail+=`<div style="margin-bottom:4px"><span style="color:${actColor};font-weight:700;font-size:10px;text-transform:uppercase">${esc(t.action)}</span> <span style="font-family:var(--font-mono);font-weight:600">${esc(t.symbol)}</span> $${(t.notional||0).toFixed(0)} â ${esc(t.reason||'')}</div>`;
+        detail+=`<div style="margin-bottom:4px"><span style="color:${actColor};font-weight:700;font-size:10px;text-transform:uppercase">${esc(t.action)}</span> <span style="font-family:var(--font-mono);font-weight:600">${esc(t.symbol)}</span> $${(t.notional||0).toFixed(0)} Ã¢ÂÂ ${esc(t.reason||'')}</div>`;
       }
       detail+='<div style="margin-bottom:8px"></div>';
     }
 
-    // Errors — entries are either dicts {time, message, severity} (new format)
+    // Errors â entries are either dicts {time, message, severity} (new format)
     // or plain strings (old format, kept for backward compat with existing records)
     if(r.errors&&r.errors.length){
       detail+=`<div class="thesis-label">Errors &amp; Warnings</div>`;
@@ -1198,7 +1198,7 @@ function renderPastRuns(){
     }
 
     // Portfolio snapshot
-    detail+=`<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:10px;color:var(--text3)">Equity $${(r.equity||0).toFixed(2)} · Cash $${(r.cash||0).toFixed(2)} · ${r.num_positions||0} positions · ${r.macro_regime||'?'}</div>`;
+    detail+=`<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:10px;color:var(--text3)">Equity $${(r.equity||0).toFixed(2)} Â· Cash $${(r.cash||0).toFixed(2)} Â· ${r.num_positions||0} positions Â· ${r.macro_regime||'?'}</div>`;
 
     return`<div class="card expandable" onclick="togglePastRun(${i})"><div style="display:flex;align-items:center;gap:8px"><span style="font-family:var(--font-mono);font-size:11px;color:var(--text3);min-width:90px">${timeStr}</span><span style="font-size:10px;font-weight:700;color:${slotColor};min-width:38px">${slotLabel}</span><span style="flex:1;font-size:11px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc((r.assessment||'').slice(0,80))}</span>${tradeTag}${errTag}${testTag}</div><div class="thesis-expand" id="prun${i}"><div style="font-size:12px;line-height:1.6;color:var(--text2);margin-top:8px">${detail}</div></div></div>`;
   }).join('');
@@ -1207,7 +1207,7 @@ function renderPastRuns(){
 function togglePastRun(i){const e=document.getElementById('prun'+i);if(e)e.classList.toggle('show')}
 function runHistNav(d){_runHistMonth.setMonth(_runHistMonth.getMonth()+d);renderPastRuns()}
 
-// ââ Equity chart ââ
+// Ã¢ÂÂÃ¢ÂÂ Equity chart Ã¢ÂÂÃ¢ÂÂ
 // Canvas-rendered equity curve from holdings_log.csv with 7d/30d/All toggle.
 // Overlays benchmark lines (SPY, QQQ, DIA) normalized to % change from the
 // first data point. Trade event dots (buy=green triangle, sell=red triangle,
@@ -1271,7 +1271,7 @@ function renderEquityChart(){
   const labels=entries.map(e=>e[0].slice(5));
   // FIX #34: Find earliest date that has BOTH an equity entry AND a benchmark
   // value, per-benchmark. Previously used entries[0][0] as the base date
-  // unconditionally â if that specific date had no benchmark record (different
+  // unconditionally Ã¢ÂÂ if that specific date had no benchmark record (different
   // cron schedule, missed day, partial data), the entire overlay vanished.
   // Now each benchmark gets its own base date (first entry date where that
   // benchmark has a value), normalizing from the earliest alignable point.
@@ -1357,8 +1357,8 @@ function renderEquityChart(){
   ctx.strokeStyle=lineCol;ctx.lineWidth=2;ctx.stroke();
   ctx.lineTo(pad.l+gW,pad.t+gH);ctx.lineTo(pad.l,pad.t+gH);ctx.closePath();
   ctx.fillStyle=fillCol;ctx.fill();
-  // ââ Trade event dots âââââââââââââââââââââââââââââââââââââââââââââââââââ
-  // Overlay buy (green â²), sell (red â¼), and stop-fire (orange â) markers
+  // Ã¢ÂÂÃ¢ÂÂ Trade event dots Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // Overlay buy (green Ã¢ÂÂ²), sell (red Ã¢ÂÂ¼), and stop-fire (orange Ã¢ÂÂ) markers
   // on the equity curve at the date they occurred.
   const _dotDateSet=new Set(entries.map(e=>e[0])); // dates with equity data
   const _dotSize=4;
@@ -1411,7 +1411,7 @@ function renderEquityChart(){
     ctx.lineTo(x-_dotSize,y);
     ctx.closePath();ctx.fill();
   }
-  // Legend â drawn in the top padding zone, above the chart grid
+  // Legend Ã¢ÂÂ drawn in the top padding zone, above the chart grid
   ctx.font='9px IBM Plex Mono';ctx.textAlign='left';
   const lY1=12,lY2=24;
   let lx=pad.l+4;
@@ -1420,7 +1420,7 @@ function renderEquityChart(){
     if(!benchPcts[b.key])continue;
     ctx.fillStyle=b.color_d;ctx.fillText(b.label,lx,lY1);lx+=b.label.length*6+10;
   }
-  // Event dot legend (second row) â draw shapes instead of Unicode glyphs
+  // Event dot legend (second row) Ã¢ÂÂ draw shapes instead of Unicode glyphs
   if(_tradesLog.length||events.some(e=>e.event_type==='CLOSE')){
     ctx.font='9px IBM Plex Mono';ctx.textAlign='left';
     let lx2=pad.l+4;
@@ -1441,7 +1441,7 @@ function renderEquityChart(){
 
 function setChartRange(r){_chartRange=r;renderEquityChart()}
 
-// ââ Benchmark data ââ
+// Ã¢ÂÂÃ¢ÂÂ Benchmark data Ã¢ÂÂÃ¢ÂÂ
 // Loads benchmark prices (SPY, QQQ, DIA) from data/benchmark_history.csv
 // for the equity chart overlay. Falls back to the legacy data/spy_history.csv
 // (SPY-only) if the multi-benchmark file doesn't exist yet.
@@ -1460,7 +1460,7 @@ async function loadSpyHistory(){
   renderEquityChart();
 }
 
-// ââ P&L Dashboard ââ
+// Ã¢ÂÂÃ¢ÂÂ P&L Dashboard Ã¢ÂÂÃ¢ÂÂ
 // Computes win rate, total P&L, expectancy, and best/worst trades from
 // CLOSE and PARTIAL_CLOSE events in position_events.csv. Displayed in
 // the Performance sub-tab under Analytics.
@@ -1469,14 +1469,14 @@ function renderPLDashboard(){
   const details=document.getElementById('plDetails');
   // FIX #40: Include CLOSE/PARTIAL_CLOSE rows even when realized_pl is "" or
   // undefined. Previously the `&& e.realized_pl` truthy-check dropped real
-  // closed trades where the fill price couldn't be fetched from activities â
+  // closed trades where the fill price couldn't be fetched from activities Ã¢ÂÂ
   // those rows have blank realized_pl but they're still real trades. We now
   // include them with realized_pl treated as 0, which correctly reflects
   // "unknown P&L" in the total and keeps the trade in the count/win rate
   // denominator. If realized_pl was genuinely negative, it would have been
   // written as a negative string; blank is unambiguously "unknown".
   const closes=events.filter(e=>['CLOSE','PARTIAL_CLOSE'].includes(e.event_type));
-  if(!closes.length){stats.innerHTML='';details.innerHTML='<div class="empty-msg"><div class="em-icon">ð</div>No closed trades yet.</div>';return}
+  if(!closes.length){stats.innerHTML='';details.innerHTML='<div class="empty-msg"><div class="em-icon">Ã°ÂÂÂ</div>No closed trades yet.</div>';return}
   const pls=closes.map(e=>parseFloat(e.realized_pl)||0);
   const wins=pls.filter(p=>p>0),losses=pls.filter(p=>p<0);
   const totalPL=pls.reduce((a,b)=>a+b,0);
@@ -1507,7 +1507,7 @@ function renderPLDashboard(){
   `;
 }
 
-// ââ Trade Log ââ
+// Ã¢ÂÂÃ¢ÂÂ Trade Log Ã¢ÂÂÃ¢ÂÂ
 // Reads data/trades_log.csv and displays all executed trades with
 // filterable symbol search and buy/sell action filter. Shown in the
 // Trades sub-tab under Analytics.
@@ -1523,7 +1523,7 @@ async function loadTradesLog(){
 
 function renderTrades(){
   const el=document.getElementById('tradeLog');
-  if(!_tradesLog.length){el.innerHTML='<div class="empty-msg"><div class="em-icon">ð</div>No trades logged yet.</div>';return}
+  if(!_tradesLog.length){el.innerHTML='<div class="empty-msg"><div class="em-icon">Ã°ÂÂÂ</div>No trades logged yet.</div>';return}
   const symFilter=(document.getElementById('tradeFilterSym')?.value||'').toUpperCase();
   const actFilter=document.getElementById('tradeFilterAction')?.value||'';
   let filtered=_tradesLog.slice().reverse();
@@ -1538,8 +1538,8 @@ function renderTrades(){
   }).join('')+(filtered.length>50?`<div style="text-align:center;color:var(--text3);padding:8px;font-size:11px">Showing 50 of ${filtered.length}</div>`:'');
 }
 
-// ââ Strategy Memory ââ
-// Displays Claude's strategy_memory.json â the persistent memory that
+// Ã¢ÂÂÃ¢ÂÂ Strategy Memory Ã¢ÂÂÃ¢ÂÂ
+// Displays Claude's strategy_memory.json Ã¢ÂÂ the persistent memory that
 // carries across runs. Shows market view, macro context, active hypotheses,
 // position-level theses with watch items, and recently exited positions.
 let _stratMem=null;
@@ -1555,7 +1555,7 @@ async function loadStratMemory(){
 
 function renderStratMemory(){
   const el=document.getElementById('stratMemory');
-  if(!_stratMem){el.innerHTML='<div class="empty-msg"><div class="em-icon">ð§ </div>No strategy memory yet.</div>';return}
+  if(!_stratMem){el.innerHTML='<div class="empty-msg"><div class="em-icon">Ã°ÂÂ§Â </div>No strategy memory yet.</div>';return}
   let html='';
   // Market view
   if(_stratMem.market_view){
@@ -1604,14 +1604,14 @@ function renderStratMemory(){
   el.innerHTML=html;
 }
 
-// ââ Analytics sub-tabs ââ
+// Ã¢ÂÂÃ¢ÂÂ Analytics sub-tabs Ã¢ÂÂÃ¢ÂÂ
 function switchSubTab(name){
   const subs=['perf','briefs','strategy','trades','costs'];
   document.querySelectorAll('#tab-analytics .sub-tab').forEach((t,i)=>t.classList.toggle('active',subs[i]===name));
   document.querySelectorAll('#tab-analytics .sub-content').forEach(sc=>sc.classList.toggle('active',sc.id==='sub-'+name));
 }
 
-// ââ Control sub-tabs ââ
+// Ã¢ÂÂÃ¢ÂÂ Control sub-tabs Ã¢ÂÂÃ¢ÂÂ
 function switchControlTab(name){
   const subs=['runs','ctrl-export','settings'];
   document.querySelectorAll('#tab-control .sub-tab').forEach((t,i)=>t.classList.toggle('active',subs[i]===name));
@@ -1619,7 +1619,7 @@ function switchControlTab(name){
   if(name==='ctrl-export')loadExportPanel();
 }
 
-// ââ Stop/Resume Trading ââ
+// Ã¢ÂÂÃ¢ÂÂ Stop/Resume Trading Ã¢ÂÂÃ¢ÂÂ
 // Toggle trading_halted in portfolio_state.json via GitHub API. When halted,
 // the bot's circuit breaker prevents all trades until manually resumed.
 // The button dynamically shows "Stop Trading" or "Resume Trading" and
@@ -1660,7 +1660,7 @@ async function toggleHalt(){
   }
 }
 
-// ââ Run triggers ââ
+// Ã¢ÂÂÃ¢ÂÂ Run triggers Ã¢ÂÂÃ¢ÂÂ
 // Triggers bot runs via GitHub Actions workflow_dispatch API. Supports
 // run (live trades) and test (no real orders) modes with morning/midday/
 // closing slot buttons. After triggering, all buttons are disabled for
@@ -1743,10 +1743,10 @@ async function triggerRun(slot){
   const workflow=isTest?'test.yml':'trader.yml';
   const cost=_estimateRunCost();
   let costNote=`\n\nEstimated cost: ~$${cost.toFixed(2)}`;
-  // Check if Monday morning â Opus brief may be generated
+  // Check if Monday morning Ã¢ÂÂ Opus brief may be generated
   if(slot==='morning'&&_isMonday()){
     const opusCost=_estimateOpusCost();
-    costNote+=`\nâ ï¸ Monday morning â may also generate an Opus strategy brief (+~$${opusCost.toFixed(2)})`;
+    costNote+=`\nÃ¢ÂÂ Ã¯Â¸Â Monday morning Ã¢ÂÂ may also generate an Opus strategy brief (+~$${opusCost.toFixed(2)})`;
     costNote+=`\nTotal estimated: ~$${(cost+opusCost).toFixed(2)}`;
   }
   const msg=isTest
@@ -1760,7 +1760,7 @@ async function triggerRun(slot){
     // FIX #46: Check response.ok. Previously the fetch call was awaited but
     // the Response's status was ignored, so a 404 (workflow not found),
     // 403 (bad token permissions), or 422 (invalid ref) would still show
-    // "Run triggered" â user thought the run was coming but it wasn't.
+    // "Run triggered" Ã¢ÂÂ user thought the run was coming but it wasn't.
     const r = await fetch(`${API}/repos/${cfg.repo}/actions/workflows/${workflow}/dispatches`,{
       method:'POST',
       headers:{
@@ -1785,8 +1785,8 @@ async function triggerRun(slot){
   }
 }
 
-// ââ API Cost Dashboard ââ
-// Reads data/api_costs.csv which logs every Anthropic API call â both
+// Ã¢ÂÂÃ¢ÂÂ API Cost Dashboard Ã¢ÂÂÃ¢ÂÂ
+// Reads data/api_costs.csv which logs every Anthropic API call Ã¢ÂÂ both
 // Haiku trading runs (slot=morning/midday/final) and Opus strategy briefs
 // (slot=opus_brief). Shows total/daily average/monthly estimate stats,
 // a daily cost bar chart, and a reverse-chronological run log.
@@ -1806,7 +1806,7 @@ function renderCostDashboard(){
   const chartBox=document.getElementById('costChart');
   if(!_apiCosts.length){
     stats.innerHTML='';
-    logEl.innerHTML='<div class="empty-msg"><div class="em-icon">ð°</div>No API cost data yet.<br>Costs are logged after each bot run.</div>';
+    logEl.innerHTML='<div class="empty-msg"><div class="em-icon">Ã°ÂÂÂ°</div>No API cost data yet.<br>Costs are logged after each bot run.</div>';
     chartBox.style.display='none';
     return;
   }
@@ -1889,10 +1889,10 @@ function renderCostDashboard(){
     const tokens=parseInt(r.total_tokens)||0;
     const searches=parseInt(r.search_count)||0;
     const slotColor=slot==='MORNING'?'var(--blue)':slot==='FINAL'?'var(--accent)':'var(--text2)';
-    return`<div class="trade-row"><span class="trade-date">${ts}</span><span style="font-size:10px;font-weight:700;color:${slotColor};min-width:48px">${slot}</span><span style="font-family:var(--font-mono);font-size:11px;color:var(--text2);flex:1">${(tokens/1000).toFixed(1)}k tok · ${searches} search</span><span style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--accent)">$${cost.toFixed(3)}</span></div>`;
+    return`<div class="trade-row"><span class="trade-date">${ts}</span><span style="font-size:10px;font-weight:700;color:${slotColor};min-width:48px">${slot}</span><span style="font-family:var(--font-mono);font-size:11px;color:var(--text2);flex:1">${(tokens/1000).toFixed(1)}k tok Â· ${searches} search</span><span style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--accent)">$${cost.toFixed(3)}</span></div>`;
   }).join('');
 
-  // ââ Budget display ââ
+  // Ã¢ÂÂÃ¢ÂÂ Budget display Ã¢ÂÂÃ¢ÂÂ
   renderBudgetDisplay();
 }
 
@@ -1914,8 +1914,8 @@ function renderBudgetDisplay(){
   const remaining=bal-spent;
   // FIX #42: Use max(rolling 7-day average, post-set-date average).
   // Previously used all-time average, which drifts low when run cadence
-  // changes (e.g., moving from test-only to production 3Ã/day). That under-
-  // estimated current burn by ~2Ã and inflated "days left" â users could
+  // changes (e.g., moving from test-only to production 3ÃÂ/day). That under-
+  // estimated current burn by ~2ÃÂ and inflated "days left" Ã¢ÂÂ users could
   // blow through the budget faster than the display suggested. The rolling
   // 7-day window reflects actual current behavior; the post-set-date fallback
   // covers the first week after a balance reset when the 7-day window has
@@ -1945,14 +1945,14 @@ function renderBudgetDisplay(){
   }
   const daysSinceSet=Math.max(1,datesSinceSet.size);
   const burnSinceSet=spentSinceSet/daysSinceSet;
-  // Take the higher of the two â conservative estimate protects against
+  // Take the higher of the two Ã¢ÂÂ conservative estimate protects against
   // under-forecasting burn when cadence has recently increased.
   const dailyBurn=Math.max(burn7, burnSinceSet);
   const daysLeft=dailyBurn>0?remaining/dailyBurn:999;
   const color=daysLeft<3?'var(--red)':daysLeft<7?'var(--yellow)':'var(--green)';
   const setDs=setDate.slice(0,10);
   const burnSource=burn7>=burnSinceSet?'7d':'since set';
-  el.innerHTML=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:6px"><div class="stat-box"><div class="stat-label">Remaining</div><div class="stat-val" style="color:${color}">$${remaining.toFixed(2)}</div></div><div class="stat-box"><div class="stat-label">Burn Rate</div><div class="stat-val">$${dailyBurn.toFixed(2)}/d</div></div><div class="stat-box"><div class="stat-label">Days Left</div><div class="stat-val" style="color:${color}">${daysLeft>90?'90+':Math.floor(daysLeft)}</div></div></div><div style="font-size:10px;color:var(--text3)">Set $${bal.toFixed(2)} on ${setDs} · spent $${spent.toFixed(2)} since · burn from ${burnSource}</div>`;
+  el.innerHTML=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:6px"><div class="stat-box"><div class="stat-label">Remaining</div><div class="stat-val" style="color:${color}">$${remaining.toFixed(2)}</div></div><div class="stat-box"><div class="stat-label">Burn Rate</div><div class="stat-val">$${dailyBurn.toFixed(2)}/d</div></div><div class="stat-box"><div class="stat-label">Days Left</div><div class="stat-val" style="color:${color}">${daysLeft>90?'90+':Math.floor(daysLeft)}</div></div></div><div style="font-size:10px;color:var(--text3)">Set $${bal.toFixed(2)} on ${setDs} Â· spent $${spent.toFixed(2)} since Â· burn from ${burnSource}</div>`;
 }
 
 function showBudgetEdit(){
@@ -1980,7 +1980,7 @@ async function saveBudget(){
   try{
     // FIX #43: Use safe state-key updater. Previously overwrote the entire
     // portfolio_state.json with a snapshot that was stale by the time we
-    // wrote â bot's fresh positions/theses could be reverted.
+    // wrote Ã¢ÂÂ bot's fresh positions/theses could be reverted.
     const setDate = new Date().toISOString();
     await updateStateKeys(
       {api_credit_balance: val, api_credit_set_date: setDate},
@@ -1994,11 +1994,11 @@ async function saveBudget(){
   }catch(e){toast('Failed: '+e.message,'err')}
 }
 
-// ââ Strategy Briefs ââ
+// Ã¢ÂÂÃ¢ÂÂ Strategy Briefs Ã¢ÂÂÃ¢ÂÂ
 // Displays weekly Opus 4.5 strategic outlook briefs from
 // data/strategy_briefs.json. Shown in reverse chronological order with
 // expandable full text. Each card shows date, model, cost, token count,
-// and search count. Briefs are permanent records â never pruned.
+// and search count. Briefs are permanent records Ã¢ÂÂ never pruned.
 let _briefs=[];
 
 async function loadBriefs(){
@@ -2018,9 +2018,9 @@ function renderBriefs(){
   list.innerHTML=sorted.map((b,i)=>{
     let ds='';
     try{const d=new Date(b.date);ds=d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'})}catch{ds=b.date||'?'}
-    const costStr=b.cost_usd?` · $${b.cost_usd.toFixed(2)}`:'';
-    const tokStr=b.input_tokens?` · ${((b.input_tokens+b.output_tokens)/1000).toFixed(1)}k tok`:'';
-    const searchStr=b.search_count?` · ${b.search_count} search${b.search_count>1?'es':''}`:'';
+    const costStr=b.cost_usd?` Â· $${b.cost_usd.toFixed(2)}`:'';
+    const tokStr=b.input_tokens?` Â· ${((b.input_tokens+b.output_tokens)/1000).toFixed(1)}k tok`:'';
+    const searchStr=b.search_count?` Â· ${b.search_count} search${b.search_count>1?'es':''}`:'';
     const meta=`${costStr}${tokStr}${searchStr}`;
     const briefHtml=esc(b.brief).replace(/\n\n/g,'</p><p style="margin:0 0 10px">').replace(/\n/g,'<br>');
     return`<div class="card expandable" onclick="toggleBrief(${i})"><div style="display:flex;align-items:center;justify-content:space-between"><div><span style="font-weight:600;font-size:13px">${ds}</span><span style="font-size:11px;color:var(--text3);margin-left:8px">${b.model||''}</span></div><span style="font-size:10px;color:var(--text3);font-family:var(--font-mono)">${meta}</span></div><div class="thesis-expand" id="brief${i}"><p style="margin:0 0 10px;font-size:12px;line-height:1.6;color:var(--text2)">${briefHtml}</p></div></div>`;
@@ -2029,7 +2029,7 @@ function renderBriefs(){
 
 function toggleBrief(i){const e=document.getElementById('brief'+i);if(e)e.classList.toggle('show')}
 
-// ââ Export ââ
+// Ã¢ÂÂÃ¢ÂÂ Export Ã¢ÂÂÃ¢ÂÂ
 // Lists all repo files from root, data/, and .github/workflows/ with
 // checkboxes. Selected files are fetched via GitHub API, bundled into a
 // zip using JSZip, and downloaded. Files are sorted by type (yml first,
@@ -2065,7 +2065,7 @@ async function loadExportFiles(){
   const el=document.getElementById('exportFileList');
   try{
     _exportFiles=[];
-    // ââ Bot repo files ââ
+    // Ã¢ÂÂÃ¢ÂÂ Bot repo files Ã¢ÂÂÃ¢ÂÂ
     for(const dir of _EXPORT_DIRS){
       try{
         const path=dir?`contents/${dir}`:'contents';
@@ -2085,7 +2085,7 @@ async function loadExportFiles(){
         }
       }catch(e){/* directory might not exist */}
     }
-    // ââ Console repo files ââ
+    // Ã¢ÂÂÃ¢ÂÂ Console repo files Ã¢ÂÂÃ¢ÂÂ
     try{
       const items=await _ghFetchRepo(_CONSOLE_REPO,'contents');
       if(Array.isArray(items)){
@@ -2110,7 +2110,7 @@ async function loadExportFiles(){
       groups[f.dir].push(f);
     }
     const dirOrder=['root','data','.github/workflows','console'];
-    const dirLabels={'root':'Bot â Root','data':'Bot â Data','.github/workflows':'Bot â Workflows','console':'Console'};
+    const dirLabels={'root':'Bot Ã¢ÂÂ Root','data':'Bot Ã¢ÂÂ Data','.github/workflows':'Bot Ã¢ÂÂ Workflows','console':'Console'};
     let html='';
     let idx=0;
     for(const dir of dirOrder){
@@ -2174,16 +2174,16 @@ async function doExport(){
   }
 }
 
-// ââ Deep Links ââ
+// Ã¢ÂÂÃ¢ÂÂ Deep Links Ã¢ÂÂÃ¢ÂÂ
 // Parses window.location.hash to navigate directly to a specific tab,
 // sub-tab, and item. Format: #tab/subtab/identifier
 // Examples:
-//   #holdings/TLT        â Holdings tab, expand TLT card
-//   #analytics/costs      â Analytics > Costs sub-tab
-//   #analytics/briefs/latest â Analytics > Briefs, expand newest
-//   #control/settings     â Control > Settings sub-tab
-//   #history/pastruns     â History > Past Runs sub-tab
-//   #history/upcoming     â History > Upcoming sub-tab
+//   #holdings/TLT        Ã¢ÂÂ Holdings tab, expand TLT card
+//   #analytics/costs      Ã¢ÂÂ Analytics > Costs sub-tab
+//   #analytics/briefs/latest Ã¢ÂÂ Analytics > Briefs, expand newest
+//   #control/settings     Ã¢ÂÂ Control > Settings sub-tab
+//   #history/pastruns     Ã¢ÂÂ History > Past Runs sub-tab
+//   #history/upcoming     Ã¢ÂÂ History > Upcoming sub-tab
 function handleDeepLink(){
   const hash=window.location.hash.replace(/^#/,'');
   if(!hash)return;
@@ -2209,7 +2209,7 @@ function handleDeepLink(){
   // Expand specific item after a short delay (DOM needs to render)
   setTimeout(()=>{
     if(tab==='holdings'&&sub){
-      // sub is the symbol name â find and expand matching position card
+      // sub is the symbol name Ã¢ÂÂ find and expand matching position card
       const sym=sub.toUpperCase();
       const positions=portfolio?portfolio.positions||[]:[];
       const idx=positions.findIndex(p=>p.symbol===sym);
@@ -2227,7 +2227,7 @@ function handleDeepLink(){
   history.replaceState(null,null,' ');
 }
 
-// ââ Init ââ
+// Ã¢ÂÂÃ¢ÂÂ Init Ã¢ÂÂÃ¢ÂÂ
 // On load: restore brightness, authenticate, fetch all data, then
 // process any deep link hash. Registers online/offline and resize handlers.
 (async function(){
