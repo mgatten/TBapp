@@ -471,7 +471,7 @@ function esc(s){if(!s)return'';const d=document.createElement('div');d.textConte
 // When UTF-8 emoji are misread as Latin-1 and re-saved, each emoji byte
 // becomes a character in U+00C0-U+00FF range followed by U+0080-U+00FF.
 // This strips those sequences, plus orphaned C1 control chars.
-function stripGarble(s){return s.replace(/[\u00c0-\u00ff][\u0080-\u00ff]*/g,'').replace(/[\u0080-\u009f]/g,'').replace(/\s{2,}/g,' ').trim()}
+function stripGarble(s){var r='';for(var i=0;i<s.length;i++){var c=s.charCodeAt(i);if(c>=0xc0&&c<=0xff){while(i+1<s.length&&s.charCodeAt(i+1)>=0x80&&s.charCodeAt(i+1)<=0xff)i++;continue}if(c>=0x80&&c<=0x9f)continue;r+=s[i]}return r.replace(/  +/g,' ').trim()}
 function _tickerName(sym){const t=_allTickers.find(t=>t.ticker===sym);return t?t.title:''}
 // GitHub API wrapper -- cache-busted with timestamp param, no-store, and
 // cleared ETag to ensure every call returns fresh data from the repo.
