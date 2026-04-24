@@ -601,6 +601,7 @@ async function refreshAll(){
   document.getElementById('offlineBanner').classList.remove('show');
   const loaders=[loadWl,loadPortfolio,loadEvents,loadSecTickers,loadHoldingsLog,loadTradesLog,loadStratMemory,loadSpyHistory,loadApiCosts,loadBriefs,loadRunHistory,loadIpoWatch,loadAma];
   const results=await Promise.allSettled(loaders.map(fn=>fn()));
+  _buildSymFilter();
   const failures=results.filter(r=>r.status==='rejected');
   if(failures.length){console.warn('Some loaders failed:',failures.map(f=>f.reason?.message))}
   LS.set('cache',{wlItems,wlSha,portfolio,events,ts:new Date().toLocaleString()});
@@ -1526,7 +1527,6 @@ async function loadTradesLog(){
     const{content}=await ghGet('data/trades_log.csv');
     _tradesLog=parseCSV(content);
   }catch(e){_tradesLog=[]}
-  _buildSymFilter();
   renderTrades();
 }
 
