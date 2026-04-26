@@ -577,7 +577,7 @@ async function forceHardRefresh(){
     }
   }catch(e){}
   // Clear localStorage caches (sec_tickers, etc.)
-  try{LS.remove('sec_tickers')}catch(e){}
+  try{LS.del('sec_tickers')}catch(e){}
   // Navigate with unique query string to bypass any remaining cache
   window.location.href=window.location.pathname+'?v='+Date.now();
 }
