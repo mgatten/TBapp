@@ -434,7 +434,7 @@ const API='https://api.github.com';
 // — a mismatch means the browser is executing a stale cached copy, which the
 // old repo-commit check could never detect (the API always reports the newest
 // commit regardless of what HTML the browser loaded). Bump on every release.
-const CONSOLE_BUILD='2026-07-08.2-watchdog-g';
+const CONSOLE_BUILD='2026-07-08.3-wd-diagnostics';
 // -- Global state --
 let cfg={},wlItems=[],wlSha=null,portfolio=null,events=[];
 let histMonth=new Date();histMonth.setDate(1);  // history tab month navigator
@@ -654,7 +654,7 @@ async function refreshAll(){
 // with the same stored token used for run dispatches. Deny closes the PR,
 // deletes the branch, and leaves a comment (with optional reason) that the
 // Sonnet prompt treats as "declined -- do not re-propose without new evidence".
-let _wdPRs=[],_wdIssues=[],_wdState=null;
+let _wdPRs=[],_wdIssues=[],_wdState=null,_wdLoadError=null;
 
 // gh() assumes a JSON body; merge/close/delete responses may be empty.
 async function ghAction(path,opts={}){
@@ -664,12 +664,18 @@ async function ghAction(path,opts={}){
 }
 
 async function loadWatchdog(){
+  _wdLoadError=null;
   try{
     const prs=await gh('pulls?state=open&per_page=30');
     const wd=(prs||[]).filter(p=>(p.head?.ref||'').startsWith('watchdog/'));
     // pull full detail per PR: additions/deletions/changed_files aren't in the list payload
     _wdPRs=await Promise.all(wd.map(p=>gh('pulls/'+p.number)));
-  }catch(e){_wdPRs=[]}
+  }catch(e){
+    // MUST fail loudly: a 403 here (fine-grained token without "Pull
+    // requests: read") is otherwise indistinguishable from "no pending
+    // changes" — the exact silent failure that hid the approval banner.
+    _wdPRs=[];_wdLoadError=e.message||String(e);
+  }
   try{
     const iss=await gh('issues?state=open&per_page=30');
     _wdIssues=(iss||[]).filter(i=>!i.pull_request&&(i.title||'').startsWith('Watchdog:'));
@@ -680,6 +686,16 @@ async function loadWatchdog(){
 
 function renderWdBanner(){
   const b=document.getElementById('wdBanner');
+  if(_wdLoadError){
+    b.innerHTML=`\u{1F415} <b>Watchdog status UNKNOWN</b> &mdash; couldn't read pull requests (${esc(_wdLoadError)}).`+
+      ` If this says HTTP 403, your access token lacks <b>Pull requests: read/write</b> `+
+      `permission &mdash; mint a classic 'repo'-scope token (or add the permission to your `+
+      `fine-grained token) and log in again. There may be pending changes you cannot see.`;
+    b.style.borderColor='var(--yellow)';b.style.background='var(--yellow-bg)';
+    b.classList.add('show');
+    return;
+  }
+  b.style.borderColor='';b.style.background='';
   if(!_wdPRs.length){b.classList.remove('show');document.getElementById('wdPanel').classList.add('hidden');return}
   const n=_wdPRs.length;
   b.innerHTML=`\u{1F415} <b>${n} watchdog change${n>1?'s':''} awaiting your review</b> &mdash; tap to review and merge or deny`;
