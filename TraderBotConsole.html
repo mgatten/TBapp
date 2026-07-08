@@ -1925,8 +1925,11 @@ function renderCostDashboard(){
     const cost=parseFloat(r.estimated_cost_usd)||0;
     const tokens=parseInt(r.total_tokens)||0;
     const searches=parseInt(r.search_count)||0;
-    const slotColor=slot==='MORNING'?'var(--blue)':slot==='FINAL'?'var(--accent)':'var(--text2)';
-    return`<div class="trade-row"><span class="trade-date">${ts}</span><span style="font-size:10px;font-weight:700;color:${slotColor};min-width:48px">${slot}</span><span style="font-family:var(--font-mono);font-size:11px;color:var(--text2);flex:1">${(tokens/1000).toFixed(1)}k tok &middot; ${searches} search</span><span style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--accent)">$${cost.toFixed(3)}</span></div>`;
+    // Watchdog runs (daily Haiku check + weekly Sonnet review) render in
+    // purple so supervision spend is visually separable from trading spend.
+    const slotColor=slot==='MORNING'?'var(--blue)':slot==='FINAL'?'var(--accent)':slot.startsWith('WATCHDOG')?'#9b59b6':'var(--text2)';
+    const slotLbl=slot==='WATCHDOG_DAILY'?'WD-DAY':slot==='WATCHDOG_WEEKLY'?'WD-WEEK':slot;
+    return`<div class="trade-row"><span class="trade-date">${ts}</span><span style="font-size:10px;font-weight:700;color:${slotColor};min-width:48px">${slotLbl}</span><span style="font-family:var(--font-mono);font-size:11px;color:var(--text2);flex:1">${(tokens/1000).toFixed(1)}k tok &middot; ${searches} search</span><span style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--accent)">$${cost.toFixed(3)}</span></div>`;
   }).join('');
 
   // -- Budget display --
