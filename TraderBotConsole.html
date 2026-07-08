@@ -434,7 +434,7 @@ const API='https://api.github.com';
 // — a mismatch means the browser is executing a stale cached copy, which the
 // old repo-commit check could never detect (the API always reports the newest
 // commit regardless of what HTML the browser loaded). Bump on every release.
-const CONSOLE_BUILD='2026-07-08.3-wd-diagnostics';
+const CONSOLE_BUILD='2026-07-08.4-audit-14';
 // -- Global state --
 let cfg={},wlItems=[],wlSha=null,portfolio=null,events=[];
 let histMonth=new Date();histMonth.setDate(1);  // history tab month navigator
@@ -1872,8 +1872,11 @@ let _runCooldownTimer=null;
 let _runMode='run';
 
 function _estimateRunCost(){
-  // Compute average run cost from recent api_costs.csv data
-  const haikuRuns=_apiCosts.filter(r=>!(r.slot||'').includes('opus'));
+  // Compute average run cost from recent api_costs.csv data.
+  // Trading slots ONLY (audit rec #14): watchdog rows share the CSV and the
+  // $0.0015 daily checks would drag the trading-run estimate far below what
+  // a manually triggered run actually costs.
+  const haikuRuns=_apiCosts.filter(r=>['morning','midday','final'].includes((r.slot||'').toLowerCase()));
   if(haikuRuns.length>=3){
     const total=haikuRuns.slice(-10).reduce((s,r)=>s+parseFloat(r.estimated_cost_usd||0),0);
     return (total/Math.min(haikuRuns.length,10));
