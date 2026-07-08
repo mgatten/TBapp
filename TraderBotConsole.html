@@ -434,7 +434,7 @@ const API='https://api.github.com';
 // — a mismatch means the browser is executing a stale cached copy, which the
 // old repo-commit check could never detect (the API always reports the newest
 // commit regardless of what HTML the browser loaded). Bump on every release.
-const CONSOLE_BUILD='2026-07-08.6-bh2-10-11';
+const CONSOLE_BUILD='2026-07-08.7-event-slot';
 // -- Global state --
 let cfg={},wlItems=[],wlSha=null,portfolio=null,events=[];
 let histMonth=new Date();histMonth.setDate(1);  // history tab month navigator
@@ -1342,8 +1342,8 @@ function renderPastRuns(){
     // Header line
     let timeStr='';
     try{const d=new Date(r.timestamp);timeStr=d.toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}catch{timeStr=r.timestamp||'?'}
-    const slotLabel={'morning':'MORN','midday':'MID','final':'FINAL','watchdog':'WATCH'}[r.slot]||r.slot.toUpperCase();
-    const slotColor=r.slot==='morning'?'var(--blue)':r.slot==='final'?'var(--accent)':'var(--text2)';
+    const slotLabel={'morning':'MORN','midday':'MID','final':'FINAL','event':'EVENT','watchdog':'WATCH'}[r.slot]||r.slot.toUpperCase();
+    const slotColor=r.slot==='morning'?'var(--blue)':r.slot==='final'?'var(--accent)':r.slot==='event'?'#1abc9c':'var(--text2)';
     const tradeCount=r.num_trades||0;
     const errCount=r.num_errors||(r.errors&&r.errors.length)||0;
     const tradeTag=tradeCount?`<span style="font-size:9px;padding:1px 5px;border-radius:3px;background:var(--green-bg);color:var(--green);font-weight:600;margin-left:6px">${tradeCount} trade${tradeCount>1?'s':''}</span>`:'';
@@ -1921,7 +1921,7 @@ function _estimateRunCost(){
   // Trading slots ONLY (audit rec #14): watchdog rows share the CSV and the
   // $0.0015 daily checks would drag the trading-run estimate far below what
   // a manually triggered run actually costs.
-  const haikuRuns=_apiCosts.filter(r=>['morning','midday','final'].includes((r.slot||'').toLowerCase()));
+  const haikuRuns=_apiCosts.filter(r=>['morning','midday','final','event'].includes((r.slot||'').toLowerCase()));
   if(haikuRuns.length>=3){
     const total=haikuRuns.slice(-10).reduce((s,r)=>s+parseFloat(r.estimated_cost_usd||0),0);
     return (total/Math.min(haikuRuns.length,10));
@@ -2140,7 +2140,7 @@ function renderCostDashboard(){
     const searches=parseInt(r.search_count)||0;
     // Watchdog runs (daily Haiku check + weekly Sonnet review) render in
     // purple so supervision spend is visually separable from trading spend.
-    const slotColor=slot==='MORNING'?'var(--blue)':slot==='FINAL'?'var(--accent)':slot.startsWith('WATCHDOG')?'#9b59b6':'var(--text2)';
+    const slotColor=slot==='MORNING'?'var(--blue)':slot==='FINAL'?'var(--accent)':slot==='EVENT'?'#1abc9c':slot.startsWith('WATCHDOG')?'#9b59b6':'var(--text2)';
     const slotLbl=slot==='WATCHDOG_DAILY'?'WD-DAY':slot==='WATCHDOG_WEEKLY'?'WD-WEEK':slot;
     return`<div class="trade-row"><span class="trade-date">${ts}</span><span style="font-size:10px;font-weight:700;color:${slotColor};min-width:48px">${slotLbl}</span><span style="font-family:var(--font-mono);font-size:11px;color:var(--text2);flex:1">${(tokens/1000).toFixed(1)}k tok &middot; ${searches} search</span><span style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--accent)">$${cost.toFixed(3)}</span></div>`;
   }).join('');
