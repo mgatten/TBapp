@@ -434,7 +434,7 @@ const API='https://api.github.com';
 // — a mismatch means the browser is executing a stale cached copy, which the
 // old repo-commit check could never detect (the API always reports the newest
 // commit regardless of what HTML the browser loaded). Bump on every release.
-const CONSOLE_BUILD='2026-07-08.5-audit-16-19';
+const CONSOLE_BUILD='2026-07-08.6-bh2-10-11';
 // -- Global state --
 let cfg={},wlItems=[],wlSha=null,portfolio=null,events=[];
 let histMonth=new Date();histMonth.setDate(1);  // history tab month navigator
@@ -723,6 +723,10 @@ function toggleWdPanel(){document.getElementById('wdPanel').classList.toggle('hi
 
 function renderWdPanel(){
   const el=document.getElementById('wdPanel');
+  // Audit BH2 #10: cached PRs render offline (deliberately — the banner must
+  // survive connectivity loss) but the action buttons cannot work without
+  // the GitHub API; show a view-only note instead of doomed buttons.
+  const _offline=document.getElementById('offlineBanner').classList.contains('show')||!navigator.onLine;
   // Audit rec #16: in the error state the banner is tappable — show the
   // full error + fix instructions instead of a blank panel.
   if(_wdLoadError){
@@ -749,14 +753,16 @@ function renderWdPanel(){
         <span style="font-size:10px;color:var(--text3);font-family:var(--font-mono);white-space:nowrap">${created} &middot; ${stats}</span>
       </div>
       <div class="wd-doc">${mdLite(p.body||'(no change document)')}</div>
-      <div style="display:flex;gap:8px;margin-bottom:8px">
-        <button class="wd-btn-merge" onclick="wdMerge(${p.number},'${esc(stats)}')">Merge (${esc(stats)})</button>
+      ${_offline
+        ? `<div style="font-size:11px;color:var(--yellow);font-weight:600;margin-bottom:8px">Offline — view only. Merge/Deny will be available when the connection returns.</div>`
+        : `<div style="display:flex;gap:8px;margin-bottom:8px">
+        <button class="wd-btn-merge" onclick="wdMerge(${p.number})">Merge (${esc(stats)})</button>
         <button class="wd-btn-deny" onclick="wdDenyPrompt(${p.number})">Deny&hellip;</button>
       </div>
       <div id="wdDenyRow${p.number}" class="hidden" style="display:flex;gap:8px;margin-bottom:8px">
         <input type="text" class="field-input" id="wdReason${p.number}" placeholder="optional reason (Sonnet reads this)" style="flex:1">
-        <button class="wd-btn-deny" style="flex:0 0 auto" onclick="wdDeny(${p.number},'${esc(p.head?.ref||'')}')">Confirm Deny</button>
-      </div>
+        <button class="wd-btn-deny" style="flex:0 0 auto" onclick="wdDeny(${p.number})">Confirm Deny</button>
+      </div>`}
       <a href="${esc(p.html_url)}" target="_blank" rel="noopener" style="font-size:11px;color:var(--blue)">View on GitHub &#8599;</a>
     </div>`;
   }
@@ -769,7 +775,12 @@ function renderWdPanel(){
   el.innerHTML=h;
 }
 
-async function wdMerge(n,stats){
+function _wdPRByNumber(n){return _wdPRs.find(p=>p.number===n)}
+async function wdMerge(n){
+  // BH2 #11: resolve details from _wdPRs by number — nothing but the PR
+  // number crosses the HTML/JS boundary, so no string-escaping surface.
+  const p=_wdPRByNumber(n);
+  const stats=p?`+${p.additions||0}/−${p.deletions||0}, ${p.changed_files||0} file${(p.changed_files||0)!==1?'s':''}`:'?';
   if(!confirm(`Merge watchdog PR #${n} (${stats})?\nMerged code goes live at the next bot run.`))return;
   try{
     await ghAction(`pulls/${n}/merge`,{method:'PUT',body:JSON.stringify({merge_method:'merge'})});
@@ -778,7 +789,8 @@ async function wdMerge(n,stats){
   loadWatchdog();
 }
 function wdDenyPrompt(n){document.getElementById('wdDenyRow'+n).classList.toggle('hidden')}
-async function wdDeny(n,branch){
+async function wdDeny(n){
+  const branch=_wdPRByNumber(n)?.head?.ref||'';
   const reason=(document.getElementById('wdReason'+n)?.value||'').trim();
   try{
     await ghAction(`issues/${n}/comments`,{method:'POST',body:JSON.stringify({body:`❌ **Declined via console**${reason?': '+reason:''}\n\n_Watchdog: this change was reviewed and declined by the owner. Do not re-propose without new evidence${reason?'; address the stated reason':''}._`})});
