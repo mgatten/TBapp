@@ -110,6 +110,11 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
 .updated-ts{font-size:10px;color:var(--text3);font-family:var(--font-mono);text-align:center;padding:8px 0}
 .offline-banner{background:var(--yellow-bg);border:1px solid var(--yellow);border-radius:var(--radius-sm);padding:10px 14px;font-size:12px;color:var(--text);line-height:1.5;margin-top:12px;display:none}
 .offline-banner.show{display:block}
+.wd-banner{background:rgba(155,89,182,0.12);border:1px solid #9b59b6;border-radius:var(--radius-sm);padding:10px 14px;font-size:12px;font-weight:600;color:var(--text);line-height:1.5;margin-top:12px;display:none;cursor:pointer}
+.wd-banner.show{display:block}
+.wd-doc{max-height:260px;overflow-y:auto;white-space:pre-wrap;font-family:var(--font-mono);font-size:11px;line-height:1.55;color:var(--text2);background:rgba(0,0,0,0.15);border-radius:var(--radius-sm);padding:10px;margin:10px 0}
+.wd-btn-merge{background:#27ae60;color:#fff;border:none;border-radius:var(--radius-sm);padding:9px 12px;font-size:12px;font-weight:700;flex:1;cursor:pointer}
+.wd-btn-deny{background:transparent;color:var(--red,#e74c3c);border:1px solid var(--red,#e74c3c);border-radius:var(--radius-sm);padding:9px 12px;font-size:12px;font-weight:700;flex:1;cursor:pointer}
 .bottom-actions{display:flex;gap:8px;padding:16px 0 12px}
 .bottom-actions .btn{flex:1}
 .logo-footer{text-align:center;padding:0 0 24px;margin-top:auto}
@@ -195,6 +200,10 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
     [!] No internet connection. Showing cached data -- there may have been runs since this snapshot.
     <span id="offlineTs"></span>
   </div>
+  <!-- Watchdog approval banner (G): visible on every tab when a watchdog/*
+       PR awaits the owner's decision. Hidden entirely when BAU. -->
+  <div class="wd-banner" id="wdBanner" onclick="toggleWdPanel()"></div>
+  <div id="wdPanel" class="hidden" style="margin-top:10px"></div>
   <div id="setupPanel" class="setup">
     <label class="field-label">Access Token</label>
     <input type="password" class="field-input" id="tokenInput" placeholder="paste token" autocomplete="off">
@@ -315,6 +324,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
         <div id="tradeLog"></div>
       </div>
       <div class="sub-content" id="sub-costs">
+        <div id="wdStatusCard" class="card" style="margin-bottom:14px"></div>
         <div id="budgetCard" class="card" style="margin-bottom:14px">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
             <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;font-weight:600">API Budget</div>
@@ -602,13 +612,126 @@ async function refreshAll(){
     return;
   }
   document.getElementById('offlineBanner').classList.remove('show');
-  const loaders=[loadWl,loadPortfolio,loadEvents,loadSecTickers,loadHoldingsLog,loadTradesLog,loadStratMemory,loadSpyHistory,loadApiCosts,loadBriefs,loadRunHistory,loadIpoWatch,loadAma];
+  const loaders=[loadWl,loadPortfolio,loadEvents,loadSecTickers,loadHoldingsLog,loadTradesLog,loadStratMemory,loadSpyHistory,loadApiCosts,loadBriefs,loadRunHistory,loadIpoWatch,loadAma,loadWatchdog];
   const results=await Promise.allSettled(loaders.map(fn=>fn()));
   _buildSymFilter();
   const failures=results.filter(r=>r.status==='rejected');
   if(failures.length){console.warn('Some loaders failed:',failures.map(f=>f.reason?.message))}
   LS.set('cache',{wlItems,wlSha,portfolio,events,ts:new Date().toLocaleString()});
   if(failures.length>=loaders.length){toast('All data loads failed','err')}
+}
+
+// -- Watchdog approvals (G) --
+// Surfaces pending watchdog/* PRs (the Saturday Sonnet bug-hunter's fixes)
+// as a banner + review panel so a forgotten Telegram/email still gets caught
+// on the next console visit. Merge and Deny act directly via the GitHub API
+// with the same stored token used for run dispatches. Deny closes the PR,
+// deletes the branch, and leaves a comment (with optional reason) that the
+// Sonnet prompt treats as "declined -- do not re-propose without new evidence".
+let _wdPRs=[],_wdIssues=[],_wdState=null;
+
+// gh() assumes a JSON body; merge/close/delete responses may be empty.
+async function ghAction(path,opts={}){
+  const r=await fetch(`${API}/repos/${cfg.repo}/${path}`,{...opts,headers:{'Authorization':`Bearer ${cfg.token}`,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json',...(opts.headers||{})}});
+  if(!r.ok){let msg='';try{msg=(await r.json()).message||''}catch{}throw new Error(`HTTP ${r.status}${msg?' -- '+msg:''}`)}
+  try{return await r.json()}catch{return null}
+}
+
+async function loadWatchdog(){
+  try{
+    const prs=await gh('pulls?state=open&per_page=30');
+    const wd=(prs||[]).filter(p=>(p.head?.ref||'').startsWith('watchdog/'));
+    // pull full detail per PR: additions/deletions/changed_files aren't in the list payload
+    _wdPRs=await Promise.all(wd.map(p=>gh('pulls/'+p.number)));
+  }catch(e){_wdPRs=[]}
+  try{
+    const iss=await gh('issues?state=open&per_page=30');
+    _wdIssues=(iss||[]).filter(i=>!i.pull_request&&(i.title||'').startsWith('Watchdog:'));
+  }catch(e){_wdIssues=[]}
+  try{const{content}=await ghGet('data/watchdog_state.json');_wdState=JSON.parse(content)}catch(e){_wdState=null}
+  renderWdBanner();renderWdPanel();renderWdStatus();
+}
+
+function renderWdBanner(){
+  const b=document.getElementById('wdBanner');
+  if(!_wdPRs.length){b.classList.remove('show');document.getElementById('wdPanel').classList.add('hidden');return}
+  const n=_wdPRs.length;
+  b.innerHTML=`\u{1F415} <b>${n} watchdog change${n>1?'s':''} awaiting your review</b> &mdash; tap to review and merge or deny`;
+  b.classList.add('show');
+}
+function toggleWdPanel(){document.getElementById('wdPanel').classList.toggle('hidden')}
+
+function renderWdPanel(){
+  const el=document.getElementById('wdPanel');
+  if(!_wdPRs.length&&!_wdIssues.length){el.innerHTML='';return}
+  let h='';
+  for(const p of _wdPRs){
+    const created=(p.created_at||'').slice(0,10);
+    const stats=`+${p.additions||0}/−${p.deletions||0}, ${p.changed_files||0} file${(p.changed_files||0)!==1?'s':''}`;
+    h+=`<div class="card" style="border-color:#9b59b6">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+        <div style="font-weight:600;font-size:13px;flex:1">${esc(p.title)}</div>
+        <span style="font-size:10px;color:var(--text3);font-family:var(--font-mono);white-space:nowrap">${created} &middot; ${stats}</span>
+      </div>
+      <div class="wd-doc">${esc(p.body||'(no change document)')}</div>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <button class="wd-btn-merge" onclick="wdMerge(${p.number},'${esc(stats)}')">Merge (${esc(stats)})</button>
+        <button class="wd-btn-deny" onclick="wdDenyPrompt(${p.number})">Deny&hellip;</button>
+      </div>
+      <div id="wdDenyRow${p.number}" class="hidden" style="display:flex;gap:8px;margin-bottom:8px">
+        <input type="text" class="field-input" id="wdReason${p.number}" placeholder="optional reason (Sonnet reads this)" style="flex:1">
+        <button class="wd-btn-deny" style="flex:0 0 auto" onclick="wdDeny(${p.number},'${esc(p.head?.ref||'')}')">Confirm Deny</button>
+      </div>
+      <a href="${esc(p.html_url)}" target="_blank" rel="noopener" style="font-size:11px;color:var(--blue)">View on GitHub &#8599;</a>
+    </div>`;
+  }
+  for(const i of _wdIssues){
+    h+=`<div class="card"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center">
+      <div style="font-size:12px;color:var(--text2);flex:1">\u{1F4CB} ${esc(i.title)} <span style="color:var(--text3)">(issue &mdash; informational, too big for auto-fix)</span></div>
+      <a href="${esc(i.html_url)}" target="_blank" rel="noopener" style="font-size:11px;color:var(--blue);white-space:nowrap">View &#8599;</a>
+    </div></div>`;
+  }
+  el.innerHTML=h;
+}
+
+async function wdMerge(n,stats){
+  if(!confirm(`Merge watchdog PR #${n} (${stats})?\nMerged code goes live at the next bot run.`))return;
+  try{
+    await ghAction(`pulls/${n}/merge`,{method:'PUT',body:JSON.stringify({merge_method:'merge'})});
+    toast(`PR #${n} merged — live at next bot run`);
+  }catch(e){toast('Merge failed: '+e.message,'err')}
+  loadWatchdog();
+}
+function wdDenyPrompt(n){document.getElementById('wdDenyRow'+n).classList.toggle('hidden')}
+async function wdDeny(n,branch){
+  const reason=(document.getElementById('wdReason'+n)?.value||'').trim();
+  try{
+    await ghAction(`issues/${n}/comments`,{method:'POST',body:JSON.stringify({body:`❌ **Declined via console**${reason?': '+reason:''}\n\n_Watchdog: this change was reviewed and declined by the owner. Do not re-propose without new evidence${reason?'; address the stated reason':''}._`})});
+    await ghAction(`pulls/${n}`,{method:'PATCH',body:JSON.stringify({state:'closed'})});
+    if(branch){try{await ghAction(`git/refs/heads/${branch}`,{method:'DELETE'})}catch(e){/* branch cleanup is best-effort */}}
+    toast(`PR #${n} declined`);
+  }catch(e){toast('Deny failed: '+e.message,'err')}
+  loadWatchdog();
+}
+
+function renderWdStatus(){
+  const el=document.getElementById('wdStatusCard');
+  if(!el)return;
+  if(!_wdState){el.innerHTML='<div style="font-size:12px;color:var(--text3)">Watchdog state not available yet.</div>';return}
+  const tier=esc(_wdState.cadence_tier||'weekly');
+  const streak=_wdState.clean_week_streak??0;
+  const last=esc(_wdState.last_sonnet_run||'never');
+  const due=esc(_wdState.next_due||'?');
+  const pend=_wdPRs.length?`<span style="color:#9b59b6;font-weight:700">${_wdPRs.length} pending review</span>`:'<span style="color:var(--green)">no pending changes</span>';
+  el.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;font-weight:600">\u{1F415} Watchdog</div>
+      <span style="font-size:10px;color:#9b59b6;font-weight:700;text-transform:uppercase">${tier}</span>
+    </div>
+    <div style="font-size:12px;color:var(--text2);line-height:1.7">
+      Clean-week streak: <b>${streak}</b> (4 → biweekly, 8 → monthly)<br>
+      Last deep review: ${last} &middot; Next due: ${due}<br>
+      ${pend}
+    </div>`;
 }
 
 // -- Watchlist --
