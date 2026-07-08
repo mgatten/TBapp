@@ -1,0 +1,47 @@
+name: Build Marker Check
+# Audit rec #19: CONSOLE_BUILD is how the console detects a stale browser
+# cache — but it's a manual bump, which is exactly the kind of forgettable
+# step that caused the original stale-build-date bug (FIX #50) and the
+# "I force-refreshed six times" debugging session of 2026-07-08. This
+# tripwire makes forgetting loud: any push that changes TraderBotConsole.html
+# without changing the CONSOLE_BUILD line fails the check (red X + GitHub
+# notification). A check, not an auto-rewrite — no commit loops, and the
+# human still chooses the marker value.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  marker-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Verify CONSOLE_BUILD was bumped alongside console changes
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE="origin/${{ github.base_ref }}"
+            git fetch origin "${{ github.base_ref }}" --depth=50 || true
+          else
+            BASE="${{ github.event.before }}"
+            # First push / force push: nothing sane to diff against
+            if [ "$BASE" = "0000000000000000000000000000000000000000" ] || ! git cat-file -e "$BASE" 2>/dev/null; then
+              echo "No valid base commit to compare — skipping."
+              exit 0
+            fi
+          fi
+          if git diff --name-only "$BASE"...HEAD | grep -q '^TraderBotConsole\.html$'; then
+            if git diff "$BASE"...HEAD -- TraderBotConsole.html | grep -q "^[+-]const CONSOLE_BUILD="; then
+              echo "✅ Console changed and CONSOLE_BUILD was bumped."
+            else
+              echo "❌ TraderBotConsole.html changed but CONSOLE_BUILD was NOT bumped."
+              echo "   Users cannot detect a stale cache without a new marker."
+              echo "   Update the line: const CONSOLE_BUILD='YYYY-MM-DD.N-slug';"
+              exit 1
+            fi
+          else
+            echo "Console file unchanged — nothing to verify."
+          fi

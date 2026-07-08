@@ -434,7 +434,7 @@ const API='https://api.github.com';
 // — a mismatch means the browser is executing a stale cached copy, which the
 // old repo-commit check could never detect (the API always reports the newest
 // commit regardless of what HTML the browser loaded). Bump on every release.
-const CONSOLE_BUILD='2026-07-08.4-audit-14';
+const CONSOLE_BUILD='2026-07-08.5-audit-16-19';
 // -- Global state --
 let cfg={},wlItems=[],wlSha=null,portfolio=null,events=[];
 let histMonth=new Date();histMonth.setDate(1);  // history tab month navigator
@@ -634,6 +634,9 @@ async function refreshAll(){
     document.getElementById('offlineBanner').classList.add('show');
     const c=LS.get('cache');
     if(c){if(c.wlItems){wlItems=c.wlItems;wlSha=c.wlSha;renderWl()}if(c.portfolio){portfolio=c.portfolio;renderHoldings()}if(c.events){events=c.events;renderHist()}
+      // Audit rec #17: pending watchdog approvals survive offline — the banner
+      // is the whole point of catching a forgotten review on a console visit.
+      if(c.wdPRs){_wdPRs=c.wdPRs;_wdIssues=c.wdIssues||[];_wdState=c.wdState||null;renderWdBanner();renderWdPanel();renderWdStatus()}
       document.getElementById('offlineTs').textContent=` Last fetched: ${c.ts||'unknown'}`}
     return;
   }
@@ -643,7 +646,7 @@ async function refreshAll(){
   _buildSymFilter();
   const failures=results.filter(r=>r.status==='rejected');
   if(failures.length){console.warn('Some loaders failed:',failures.map(f=>f.reason?.message))}
-  LS.set('cache',{wlItems,wlSha,portfolio,events,ts:new Date().toLocaleString()});
+  LS.set('cache',{wlItems,wlSha,portfolio,events,wdPRs:_wdPRs,wdIssues:_wdIssues,wdState:_wdState,ts:new Date().toLocaleString()});
   if(failures.length>=loaders.length){toast('All data loads failed','err')}
 }
 
@@ -655,6 +658,21 @@ async function refreshAll(){
 // deletes the branch, and leaves a comment (with optional reason) that the
 // Sonnet prompt treats as "declined -- do not re-propose without new evidence".
 let _wdPRs=[],_wdIssues=[],_wdState=null,_wdLoadError=null;
+
+// Audit rec #18: minimal markdown for watchdog change documents. Escapes
+// FIRST (esc), then applies a small whitelist of transforms — the only HTML
+// that can appear is what this function itself emits. The container is
+// white-space:pre-wrap, so line structure is preserved without <p> handling.
+function mdLite(s){
+  let t=esc(s||'');
+  t=t.replace(/^######? (.*)$/gm,'<b style="font-size:12.5px">$1</b>');
+  t=t.replace(/^#{1,4} (.*)$/gm,'<b style="font-size:13px;color:var(--text)">$1</b>');
+  t=t.replace(/\*\*([^*\n]+)\*\*/g,'<b>$1</b>');
+  t=t.replace(/`([^`\n]+)`/g,'<code style="background:rgba(255,255,255,0.08);padding:0 3px;border-radius:3px">$1</code>');
+  t=t.replace(/^- (.*)$/gm,'&bull; $1');
+  t=t.replace(/(https?:\/\/[^\s<)]+)/g,'<a href="$1" target="_blank" rel="noopener" style="color:var(--blue)">$1</a>');
+  return t;
+}
 
 // gh() assumes a JSON body; merge/close/delete responses may be empty.
 async function ghAction(path,opts={}){
@@ -705,6 +723,21 @@ function toggleWdPanel(){document.getElementById('wdPanel').classList.toggle('hi
 
 function renderWdPanel(){
   const el=document.getElementById('wdPanel');
+  // Audit rec #16: in the error state the banner is tappable — show the
+  // full error + fix instructions instead of a blank panel.
+  if(_wdLoadError){
+    el.innerHTML=`<div class="card" style="border-color:var(--yellow)">
+      <div style="font-weight:600;font-size:13px;margin-bottom:6px">Watchdog status could not be loaded</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.6">Error: <code>${esc(_wdLoadError)}</code><br><br>
+      Most likely cause: the stored access token cannot read pull requests.<br>
+      Fix: GitHub &rarr; Settings &rarr; Developer settings &rarr; Fine-grained tokens &rarr; your token &rarr;
+      set <b>Pull requests: Read and write</b> (and <b>Contents: Read and write</b>), save, then reload this page.
+      Classic tokens with <code>repo</code> scope already work.<br><br>
+      There may be pending watchdog changes you cannot see until this is fixed —
+      check <a href="https://github.com/${esc(cfg.repo||'')}/pulls" target="_blank" rel="noopener" style="color:var(--blue)">open PRs on GitHub &#8599;</a>.</div>
+    </div>`;
+    return;
+  }
   if(!_wdPRs.length&&!_wdIssues.length){el.innerHTML='';return}
   let h='';
   for(const p of _wdPRs){
@@ -715,7 +748,7 @@ function renderWdPanel(){
         <div style="font-weight:600;font-size:13px;flex:1">${esc(p.title)}</div>
         <span style="font-size:10px;color:var(--text3);font-family:var(--font-mono);white-space:nowrap">${created} &middot; ${stats}</span>
       </div>
-      <div class="wd-doc">${esc(p.body||'(no change document)')}</div>
+      <div class="wd-doc">${mdLite(p.body||'(no change document)')}</div>
       <div style="display:flex;gap:8px;margin-bottom:8px">
         <button class="wd-btn-merge" onclick="wdMerge(${p.number},'${esc(stats)}')">Merge (${esc(stats)})</button>
         <button class="wd-btn-deny" onclick="wdDenyPrompt(${p.number})">Deny&hellip;</button>
