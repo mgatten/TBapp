@@ -429,6 +429,12 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
 // ==============================================================================
 
 const API='https://api.github.com';
+// Build marker embedded in THIS file. showBuildInfo() compares the value the
+// running page carries against the value in the freshly-fetched deployed page
+// — a mismatch means the browser is executing a stale cached copy, which the
+// old repo-commit check could never detect (the API always reports the newest
+// commit regardless of what HTML the browser loaded). Bump on every release.
+const CONSOLE_BUILD='2026-07-08.2-watchdog-g';
 // -- Global state --
 let cfg={},wlItems=[],wlSha=null,portfolio=null,events=[];
 let histMonth=new Date();histMonth.setDate(1);  // history tab month navigator
@@ -474,7 +480,27 @@ async function showBuildInfo(){
       }catch{ formatted = when; }
     }
     const msg = d.commit && d.commit.message ? d.commit.message.split('\n')[0].slice(0, 100) : '';
-    alert(`Console build\nCommit ${sha}\n${formatted}\n\n${msg}`);
+    // FIX #55: The repo-head check above says what's DEPLOYED, not what's
+    // RUNNING. Compare this page's embedded build marker against the marker
+    // in a freshly-fetched copy of the page to detect a stale browser cache
+    // (the failure mode: user "verifies current version" while executing an
+    // old cached page, because the API always reports the newest commit).
+    let staleness='';
+    try{
+      const pr = await fetch(window.location.pathname+'?cachecheck='+Date.now(), {cache:'no-store'});
+      const ptext = await pr.text();
+      const m = ptext.match(/CONSOLE_BUILD='([^']+)'/);
+      const deployedBuild = m ? m[1] : '(unknown)';
+      staleness = (deployedBuild === CONSOLE_BUILD)
+        ? `\nRunning build: ${CONSOLE_BUILD} (current)`
+        : `\n\n⚠️ STALE CACHE!\nRunning build:  ${CONSOLE_BUILD}\nDeployed build: ${deployedBuild}`;
+      if(deployedBuild !== CONSOLE_BUILD){
+        alert(`Console build\nCommit ${sha}\n${formatted}\n\n${msg}${staleness}`);
+        if(confirm('This browser is running an outdated cached copy. Force-refresh now?')){forceHardRefresh()}
+        return;
+      }
+    }catch(e){staleness='\n(could not verify running build: '+e.message+')'}
+    alert(`Console build\nCommit ${sha}\n${formatted}\n\n${msg}${staleness}`);
   }catch(e){
     alert('Could not fetch build info: '+e.message);
   }
