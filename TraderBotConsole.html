@@ -434,7 +434,7 @@ const API='https://api.github.com';
 // — a mismatch means the browser is executing a stale cached copy, which the
 // old repo-commit check could never detect (the API always reports the newest
 // commit regardless of what HTML the browser loaded). Bump on every release.
-const CONSOLE_BUILD='2026-07-08.7-event-slot';
+const CONSOLE_BUILD='2026-07-08.8-tz-labels';
 // -- Global state --
 let cfg={},wlItems=[],wlSha=null,portfolio=null,events=[];
 let histMonth=new Date();histMonth.setDate(1);  // history tab month navigator
@@ -451,6 +451,11 @@ function setBrightness(val){
   document.body.style.setProperty('--text3',`rgb(${t3r},${t3g},${t3b})`);
   LS.set('brightness',val);
 }
+// Two-letter timezone tag (ET/CT/MT/PT) for any displayed clock time —
+// owner rule 2026-07-08: the market runs ET, the owner lives MT; a bare
+// time is a lie waiting to happen. Falls back to the browser's short name
+// (e.g. GMT-6) when it isn't a US zone.
+function tzTag(d){const p=d.toLocaleTimeString('en-US',{timeZoneName:'short'}).split(' ').pop();return /^[ECMP][DS]T$/.test(p)?p[0]+'T':p}
 function toast(m,t='ok'){const e=document.getElementById('toast');e.textContent=m;e.className=`toast show ${t}`;clearTimeout(e._t);e._t=setTimeout(()=>e.className='toast',2500)}
 
 // FIX #50: Fetch latest console-repo commit on demand and show its date and
@@ -473,10 +478,11 @@ async function showBuildInfo(){
     let formatted = '';
     if(when){
       try{
-        formatted = new Date(when).toLocaleString('en-US', {
+        const _bd = new Date(when);
+        formatted = _bd.toLocaleString('en-US', {
           weekday: 'short', month: 'short', day: 'numeric',
-          hour: 'numeric', minute: '2-digit', timeZoneName: 'short',
-        });
+          hour: 'numeric', minute: '2-digit',
+        }) + ' ' + tzTag(_bd);
       }catch{ formatted = when; }
     }
     const msg = d.commit && d.commit.message ? d.commit.message.split('\n')[0].slice(0, 100) : '';
@@ -646,7 +652,7 @@ async function refreshAll(){
   _buildSymFilter();
   const failures=results.filter(r=>r.status==='rejected');
   if(failures.length){console.warn('Some loaders failed:',failures.map(f=>f.reason?.message))}
-  LS.set('cache',{wlItems,wlSha,portfolio,events,wdPRs:_wdPRs,wdIssues:_wdIssues,wdState:_wdState,ts:new Date().toLocaleString()});
+  LS.set('cache',{wlItems,wlSha,portfolio,events,wdPRs:_wdPRs,wdIssues:_wdIssues,wdState:_wdState,ts:new Date().toLocaleString()+' '+tzTag(new Date())});
   if(failures.length>=loaders.length){toast('All data loads failed','err')}
 }
 
@@ -1026,7 +1032,7 @@ function renderHoldings(){
       let ageBorder='var(--border)',ageTag='';
       if(dates[p.symbol]&&th.time_horizon_days){const od=new Date(dates[p.symbol]);const held=Math.floor((Date.now()-od.getTime())/86400000);const hz=th.time_horizon_days;const pctAge=held/hz;if(pctAge>=1){ageBorder='var(--red)';ageTag=`<span style="font-size:9px;padding:1px 5px;border-radius:3px;background:var(--red-bg);color:var(--red);font-weight:600;margin-left:6px">DAY ${held}/${hz}</span>`}else if(pctAge>=0.75){ageBorder='var(--yellow)';ageTag=`<span style="font-size:9px;padding:1px 5px;border-radius:3px;background:var(--yellow-bg);color:var(--yellow);font-weight:600;margin-left:6px">DAY ${held}/${hz}</span>`}else{ageTag=`<span style="font-size:9px;padding:1px 5px;border-radius:3px;background:var(--green-bg);color:var(--green);font-weight:600;margin-left:6px">DAY ${held}/${hz}</span>`}}
       return`<div class="card expandable" style="border-color:${ageBorder}" onclick="toggleTh(${i})"><div class="pos-row"><div class="pos-sym">${esc(p.symbol)}<div style="font-size:10px;font-weight:400;color:var(--text3);font-family:var(--font-head);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:80px">${esc(_tickerName(p.symbol))}</div></div><div class="pos-mid"><div class="pos-alloc">${p.alloc_pct||0}% &middot; ${p.side}${ageTag}</div><div class="pos-entry">${opened} @ $${(p.avg_entry_price||0).toFixed(2)}</div></div><div class="pos-pl ${cls}">${sgn}$${pl.toFixed(2)}<br><span style="font-size:11px">${sgn}${pct.toFixed(1)}%</span></div></div><div class="thesis-expand" id="th${i}"><div style="font-size:12px;color:var(--text2);margin-bottom:8px">${esc(_tickerName(p.symbol))}</div>${th.reason?`<div class="thesis-label">Why Opened</div><div>${esc(th.reason)}</div>`:''}${th.price_target?`<div class="thesis-label">Price Target</div><div>${esc(th.price_target)}</div>`:''}${th.exit_catalyst?`<div class="thesis-label">Exit Catalyst</div><div>${esc(th.exit_catalyst)}</div>`:''}${th.invalidation?`<div class="thesis-label">Invalidation</div><div>${esc(th.invalidation)}</div>`:''}${th.conviction?`<div class="thesis-label">Conviction</div><div>${th.conviction}/10</div>`:''}${th.time_horizon_days?`<div class="thesis-label">Time Horizon</div><div>${th.time_horizon_days} days</div>`:''}${!th.reason&&!th.price_target?'<div style="color:var(--text3)">No thesis recorded.</div>':''}</div></div>`}).join('')}
-  const now=new Date();const tz=now.toLocaleTimeString('en-US',{timeZoneName:'short'}).split(' ').pop();tsEl.textContent=`Logs last consulted at: ${now.toLocaleDateString()} ${now.toLocaleTimeString()} ${tz}`;
+  const now=new Date();tsEl.textContent=`Logs last consulted at: ${now.toLocaleDateString()} ${now.toLocaleTimeString()} ${tzTag(now)}`;
 }
 function toggleTh(i){const e=document.getElementById('th'+i);if(e)e.classList.toggle('show')}
 
@@ -1097,7 +1103,7 @@ function renderUpcoming(){
   empty.classList.add('hidden');
   list.innerHTML=upcoming.map((e,i)=>{
     let schedStr='';
-    try{const sd=new Date(e.scheduled);schedStr=sd.toLocaleString('en-US',{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short'})}catch{schedStr=e.scheduled||'?'}
+    try{const sd=new Date(e.scheduled);schedStr=sd.toLocaleString('en-US',{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+' '+tzTag(sd)}catch{schedStr=e.scheduled||'?'}
     const reason=e.reason||'';
     return`<div class="card"><div class="evt-row"><span class="evt-badge scheduled">SCHED</span><span class="evt-sym" style="flex:1;cursor:pointer" onclick="toggleUpcoming(${i})">${esc(e.event)}</span><span style="font-size:11px;color:var(--text2);font-family:var(--font-mono)">${schedStr}</span><button class="wl-btn del" onclick="cancelEvent('${esc(e.jobId)}','${esc(e.event)}','${esc(e.scheduled)}','${esc(e.event_id)}')" title="Cancel" style="margin-left:8px">x</button></div>${reason?`<div class="evt-detail" id="upc${i}">${esc(reason)}</div>`:''}</div>`;
   }).join('');
@@ -1195,7 +1201,7 @@ function renderAma(){
     const sorted=_amaLog.slice().reverse();
     logEl.innerHTML='<div class="section-title">Past Q&A</div>'+sorted.map((qa,i)=>{
       let ts='';
-      try{const d=new Date(qa.timestamp);ts=d.toLocaleDateString('en-US',{month:'short',day:'numeric'})+' '+d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}catch{ts=qa.timestamp||''}
+      try{const d=new Date(qa.timestamp);ts=d.toLocaleDateString('en-US',{month:'short',day:'numeric'})+' '+d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})+' '+tzTag(d)}catch{ts=qa.timestamp||''}
       return`<div class="card expandable" onclick="toggleAmaLog(${i})"><div style="display:flex;align-items:flex-start;gap:8px"><span style="font-size:12px;color:var(--accent);font-weight:600;min-width:16px">Q:</span><span style="flex:1;font-size:12px;color:var(--text)">${esc(qa.question||'?')}</span><span style="font-size:10px;color:var(--text3);font-family:var(--font-mono);white-space:nowrap">${ts}</span><button class="wl-btn del" onclick="event.stopPropagation();deleteAmaLog(${i})" title="Delete">x</button></div><div class="thesis-expand" id="amaL${i}"><div style="margin-top:8px;font-size:12px;line-height:1.6;color:var(--text2)"><span style="color:var(--green);font-weight:600">A:</span> ${esc(qa.answer||'No answer')}</div></div></div>`;
     }).join('');
   }else if(!_amaQueue.length){
@@ -1341,7 +1347,7 @@ function renderPastRuns(){
   list.innerHTML=filt.map((r,i)=>{
     // Header line
     let timeStr='';
-    try{const d=new Date(r.timestamp);timeStr=d.toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}catch{timeStr=r.timestamp||'?'}
+    try{const d=new Date(r.timestamp);timeStr=d.toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+' '+tzTag(d)}catch{timeStr=r.timestamp||'?'}
     const slotLabel={'morning':'MORN','midday':'MID','final':'FINAL','event':'EVENT','watchdog':'WATCH'}[r.slot]||r.slot.toUpperCase();
     const slotColor=r.slot==='morning'?'var(--blue)':r.slot==='final'?'var(--accent)':r.slot==='event'?'#1abc9c':'var(--text2)';
     const tradeCount=r.num_trades||0;
@@ -2133,7 +2139,7 @@ function renderCostDashboard(){
   // Run log (most recent first)
   const recent=_apiCosts.slice().reverse().slice(0,30);
   logEl.innerHTML='<div class="section-title">Recent Runs</div>'+recent.map(r=>{
-    const ts=(r.timestamp||'').slice(5,16).replace('T',' ');
+    const ts=(r.timestamp||'').slice(5,16).replace('T',' ')+' ET';
     const slot=(r.slot||'').toUpperCase();
     const cost=parseFloat(r.estimated_cost_usd)||0;
     const tokens=parseInt(r.total_tokens)||0;
