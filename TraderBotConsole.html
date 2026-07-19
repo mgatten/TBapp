@@ -309,6 +309,7 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
         <button class="sub-tab" onclick="switchSubTab('costs')">Costs</button>
       </div>
       <div class="sub-content active" id="sub-perf">
+        <div id="readiness"></div>
         <div class="account-bar pl-bar" id="plStats"></div>
         <div id="plDetails"></div>
       </div>
@@ -437,7 +438,7 @@ const API='https://api.github.com';
 // — a mismatch means the browser is executing a stale cached copy, which the
 // old repo-commit check could never detect (the API always reports the newest
 // commit regardless of what HTML the browser loaded). Bump on every release.
-const CONSOLE_BUILD='2026-07-18.10-bughunt';
+const CONSOLE_BUILD='2026-07-19.11-readiness';
 // -- Global state --
 let cfg={},wlItems=[],wlSha=null,portfolio=null,events=[];
 let histMonth=new Date();histMonth.setDate(1);  // history tab month navigator
@@ -1711,7 +1712,69 @@ async function loadSpyHistory(){
 // Computes win rate, total P&L, expectancy, and best/worst trades from
 // CLOSE and PARTIAL_CLOSE events in position_events.csv. Displayed in
 // the Performance sub-tab under Analytics.
+
+// -- Go-live readiness dashboard (feature #4, 2026-07-19) --
+// The owner's PRE-REGISTERED criteria for funding real money ($1,200 on
+// the lean config): avg cash <15%, ~0.7x QQQ tracking (beta 0.55-0.85),
+// satellites net >= $0 since v2 go-live, <=4 trades/week, held for two
+// consecutive quarters. Computed live from the same files other tabs
+// load; quarters gauge shows progress through the current quarter.
+const V2_START='2026-07-06';
+const READINESS_CORE=['SPY','QQQ','VOO','IVV','SPLG','QQQM','VTI']; // keep in sync with TraderBot CORE_ETFS
+function _readinessStats(){
+  const runs=_runHistory.filter(r=>!r.test_mode&&r.equity>0);
+  const byDate={};for(const r of runs){byDate[r.date]=r} // last run per date
+  const dates=Object.keys(byDate).sort();
+  const last30=dates.slice(-30);
+  const cashAvg=last30.length?last30.reduce((s,d)=>s+(byDate[d].cash/byDate[d].equity*100),0)/last30.length:null;
+  // beta vs QQQ over the same dates
+  const q={};for(const b of _benchHistory){if(b.date&&b.QQQ)q[b.date]=parseFloat(b.QQQ)}
+  const pairs=[];
+  for(let i=1;i<last30.length;i++){
+    const d0=last30[i-1],d1=last30[i];
+    if(q[d0]&&q[d1]){pairs.push([q[d1]/q[d0]-1,byDate[d1].equity/byDate[d0].equity-1])}
+  }
+  let beta=null;
+  if(pairs.length>=10){
+    const mx=pairs.reduce((s,p)=>s+p[0],0)/pairs.length,my=pairs.reduce((s,p)=>s+p[1],0)/pairs.length;
+    let cov=0,varx=0;for(const[x,y]of pairs){cov+=(x-mx)*(y-my);varx+=(x-mx)*(x-mx)}
+    if(varx>0)beta=cov/varx;
+  }
+  // satellites net since v2: realized (position_events) + unrealized (current)
+  let satNet=0,satSeen=false;
+  for(const e of events){
+    if(['CLOSE','PARTIAL_CLOSE'].includes(e.event_type)&&(e.close_timestamp||'')>=V2_START
+       &&!READINESS_CORE.includes(e.symbol)&&e.realized_pl){satNet+=parseFloat(e.realized_pl)||0;satSeen=true}
+  }
+  if(portfolio&&portfolio.positions)for(const p of portfolio.positions){
+    if(!READINESS_CORE.includes(p.symbol)){satNet+=parseFloat(p.unrealized_pl)||0;satSeen=true}
+  }
+  // trades/week trailing 28 days
+  const cutoff=new Date(Date.now()-28*864e5).toISOString().slice(0,10);
+  const tw=_tradesLog.filter(t=>(t.timestamp||'')>=cutoff).length/4;
+  // quarter progress
+  const days=Math.floor((Date.now()-new Date(V2_START+'T00:00:00'))/864e5);
+  const qNum=Math.floor(days/91)+1,qDay=days%91;
+  return {cashAvg,beta,satNet:satSeen?satNet:null,tw,qNum,qDay};
+}
+function renderReadiness(){
+  const el=document.getElementById('readiness');if(!el)return;
+  const s=_readinessStats();
+  const row=(label,val,pass,detail)=>{
+    const icon=pass===null?'<span style="color:var(--text3)">--</span>':pass?'<span style="color:var(--green)">PASS</span>':'<span style="color:var(--red)">not yet</span>';
+    return `<div style="display:flex;justify-content:space-between;gap:8px;padding:4px 0;border-bottom:1px solid var(--border)"><span style="font-size:11px;color:var(--text2)">${label}</span><span style="font-size:11px;font-family:var(--font-mono)">${val} ${icon}</span><span style="font-size:10px;color:var(--text3);text-align:right;flex:0 0 auto">${detail}</span></div>`};
+  const met=[s.cashAvg!==null&&s.cashAvg<15,s.beta!==null&&s.beta>=0.55&&s.beta<=0.85,s.satNet!==null&&s.satNet>=0,s.tw<=4].filter(Boolean).length;
+  el.innerHTML=`<div class="card"><div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">Go-Live Readiness <span style="float:right">${met}/4 criteria met now</span></div>
+    ${row('Avg cash (30d)',s.cashAvg===null?'--':s.cashAvg.toFixed(1)+'%',s.cashAvg===null?null:s.cashAvg<15,'target <15%')}
+    ${row('QQQ tracking beta (30d)',s.beta===null?'--':s.beta.toFixed(2)+'x',s.beta===null?null:(s.beta>=0.55&&s.beta<=0.85),'target ~0.7x')}
+    ${row('Satellites net P/L (v2)',s.satNet===null?'--':'$'+s.satNet.toFixed(2),s.satNet===null?null:s.satNet>=0,'target >= $0')}
+    ${row('Trades/week (28d)',s.tw.toFixed(1),s.tw<=4,'target <= 4')}
+    ${row('Clean quarters','Q'+s.qNum+' day '+s.qDay+'/91',null,'need 2 consecutive')}
+  </div>`;
+}
+
 function renderPLDashboard(){
+  renderReadiness();
   const stats=document.getElementById('plStats');
   const details=document.getElementById('plDetails');
   // FIX #40: Include CLOSE/PARTIAL_CLOSE rows even when realized_pl is "" or
