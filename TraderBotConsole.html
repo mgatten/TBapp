@@ -64,6 +64,9 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
 .search-selected{font-size:12px;color:var(--accent);font-family:var(--font-mono);font-weight:500;padding:4px 0;margin-bottom:6px}
 .search-selected .sel-clear{color:var(--text3);cursor:pointer;margin-left:8px;font-size:14px}
 .wl-item{display:flex;align-items:center;gap:10px}
+.wl-once{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text3);padding:7px 2px 0;cursor:pointer;user-select:none}
+.wl-once input{accent-color:var(--accent);cursor:pointer;margin:0}
+.wl-once.on{color:var(--accent)}
 .wl-ticker{font-family:var(--font-mono);font-weight:600;font-size:14px;color:var(--accent);min-width:55px}
 .wl-note{flex:1;font-size:12px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
 .wl-note.expanded{white-space:normal;overflow:visible;text-overflow:unset}
@@ -434,7 +437,7 @@ const API='https://api.github.com';
 // — a mismatch means the browser is executing a stale cached copy, which the
 // old repo-commit check could never detect (the API always reports the newest
 // commit regardless of what HTML the browser loaded). Bump on every release.
-const CONSOLE_BUILD='2026-07-08.8-tz-labels';
+const CONSOLE_BUILD='2026-07-18.9-wl-once';
 // -- Global state --
 let cfg={},wlItems=[],wlSha=null,portfolio=null,events=[];
 let histMonth=new Date();histMonth.setDate(1);  // history tab month navigator
@@ -833,8 +836,9 @@ function renderWdStatus(){
 // expand, double-tap to edit), deletion with confirmation, and adding new
 // symbols via the SEC ticker search autocomplete. Changes are saved back
 // to the repo via GitHub API with optimistic sha tracking.
-function parseWl(t){const o=[];for(const raw of t.split('\n')){const l=raw.trim();if(!l||l.startsWith('#'))continue;let tk,n='';for(const s of['#','|']){const i=l.indexOf(s);if(i!==-1){tk=l.slice(0,i).trim().toUpperCase();n=l.slice(i+1).trim();break}}if(!tk)tk=l.toUpperCase();if(tk&&/^[A-Z0-9]+$/.test(tk))o.push({symbol:tk,note:n})}return o}
-function serWl(){return wlItems.map(w=>w.note?`${w.symbol}  # ${w.note}`:w.symbol).join('\n')+(wlItems.length?'\n':'')}
+function parseWl(t){const o=[];for(const raw of t.split('\n')){const l=raw.trim();if(!l||l.startsWith('#'))continue;let tk,n='';for(const s of['#','|']){const i=l.indexOf(s);if(i!==-1){tk=l.slice(0,i).trim().toUpperCase();n=l.slice(i+1).trim();break}}if(!tk)tk=l.toUpperCase();let once=false;if(tk.includes('[ONCE]')){once=true;tk=tk.replace(/\s*\[ONCE\]\s*/g,' ').trim()}if(tk&&/^[A-Z0-9]+$/.test(tk))o.push({symbol:tk,note:n,once})}return o}
+// [once] marker = TraderBot's "evaluate on the next real run, then auto-remove"
+function serWl(){return wlItems.map(w=>{const s=w.symbol+(w.once?' [once]':'');return w.note?`${s}  # ${w.note}`:s}).join('\n')+(wlItems.length?'\n':'')}
 
 async function loadWl(){try{const{content,sha}=await ghGet('data/watchlist.txt');wlItems=parseWl(content);wlSha=sha}catch(e){wlItems=[];wlSha=null}renderWl()}
 async function saveWl(){try{wlSha=await ghPut('data/watchlist.txt',serWl(),wlSha,`watchlist: ${wlItems.length} symbol${wlItems.length!==1?'s':''}`);toast(`Saved -- ${wlItems.length} symbol${wlItems.length!==1?'s':''}`)}catch(e){toast('Save failed: '+e.message,'err')}}
@@ -843,7 +847,7 @@ function renderWl(){
   const list=document.getElementById('wlList'),empty=document.getElementById('wlEmpty');
   if(!wlItems.length){list.innerHTML='';empty.classList.remove('hidden');return}
   empty.classList.add('hidden');
-  list.innerHTML=wlItems.map((w,i)=>`<div class="card"><div class="wl-item"><span class="wl-ticker">${esc(w.symbol)}</span><span class="wl-note" id="wlN${i}" onclick="wlNoteToggle(${i})" ondblclick="wlEdit(${i})">${esc(w.note)||'-'}</span><div class="wl-actions"><button class="wl-btn" onclick="wlEdit(${i})" title="Edit">[edit]</button><button class="wl-btn del" onclick="wlDel(${i})" title="Remove">x</button></div></div></div>`).join('');
+  list.innerHTML=wlItems.map((w,i)=>`<div class="card"><div class="wl-item"><span class="wl-ticker">${esc(w.symbol)}</span><span class="wl-note" id="wlN${i}" onclick="wlNoteToggle(${i})" ondblclick="wlEdit(${i})">${esc(w.note)||'-'}</span><div class="wl-actions"><button class="wl-btn" onclick="wlEdit(${i})" title="Edit">[edit]</button><button class="wl-btn del" onclick="wlDel(${i})" title="Remove">x</button></div></div><label class="wl-once${w.once?' on':''}"><input type="checkbox" ${w.once?'checked':''} onchange="wlOnce(${i},this.checked)"> remove after next run</label></div>`).join('');
 }
 async function wlAdd(){
   if(!_selectedTicker){toast('Search and select a symbol first','err');return}
@@ -942,6 +946,10 @@ document.addEventListener('click',function(e){
   }
 });
 async function wlDel(i){const s=wlItems[i].symbol;if(!confirm(`Remove ${s} from watchlist?`))return;wlItems.splice(i,1);renderWl();await saveWl();toast(`Removed ${s}`)}
+
+// "remove after next run": writes/clears the [once] marker; TraderBot
+// evaluates the symbol on its next real run and then deletes the line itself.
+async function wlOnce(i,v){wlItems[i].once=v;renderWl();await saveWl();toast(v?`${wlItems[i].symbol} will be evaluated once, then auto-removed`:`${wlItems[i].symbol} will stay on the list`)}
 function wlNoteToggle(i){const el=document.getElementById('wlN'+i);if(el)el.classList.toggle('expanded')}
 function wlEdit(i){const el=document.getElementById('wlN'+i);el.outerHTML=`<input class="wl-note-edit" id="wlE${i}" value="${esc(wlItems[i].note)}" onblur="wlEditDone(${i})" onkeydown="if(event.key==='Enter')this.blur()">`; document.getElementById('wlE'+i).focus()}
 async function wlEditDone(i){const el=document.getElementById('wlE'+i);if(!el)return;wlItems[i].note=el.value.trim();renderWl();await saveWl()}
