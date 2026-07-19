@@ -438,7 +438,7 @@ const API='https://api.github.com';
 // — a mismatch means the browser is executing a stale cached copy, which the
 // old repo-commit check could never detect (the API always reports the newest
 // commit regardless of what HTML the browser loaded). Bump on every release.
-const CONSOLE_BUILD='2026-07-19.11-readiness';
+const CONSOLE_BUILD='2026-07-19.12-slippage';
 // -- Global state --
 let cfg={},wlItems=[],wlSha=null,portfolio=null,events=[];
 let histMonth=new Date();histMonth.setDate(1);  // history tab month navigator
@@ -2138,8 +2138,14 @@ async function loadApiCosts(){
     const{content}=await ghGet('data/api_costs.csv');
     _apiCosts=parseCSV(content);
   }catch(e){_apiCosts=[]}
+  // Feature #6: execution slippage (file appears after the first resolved fill)
+  try{
+    const{content}=await ghGet('data/slippage_log.csv');
+    _slippage=parseCSV(content);
+  }catch(e){_slippage=[]}
   renderCostDashboard();
 }
+let _slippage=[];
 
 function renderCostDashboard(){
   const stats=document.getElementById('costStats');
@@ -2175,6 +2181,7 @@ function renderCostDashboard(){
     <div class="stat-box"><div class="stat-label">Total Spent</div><div class="stat-val" style="color:${costColor}">$${totalCost.toFixed(2)}</div></div>
     <div class="stat-box"><div class="stat-label">Daily Avg</div><div class="stat-val">$${dailyAvg.toFixed(2)}</div></div>
     <div class="stat-box"><div class="stat-label">Mo. Est.</div><div class="stat-val">$${monthEst.toFixed(1)}</div></div>
+    ${_slippage.length?`<div class="stat-box" title="Execution slippage: decision quote vs actual fill, cumulative. Positive = cost."><div class="stat-label">Slippage</div><div class="stat-val">$${_slippage.reduce((t,r)=>t+(parseFloat(r.slippage_usd)||0),0).toFixed(2)}</div></div>`:''}
   `;
 
   // Cost chart
