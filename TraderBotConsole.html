@@ -437,7 +437,7 @@ const API='https://api.github.com';
 // — a mismatch means the browser is executing a stale cached copy, which the
 // old repo-commit check could never detect (the API always reports the newest
 // commit regardless of what HTML the browser loaded). Bump on every release.
-const CONSOLE_BUILD='2026-07-18.9-wl-once';
+const CONSOLE_BUILD='2026-07-18.10-bughunt';
 // -- Global state --
 let cfg={},wlItems=[],wlSha=null,portfolio=null,events=[];
 let histMonth=new Date();histMonth.setDate(1);  // history tab month navigator
@@ -836,12 +836,22 @@ function renderWdStatus(){
 // expand, double-tap to edit), deletion with confirmation, and adding new
 // symbols via the SEC ticker search autocomplete. Changes are saved back
 // to the repo via GitHub API with optimistic sha tracking.
-function parseWl(t){const o=[];for(const raw of t.split('\n')){const l=raw.trim();if(!l||l.startsWith('#'))continue;let tk,n='';for(const s of['#','|']){const i=l.indexOf(s);if(i!==-1){tk=l.slice(0,i).trim().toUpperCase();n=l.slice(i+1).trim();break}}if(!tk)tk=l.toUpperCase();let once=false;if(tk.includes('[ONCE]')){once=true;tk=tk.replace(/\s*\[ONCE\]\s*/g,' ').trim()}if(tk&&/^[A-Z0-9]+$/.test(tk))o.push({symbol:tk,note:n,once})}return o}
+function parseWl(t){const o=[];for(const raw of t.split('\n')){const l=raw.trim();if(!l||l.startsWith('#'))continue;let tk,n='';for(const s of['#','|']){const i=l.indexOf(s);if(i!==-1){tk=l.slice(0,i).trim().toUpperCase();n=l.slice(i+1).trim();break}}if(!tk)tk=l.toUpperCase();let once=false;if(tk.includes('[ONCE]')){once=true;tk=tk.replace(/\s*\[ONCE\]\s*/g,' ').trim()}if(tk&&/^[A-Z0-9.-]{1,10}$/.test(tk))o.push({symbol:tk,note:n,once})}return o}
 // [once] marker = TraderBot's "evaluate on the next real run, then auto-remove"
 function serWl(){return wlItems.map(w=>{const s=w.symbol+(w.once?' [once]':'');return w.note?`${s}  # ${w.note}`:s}).join('\n')+(wlItems.length?'\n':'')}
 
 async function loadWl(){try{const{content,sha}=await ghGet('data/watchlist.txt');wlItems=parseWl(content);wlSha=sha}catch(e){wlItems=[];wlSha=null}renderWl()}
-async function saveWl(){try{wlSha=await ghPut('data/watchlist.txt',serWl(),wlSha,`watchlist: ${wlItems.length} symbol${wlItems.length!==1?'s':''}`);toast(`Saved -- ${wlItems.length} symbol${wlItems.length!==1?'s':''}`)}catch(e){toast('Save failed: '+e.message,'err')}}
+async function saveWl(){const msg=`watchlist: ${wlItems.length} symbol${wlItems.length!==1?'s':''}`;
+  try{wlSha=await ghPut('data/watchlist.txt',serWl(),wlSha,msg);toast(`Saved -- ${wlItems.length} symbol${wlItems.length!==1?'s':''}`)}
+  catch(e){
+    // SHA conflict: the bot writes this file too (e.g. consuming a [once]
+    // entry). Refetch the current SHA and retry once -- what's on the
+    // owner's screen wins.
+    try{const{sha}=await ghGet('data/watchlist.txt');wlSha=sha;
+      wlSha=await ghPut('data/watchlist.txt',serWl(),wlSha,msg);
+      toast('Saved (list had changed upstream -- your version kept)')}
+    catch(e2){toast('Save failed: '+e2.message,'err')}
+  }}
 
 function renderWl(){
   const list=document.getElementById('wlList'),empty=document.getElementById('wlEmpty');
@@ -1363,6 +1373,7 @@ function renderPastRuns(){
     const tradeTag=tradeCount?`<span style="font-size:9px;padding:1px 5px;border-radius:3px;background:var(--green-bg);color:var(--green);font-weight:600;margin-left:6px">${tradeCount} trade${tradeCount>1?'s':''}</span>`:'';
     const errTag=errCount?`<span style="font-size:9px;padding:1px 5px;border-radius:3px;background:var(--red-bg);color:var(--red);font-weight:600;margin-left:6px">${errCount} err</span>`:'';
     const testTag=r.test_mode?`<span style="font-size:9px;padding:1px 5px;border-radius:3px;background:var(--yellow-bg);color:var(--yellow);font-weight:600;margin-left:6px">TEST</span>`:'';
+    const backupTag=r.backup_recovery?`<span style="font-size:9px;padding:1px 5px;border-radius:3px;background:var(--yellow-bg);color:#e67e22;font-weight:600;margin-left:6px" title="Primary cron dispatch failed -- recovered by the native-cron backup">RECOVERED</span>`:'';
 
     // Expandable detail
     let detail='';
@@ -1436,7 +1447,7 @@ function renderPastRuns(){
     // Portfolio snapshot
     detail+=`<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:10px;color:var(--text3)">Equity $${(r.equity||0).toFixed(2)} &middot; Cash $${(r.cash||0).toFixed(2)} &middot; ${r.num_positions||0} positions &middot; ${r.macro_regime||'?'}</div>`;
 
-    return`<div class="card expandable" onclick="togglePastRun(${i})"><div style="display:flex;align-items:center;gap:8px"><span style="font-family:var(--font-mono);font-size:11px;color:var(--text3);min-width:90px">${timeStr}</span><span style="font-size:10px;font-weight:700;color:${slotColor};min-width:38px">${slotLabel}</span><span style="flex:1;font-size:11px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc((r.assessment||'').slice(0,80))}</span>${tradeTag}${errTag}${testTag}</div><div class="thesis-expand" id="prun${i}"><div style="font-size:12px;line-height:1.6;color:var(--text2);margin-top:8px">${detail}</div></div></div>`;
+    return`<div class="card expandable" onclick="togglePastRun(${i})"><div style="display:flex;align-items:center;gap:8px"><span style="font-family:var(--font-mono);font-size:11px;color:var(--text3);min-width:90px">${timeStr}</span><span style="font-size:10px;font-weight:700;color:${slotColor};min-width:38px">${slotLabel}</span><span style="flex:1;font-size:11px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc((r.assessment||'').slice(0,80))}</span>${tradeTag}${errTag}${testTag}${backupTag}</div><div class="thesis-expand" id="prun${i}"><div style="font-size:12px;line-height:1.6;color:var(--text2);margin-top:8px">${detail}</div></div></div>`;
   }).join('');
 }
 
@@ -1935,7 +1946,10 @@ function _estimateRunCost(){
   // Trading slots ONLY (audit rec #14): watchdog rows share the CSV and the
   // $0.0015 daily checks would drag the trading-run estimate far below what
   // a manually triggered run actually costs.
-  const haikuRuns=_apiCosts.filter(r=>['morning','midday','final','event'].includes((r.slot||'').toLowerCase()));
+  let haikuRuns=_apiCosts.filter(r=>['morning','midday','final','event'].includes((r.slot||'').toLowerCase()));
+  // After a trader-model upgrade, old-price rows would skew the average --
+  // estimate from rows matching the most recent run's model only.
+  if(haikuRuns.length){const curModel=haikuRuns[haikuRuns.length-1].model;haikuRuns=haikuRuns.filter(r=>r.model===curModel)}
   if(haikuRuns.length>=3){
     const total=haikuRuns.slice(-10).reduce((s,r)=>s+parseFloat(r.estimated_cost_usd||0),0);
     return (total/Math.min(haikuRuns.length,10));
