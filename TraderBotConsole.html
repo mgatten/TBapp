@@ -37,6 +37,11 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
 .field-label{display:block;font-size:11px;color:var(--text2);margin-bottom:5px;font-weight:600;text-transform:uppercase;letter-spacing:0.6px}
 .field-input{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px 12px;color:var(--text);font-family:var(--font-mono);font-size:13px;margin-bottom:12px;outline:none;transition:border-color var(--tr)}
 .field-input:focus{border-color:var(--accent)}
+.field-input[type="number"]{font-family:var(--font-mono)}
+.pin-lbl{display:block;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:3px}
+.pin-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:8px}
+.pin-card.paused{opacity:0.55}
+.pin-badge{font-family:var(--font-mono);font-size:10px;padding:2px 6px;border-radius:4px;background:var(--bg2);color:var(--text2)}
 .field-input[type="password"]{letter-spacing:1.5px}
 .setup-note{font-size:11px;color:var(--text3);line-height:1.5;margin-bottom:14px}
 .btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 18px;border-radius:var(--radius-sm);border:none;font-family:var(--font-head);font-size:13px;font-weight:600;cursor:pointer;transition:all 0.12s}
@@ -232,6 +237,33 @@ body{font-family:var(--font-head);background:var(--bg);color:var(--text);min-hei
       </div>
       <div id="wlList"></div>
       <div class="empty-msg hidden" id="wlEmpty"><div class="em-icon">[list]</div>No symbols on your watchlist.<br>Add a ticker to suggest it to Claude.</div>
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+          <div style="font-size:13px;font-weight:600">Pinned Satellites</div>
+          <button class="btn btn-sm btn-ghost" onclick="showPinnedAdd()" id="pinnedAddToggle" style="font-size:10px;padding:4px 10px">+ Add</button>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:10px">Standing hold mandates. The bot buys each to its target % and holds it as a deliberate overweight beyond any index-core exposure, reducing only if the invalidation you set triggers.</div>
+        <div id="pinnedAddPanel" class="hidden" style="margin-bottom:12px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px">
+          <input type="text" class="field-input" id="pinSymbol" placeholder="Ticker (e.g. NVDA)" maxlength="10" style="text-transform:uppercase">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+            <div><label class="pin-lbl">Target %</label><input type="number" class="field-input" id="pinTarget" value="5" min="0" max="100" step="0.5"></div>
+            <div><label class="pin-lbl">Max %</label><input type="number" class="field-input" id="pinMax" value="10" min="0" max="100" step="0.5"></div>
+            <div><label class="pin-lbl">Band %</label><input type="number" class="field-input" id="pinBand" value="1.5" min="0" max="100" step="0.5"></div>
+          </div>
+          <label class="pin-lbl">Conviction (1&ndash;10)</label><input type="number" class="field-input" id="pinConv" value="7" min="1" max="10" step="1">
+          <label class="pin-lbl">Thesis &mdash; why it is held (becomes the position's entry thesis)</label>
+          <textarea class="field-input" id="pinThesis" rows="2" style="resize:vertical;font-family:var(--font-head)" placeholder="e.g. AI-infrastructure leader; deliberate overweight beyond QQQ inclusion."></textarea>
+          <label class="pin-lbl">Invalidation &mdash; the ONLY condition under which the bot should reduce or exit it</label>
+          <textarea class="field-input" id="pinInval" rows="2" style="resize:vertical;font-family:var(--font-head)" placeholder="e.g. Weekly close below the 200-day, or data-center revenue growth stalls."></textarea>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);margin:4px 0 10px"><input type="checkbox" id="pinEnabled" checked> Active (uncheck to pause without deleting)</label>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-primary" onclick="pinnedSave()" style="flex:1;padding:8px" id="pinSaveBtn">Add</button>
+            <button class="btn btn-ghost" onclick="hidePinnedAdd()" style="flex:1;padding:8px">Cancel</button>
+          </div>
+        </div>
+        <div id="pinnedList"></div>
+        <div class="empty-msg hidden" id="pinnedEmpty" style="padding:16px"><div class="em-icon">[pin]</div>No pinned satellites.<br>Pin a symbol to hold it as a permanent overweight.</div>
+      </div>
       <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
           <div style="font-size:13px;font-weight:600">IPO Watch</div>
@@ -438,7 +470,7 @@ const API='https://api.github.com';
 // — a mismatch means the browser is executing a stale cached copy, which the
 // old repo-commit check could never detect (the API always reports the newest
 // commit regardless of what HTML the browser loaded). Bump on every release.
-const CONSOLE_BUILD='2026-07-19.12-slippage';
+const CONSOLE_BUILD='2026-07-21.13-pinned-satellites';
 // -- Global state --
 let cfg={},wlItems=[],wlSha=null,portfolio=null,events=[];
 let histMonth=new Date();histMonth.setDate(1);  // history tab month navigator
@@ -651,7 +683,7 @@ async function refreshAll(){
     return;
   }
   document.getElementById('offlineBanner').classList.remove('show');
-  const loaders=[loadWl,loadPortfolio,loadEvents,loadSecTickers,loadHoldingsLog,loadTradesLog,loadStratMemory,loadSpyHistory,loadApiCosts,loadBriefs,loadRunHistory,loadIpoWatch,loadAma,loadWatchdog];
+  const loaders=[loadWl,loadPinned,loadPortfolio,loadEvents,loadSecTickers,loadHoldingsLog,loadTradesLog,loadStratMemory,loadSpyHistory,loadApiCosts,loadBriefs,loadRunHistory,loadIpoWatch,loadAma,loadWatchdog];
   const results=await Promise.allSettled(loaders.map(fn=>fn()));
   _buildSymFilter();
   const failures=results.filter(r=>r.status==='rejected');
@@ -1024,6 +1056,135 @@ async function ipoDel(i){
   if(!confirm(`Remove ${name} from IPO watch?`))return;
   _ipoWatch.splice(i,1);renderIpoWatch();
   await saveIpoWatch();toast(`Removed ${name}`);
+}
+
+// -- Pinned Satellites --
+// Manages data/pinned_satellites.json -- standing hold mandates. Each entry
+// tells the bot to buy a symbol to a target % and hold it as a deliberate
+// overweight beyond any index-core exposure, reducing only if the invalidation
+// triggers. Mirrors the IPO/AMA JSON-file pattern (ghGet/ghPut + sha).
+let _pinned=[];
+let _pinnedSha=null;
+let _pinnedEditIdx=-1;   // -1 = adding a new pin; >=0 = editing that index
+
+async function loadPinned(){
+  try{
+    const{content,sha}=await ghGet('data/pinned_satellites.json');
+    _pinned=JSON.parse(content);
+    if(!Array.isArray(_pinned))_pinned=[];
+    _pinnedSha=sha;
+  }catch(e){_pinned=[];_pinnedSha=null}
+  renderPinned();
+}
+
+async function savePinned(){
+  const content=JSON.stringify(_pinned,null,2);
+  const msg=`pinned_satellites: ${_pinned.length} symbol${_pinned.length!==1?'s':''}`;
+  try{
+    _pinnedSha=await ghPut('data/pinned_satellites.json',content,_pinnedSha,msg);
+  }catch(e){
+    // Recover from a stale sha (edited elsewhere) exactly like saveWl does.
+    try{const{sha}=await ghGet('data/pinned_satellites.json');_pinnedSha=sha;
+      _pinnedSha=await ghPut('data/pinned_satellites.json',content,_pinnedSha,msg);
+    }catch(e2){toast('Pin save failed: '+e2.message,'err');throw e2}
+  }
+}
+
+function renderPinned(){
+  const list=document.getElementById('pinnedList'),empty=document.getElementById('pinnedEmpty');
+  if(!_pinned.length){list.innerHTML='';empty.classList.remove('hidden');return}
+  empty.classList.add('hidden');
+  list.innerHTML=_pinned.map((p,i)=>{
+    const conv=p.conviction!=null&&p.conviction!==''?` &middot; conv ${esc(String(p.conviction))}`:'';
+    const paused=p.enabled===false;
+    return`<div class="pin-card${paused?' paused':''}">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <span class="wl-ticker" style="min-width:auto">${esc(p.symbol||'?')}</span>
+        <span class="pin-badge">target ${esc(String(p.target_pct??'?'))}%</span>
+        <span class="pin-badge">max ${esc(String(p.max_pct??'?'))}%</span>
+        <span class="pin-badge">band ${esc(String(p.rebalance_band_pct??'?'))}%</span>
+        <span style="flex:1"></span>
+        <span class="pin-badge" style="color:${paused?'var(--yellow)':'var(--green)'}">${paused?'PAUSED':'ACTIVE'}${conv}</span>
+      </div>
+      ${p.thesis?`<div style="font-size:12px;color:var(--text2);margin-bottom:4px"><b style="color:var(--text3)">Thesis:</b> ${esc(p.thesis)}</div>`:''}
+      <div style="font-size:12px;color:var(--text2);margin-bottom:8px"><b style="color:var(--text3)">Invalidation:</b> ${esc(p.invalidation)||'<span style="color:var(--red)">none set</span>'}</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-sm btn-ghost" onclick="pinnedEdit(${i})" style="font-size:11px">Edit</button>
+        <button class="btn btn-sm btn-ghost" onclick="pinnedToggle(${i})" style="font-size:11px">${paused?'Activate':'Pause'}</button>
+        <button class="btn btn-sm btn-ghost" onclick="pinnedDel(${i})" style="font-size:11px;color:var(--red)">Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function _pinForm(){return{
+  symbol:document.getElementById('pinSymbol'),target:document.getElementById('pinTarget'),
+  max:document.getElementById('pinMax'),band:document.getElementById('pinBand'),
+  conv:document.getElementById('pinConv'),thesis:document.getElementById('pinThesis'),
+  inval:document.getElementById('pinInval'),enabled:document.getElementById('pinEnabled')};}
+
+function showPinnedAdd(){
+  _pinnedEditIdx=-1;
+  const f=_pinForm();
+  f.symbol.value='';f.symbol.disabled=false;f.target.value='5';f.max.value='10';
+  f.band.value='1.5';f.conv.value='7';f.thesis.value='';f.inval.value='';f.enabled.checked=true;
+  document.getElementById('pinSaveBtn').textContent='Add';
+  document.getElementById('pinnedAddPanel').classList.remove('hidden');
+  document.getElementById('pinnedAddToggle').classList.add('hidden');
+  f.symbol.focus();
+}
+function hidePinnedAdd(){
+  _pinnedEditIdx=-1;
+  document.getElementById('pinnedAddPanel').classList.add('hidden');
+  document.getElementById('pinnedAddToggle').classList.remove('hidden');
+}
+function pinnedEdit(i){
+  _pinnedEditIdx=i;
+  const p=_pinned[i],f=_pinForm();
+  f.symbol.value=p.symbol||'';f.symbol.disabled=true;   // symbol is the identity
+  f.target.value=p.target_pct??5;f.max.value=p.max_pct??10;f.band.value=p.rebalance_band_pct??1.5;
+  f.conv.value=p.conviction??7;f.thesis.value=p.thesis||'';f.inval.value=p.invalidation||'';
+  f.enabled.checked=p.enabled!==false;
+  document.getElementById('pinSaveBtn').textContent='Save';
+  document.getElementById('pinnedAddPanel').classList.remove('hidden');
+  document.getElementById('pinnedAddToggle').classList.add('hidden');
+  f.thesis.focus();
+}
+async function pinnedSave(){
+  const f=_pinForm();
+  const sym=f.symbol.value.trim().toUpperCase();
+  if(!/^[A-Z0-9.\-]{1,10}$/.test(sym)){toast('Enter a valid ticker','err');return}
+  const target=parseFloat(f.target.value),max=parseFloat(f.max.value),band=parseFloat(f.band.value);
+  if(!(target>0)){toast('Target % must be greater than 0','err');return}
+  if(!(max>=target)){toast('Max % cannot be below target %','err');return}
+  if(!(band>=0)){toast('Band % cannot be negative','err');return}
+  const inval=f.inval.value.trim();
+  if(!inval){toast('Set an invalidation — the bot needs to know when to let it go','err');return}
+  const conv=f.conv.value===''?null:Math.max(1,Math.min(10,parseInt(f.conv.value)||7));
+  const entry={symbol:sym,target_pct:target,max_pct:max,rebalance_band_pct:band,
+    conviction:conv,thesis:f.thesis.value.trim(),invalidation:inval,
+    enabled:f.enabled.checked};
+  if(_pinnedEditIdx>=0){
+    entry.added=_pinned[_pinnedEditIdx].added||new Date().toISOString().slice(0,10);
+    _pinned[_pinnedEditIdx]=entry;
+  }else{
+    if(_pinned.some(p=>p.symbol===sym)){toast(`${sym} is already pinned`,'err');return}
+    entry.added=new Date().toISOString().slice(0,10);
+    _pinned.push(entry);
+  }
+  renderPinned();hidePinnedAdd();
+  try{await savePinned();toast(`Pinned ${sym} saved`)}catch(e){}
+}
+async function pinnedDel(i){
+  const s=_pinned[i].symbol;
+  if(!confirm(`Delete pinned satellite ${s}? The bot will stop maintaining it (existing shares stay).`))return;
+  _pinned.splice(i,1);renderPinned();
+  try{await savePinned();toast(`Deleted ${s}`)}catch(e){}
+}
+async function pinnedToggle(i){
+  _pinned[i].enabled=_pinned[i].enabled===false;
+  renderPinned();
+  try{await savePinned();toast(`${_pinned[i].symbol} ${_pinned[i].enabled?'activated':'paused'}`)}catch(e){}
 }
 
 // -- Holdings --
