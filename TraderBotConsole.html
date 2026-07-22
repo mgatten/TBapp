@@ -470,7 +470,7 @@ const API='https://api.github.com';
 // — a mismatch means the browser is executing a stale cached copy, which the
 // old repo-commit check could never detect (the API always reports the newest
 // commit regardless of what HTML the browser loaded). Bump on every release.
-const CONSOLE_BUILD='2026-07-21.13-pinned-satellites';
+const CONSOLE_BUILD='2026-07-21.14-pin-release';
 // -- Global state --
 let cfg={},wlItems=[],wlSha=null,portfolio=null,events=[];
 let histMonth=new Date();histMonth.setDate(1);  // history tab month navigator
@@ -1106,6 +1106,7 @@ function renderPinned(){
         <span style="flex:1"></span>
         <span class="pin-badge" style="color:${paused?'var(--yellow)':'var(--green)'}">${paused?'PAUSED':'ACTIVE'}${conv}</span>
       </div>
+      ${paused&&p.paused_reason?`<div style="font-size:11px;color:var(--yellow);background:var(--yellow-bg);border-radius:4px;padding:6px 8px;margin-bottom:6px">Auto-paused${p.paused_at?' '+esc(String(p.paused_at).slice(0,10)):''}: ${esc(p.paused_reason)}<br><span style="color:var(--text3)">The bot exited this on its invalidation and won't re-buy it. Press Activate to override.</span></div>`:''}
       ${p.thesis?`<div style="font-size:12px;color:var(--text2);margin-bottom:4px"><b style="color:var(--text3)">Thesis:</b> ${esc(p.thesis)}</div>`:''}
       <div style="font-size:12px;color:var(--text2);margin-bottom:8px"><b style="color:var(--text3)">Invalidation:</b> ${esc(p.invalidation)||'<span style="color:var(--red)">none set</span>'}</div>
       <div style="display:flex;gap:8px">
@@ -1165,7 +1166,11 @@ async function pinnedSave(){
     conviction:conv,thesis:f.thesis.value.trim(),invalidation:inval,
     enabled:f.enabled.checked};
   if(_pinnedEditIdx>=0){
-    entry.added=_pinned[_pinnedEditIdx].added||new Date().toISOString().slice(0,10);
+    const prev=_pinned[_pinnedEditIdx];
+    entry.added=prev.added||new Date().toISOString().slice(0,10);
+    // Preserve the bot's auto-pause audit trail while the pin stays paused;
+    // clear it once the owner re-activates (the pause no longer applies).
+    if(!entry.enabled){entry.paused_reason=prev.paused_reason||'';entry.paused_at=prev.paused_at||''}
     _pinned[_pinnedEditIdx]=entry;
   }else{
     if(_pinned.some(p=>p.symbol===sym)){toast(`${sym} is already pinned`,'err');return}
@@ -1183,6 +1188,8 @@ async function pinnedDel(i){
 }
 async function pinnedToggle(i){
   _pinned[i].enabled=_pinned[i].enabled===false;
+  // Re-activating overrides any bot auto-pause — clear its audit note.
+  if(_pinned[i].enabled){delete _pinned[i].paused_reason;delete _pinned[i].paused_at}
   renderPinned();
   try{await savePinned();toast(`${_pinned[i].symbol} ${_pinned[i].enabled?'activated':'paused'}`)}catch(e){}
 }
